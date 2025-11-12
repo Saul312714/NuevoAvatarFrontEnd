@@ -1,143 +1,161 @@
-﻿<!DOCTYPE html>
-<html lang="es">
+﻿@inject IHttpContextAccessor HttpContextAccessor
+@inject IConfiguration Configuration
 
+@{
+    // Obtener datos del usuario desde la sesión
+    var userId = HttpContextAccessor.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
+    var userName = HttpContextAccessor.HttpContext?.Session.GetString("UserName") ?? "Usuario";
+    var userRole = HttpContextAccessor.HttpContext?.Session.GetString("UserRole") ?? "Rol";
+    var title = ViewData["Title"] ?? "Nuevo Avatar";
+
+    // Obtener URL del API de bitácora desde appsettings.json
+    var bitacoraApi = Configuration["BitacoraApi:BaseUrl"] ?? "http://localhost:5062/";
+}
+
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="Panel NuevoAvatar" />
-    <meta name="author" content="Equipo NuevoAvatar" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title - Nuevo Avatar</title>
+    <link rel="icon" href="/images/logo.png" />
 
-    <title>@ViewData["Title"] - NuevoAvatar</title>
-
-    <!-- Fuentes y estilos -->
-    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
-    <link href="~/css/sb-admin-2.min.css" rel="stylesheet" />
-    <link href="~/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" />
+    <!-- Estilos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
 </head>
 
 <body id="page-top">
-    <!-- Page Wrapper -->
     <div id="wrapper">
 
         <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-            <!-- Marca -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-page="/Index">
-                <div class="sidebar-brand-icon rotate-n-15">
-                    <i class="fas fa-laugh-wink"></i>
-                </div>
-                <div class="sidebar-brand-text mx-3">NuevoAvatar</div>
-            </a>
+        <partial name="~/Pages/Shared/_Sidebar.cshtml" />
 
-            <hr class="sidebar-divider my-0" />
-
-            <li class="nav-item active">
-                <a class="nav-link" asp-page="/Index">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-
-            <hr class="sidebar-divider" />
-
-            <div class="sidebar-heading">Módulos</div>
-
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseComponents"
-                   aria-expanded="true" aria-controls="collapseComponents">
-                    <i class="fas fa-fw fa-cog"></i>
-                    <span>Componentes</span>
-                </a>
-                <div id="collapseComponents" class="collapse" aria-labelledby="headingComponents"
-                     data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">UI:</h6>
-                        <a class="collapse-item" asp-page="/Buttons">Botones</a>
-                        <a class="collapse-item" asp-page="/Cards">Tarjetas</a>
-                    </div>
-                </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" asp-page="/Tables">
-                    <i class="fas fa-fw fa-table"></i>
-                    <span>Tablas</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" asp-page="/Charts">
-                    <i class="fas fa-fw fa-chart-area"></i>
-                    <span>Gráficos</span>
-                </a>
-            </li>
-
-            <hr class="sidebar-divider d-none d-md-block" />
-            <div class="text-center d-none d-md-inline">
-                <button class="rounded-circle border-0" id="sidebarToggle"></button>
-            </div>
-        </ul>
-        <!-- Fin del Sidebar -->
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
 
-            <!-- Contenido principal -->
-            <div id="content">
-                <!-- Topbar -->
-                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                        <i class="fa fa-bars"></i>
-                    </button>
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Usuario</span>
-                                <img class="img-profile rounded-circle" src="~/img/undraw_profile.svg" />
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                 aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#"><i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Perfil</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i> Configuración</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Cerrar sesión</a>
-                            </div>
-                        </li>
-                    </ul>
+            <!-- Topbar -->
+            <partial name="~/Pages/Shared/_Topbar.cshtml" />
+
+            <!-- Main Content -->
+            <div class="container-fluid mt-3">
+
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/Dashboard/Index">Inicio</a></li>
+                        <li class="breadcrumb-item active">@ViewData["Title"]</li>
+                    </ol>
                 </nav>
 
-                <!-- Contenido dinámico -->
-                <div class="container-fluid">
-                    <h1 class="h3 mb-4 text-gray-800">@ViewData["Title"]</h1>
-                    @RenderBody()
-                </div>
+                <!-- Contenedor para alertas -->
+                <div id="alertContainer"></div>
+
+                <!-- Aquí se renderiza el contenido de cada página -->
+                @RenderBody()
             </div>
 
             <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>© NuevoAvatar 2025</span>
-                    </div>
-                </div>
-            </footer>
+            <partial name="~/Pages/Shared/_Footer.cshtml" />
         </div>
     </div>
 
-    <!-- Scroll to Top -->
-    <a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/js/sb-admin-2.min.js"></script>
 
-    <!-- Scripts base -->
-    <script src="~/vendor/jquery/jquery.min.js"></script>
-    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
-    <script src="~/vendor/chart.js/Chart.min.js"></script>
-    <script src="~/vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="~/vendor/datatables/dataTables.bootstrap4.min.js"></script>
-    <script src="~/js/sb-admin-2.min.js"></script>
+    <!-- 🔹 Función global de notificaciones -->
+    <script>
+        function showAlert(type, message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: type,
+                title: message,
+                showConfirmButton: false,
+                timer: 2500
+            });
+        }
+    </script>
+
+    <!-- 🔹 Registro automático de errores de UI -->
+    <script>
+        window.addEventListener("error", function (e) {
+            fetch("@bitacoraApi/bitacora", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ID_Usuario: @userId,
+                    Accion: "Error de UI: " + e.message
+                })
+            }).catch(err => console.error("No se pudo registrar el error en bitácora", err));
+        });
+    </script>
+
+    <!-- 🔹 Registro de acceso y navegación -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const bitacoraUrl = "@bitacoraApi/bitacora";
+            const userId = @userId;
+
+            // Registrar acceso inicial al sistema
+            fetch(bitacoraUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ID_Usuario: userId,
+                    Accion: "Acceso al sistema"
+                })
+            });
+
+            // Registrar cambios de ruta (solo links internos)
+            document.querySelectorAll("a.nav-link").forEach(link => {
+                link.addEventListener("click", () => {
+                    fetch(bitacoraUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            ID_Usuario: userId,
+                            Accion: "Cambio de ruta: " + link.getAttribute("href")
+                        })
+                    });
+                });
+            });
+        });
+    </script>
+
+    <!-- 🔹 Refresh automático del token al cargar página -->
+    <script>
+        (async () => {
+            const refreshUrl = "@(Configuration["AuthApi:BaseUrl"] + "login/refresh")";
+            const refreshToken = "@(HttpContextAccessor.HttpContext?.Session.GetString("RefreshToken") ?? "")";
+
+            if (!refreshToken) return;
+
+            try {
+                const res = await fetch(refreshUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ refreshToken })
+                });
+
+                if (res.ok) {
+                    console.log("Token actualizado automáticamente al cargar la página");
+                } else {
+                    console.warn("Refresh falló, redirigiendo al login...");
+                    window.location.href = "/HU_MICHEL/Login/Index";
+                }
+            } catch {
+                console.error("Error al intentar refrescar token, redirigiendo...");
+                window.location.href = "/HU_MICHEL/Login/Index";
+            }
+        })();
+    </script>
 
     @RenderSection("Scripts", required: false)
 </body>
 </html>
+

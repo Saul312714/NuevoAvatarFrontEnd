@@ -65,7 +65,9 @@
                 <td>@usuario.RolNombre</td>
                 <td>
                     <a href="/Usuarios/Upsert?id=@usuario.ID_Usuario" class="btn btn-warning btn-sm">Editar</a>
-                    <form method="post" asp-page-handler="Delete" class="d-inline" onsubmit="return confirmDelete()">
+
+                    <!-- Botón para eliminar -->
+                    <form method="post" asp-page-handler="Delete" class="d-inline" onsubmit="return confirmDelete(event, @usuario.ID_Usuario)">
                         <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
                     </form>
                 </td>
@@ -73,6 +75,8 @@
         }
     </tbody>
 </table>
+
+
 
 <!-- Paginación -->
 <div class="d-flex justify-content-center">
@@ -126,9 +130,12 @@
         document.getElementById('filtroRol').addEventListener('change', filterTable);
         document.getElementById('filtroDominio').addEventListener('change', filterTable);
 
-        // Confirmar eliminación
-        function confirmDelete() {
-            return Swal.fire({
+        // Función para confirmar eliminación
+        function confirmDelete(event, idUsuario) {
+            event.preventDefault(); // Prevenir el envío inmediato del formulario
+
+            // Mostrar cuadro de confirmación con SweetAlert
+            Swal.fire({
                 title: '¿Estás seguro?',
                 text: "¡No podrás revertir esto!",
                 icon: 'warning',
@@ -138,7 +145,27 @@
                 confirmButtonText: 'Sí, eliminarlo',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
-                return result.isConfirmed;
+                if (result.isConfirmed) {
+                    // Si el usuario confirma, enviar el formulario con el id de usuario
+                    // Adjuntar el id al formulario para enviarlo correctamente al backend
+                    let form = event.target;
+                    let formData = new FormData(form);
+                    formData.append('id', idUsuario); // Añadimos el id del usuario al formulario
+
+                    // Enviar el formulario con el id
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload(); // Recargar la página para reflejar los cambios
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Error al eliminar:', error);
+                    });
+                }
             });
         }
 

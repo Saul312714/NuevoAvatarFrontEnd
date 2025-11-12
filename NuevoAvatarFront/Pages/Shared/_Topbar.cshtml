@@ -1,0 +1,58 @@
+﻿@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    // 🔹 Obtener datos de sesión del usuario actual
+    var userName = HttpContextAccessor.HttpContext?.Session.GetString("UserName") ?? "Usuario";
+    var userRole = HttpContextAccessor.HttpContext?.Session.GetString("UserRole") ?? "Rol";
+}
+
+<!-- Topbar -->
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+    <!-- Botón para colapsar sidebar -->
+    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle me-3">
+        <i class="fa fa-bars"></i>
+    </button>
+
+    <!-- Título del sistema -->
+    <h5 class="text-primary fw-bold mt-2">Sistema Nuevo Avatar</h5>
+
+    <!-- Spacer -->
+    <div class="ms-auto"></div>
+
+    <!-- Información del usuario -->
+    <ul class="navbar-nav align-items-center">
+
+        <li class="nav-item dropdown no-arrow">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+               data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="me-2 d-none d-lg-inline text-gray-600 small">
+                    @userName (@userRole)
+                </span>
+                <img class="img-profile rounded-circle"
+                     src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                     width="35" height="35" />
+            </a>
+
+            <!-- Menú desplegable -->
+            <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in" aria-labelledby="userDropdown">
+
+                <a class="dropdown-item" href="/Dashboard/Index">
+                    <i class="fas fa-home fa-sm fa-fw me-2 text-gray-400"></i>
+                    Inicio
+                </a>
+
+                <div class="dropdown-divider"></div>
+
+                <!-- Botón de logout -->
+                <form action="/logout" method="post" class="dropdown-item p-0">
+                    <button type="submit" class="btn w-100 text-start text-danger">
+                        <i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-danger"></i>
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
+        </li>
+    </ul>
+</nav>
+<!-- End of Topbar -->

@@ -1,43 +1,60 @@
 ﻿using Microsoft.AspNetCore.Http;
 using NuevoAvatarFront.Services;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace NuevoAvatarFront.Helpers
 {
     public class TokenHelper
     {
-        private readonly IHttpContextAccessor _httpContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuthApiClient _authApi;
 
-        public TokenHelper(IHttpContextAccessor httpContext, IAuthApiClient authApi)
+        public TokenHelper(IHttpContextAccessor httpContextAccessor, IAuthApiClient authApi)
         {
-            _httpContext = httpContext;
+            _httpContextAccessor = httpContextAccessor;
             _authApi = authApi;
         }
 
-        public async Task<bool> EnsureTokenValidAsync()
+        public async Task<string?> EnsureValidAccessTokenAsync()
         {
-            var session = _httpContext.HttpContext!.Session;
-            var accessToken = session.GetString("AccessToken");
-            var refreshToken = session.GetString("RefreshToken");
-            var expiresIn = session.GetString("ExpiresIn");
+            var context = _httpContextAccessor.HttpContext!;
+            var token = context.Session.GetString("AccessToken");
+            var refreshToken = context.Session.GetString("RefreshToken");
 
-            if (accessToken == null || refreshToken == null || expiresIn == null)
-                return false;
+            if (string.IsNullOrEmpty(token))
+                return null;
 
-            var expiration = DateTime.Parse(expiresIn);
-            if (DateTime.UtcNow < expiration)
-                return true; // aún válido
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
+            var exp = jwt.ValidTo;
 
-            // Si expiró, renovamos
-            var newTokens = await _authApi.RefreshAsync(refreshToken);
-            if (newTokens == null)
-                return false;
+            //Si el token está por expirar (menos de 2 minutos)
+            if (exp <= DateTime.UtcNow.AddMinutes(2))
+            {
+                try
+                {
+                    var result = await _authApi.RefreshAsync(refreshToken!);
 
-            // Guardar nuevos tokens
-            session.SetString("AccessToken", newTokens.Access_Token);
-            session.SetString("RefreshToken", newTokens.Refresh_Token);
-            session.SetString("ExpiresIn", newTokens.Expires_In);
-            return true;
+                    if (result == null)
+                    {
+                        context.Session.Clear();
+                        context.Response.Redirect("/HU_MICHEL/Login/Index");
+                        return null;
+                    }
+
+                    context.Session.SetString("AccessToken", result.Access_Token);
+                    context.Session.SetString("RefreshToken", result.Refresh_Token);
+                    return result.Access_Token;
+                }
+                catch
+                {
+                    context.Session.Clear();
+                    context.Response.Redirect("/HU_MICHEL/Login/Index");
+                    return null;
+                }
+            }
+
+            return token;
         }
     }
 }

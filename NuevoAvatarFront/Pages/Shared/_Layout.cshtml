@@ -67,7 +67,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/js/sb-admin-2.min.js"></script>
 
-    <!-- 🔹 Función global de notificaciones -->
+    <!--Función global de notificaciones -->
     <script>
         function showAlert(type, message) {
             Swal.fire({
@@ -81,7 +81,7 @@
         }
     </script>
 
-    <!-- 🔹 Registro automático de errores de UI -->
+    <!-- Registro automático de errores de UI -->
     <script>
         window.addEventListener("error", function (e) {
             fetch("@bitacoraApi/bitacora", {
@@ -95,13 +95,13 @@
         });
     </script>
 
-    <!-- 🔹 Registro de acceso y navegación -->
+    <!-- Registro de acceso y navegación -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const bitacoraUrl = "@bitacoraApi/bitacora";
             const userId = @userId;
 
-            // Registrar acceso inicial al sistema
+            // Registrar acceso inicial
             fetch(bitacoraUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -111,7 +111,7 @@
                 })
             });
 
-            // Registrar cambios de ruta (solo links internos)
+            // Registrar cambio de ruta
             document.querySelectorAll("a.nav-link").forEach(link => {
                 link.addEventListener("click", () => {
                     fetch(bitacoraUrl, {
@@ -127,13 +127,23 @@
         });
     </script>
 
-    <!-- 🔹 Refresh automático del token al cargar página -->
+    <!-- Refresh automático del token -->
     <script>
-        (async () => {
-            const refreshUrl = "@(Configuration["AuthApi:BaseUrl"] + "login/refresh")";
-            const refreshToken = "@(HttpContextAccessor.HttpContext?.Session.GetString("RefreshToken") ?? "")";
+        async function tryRefreshToken() {
+            const currentPath = window.location.pathname.toLowerCase();
 
-            if (!refreshToken) return;
+            // Evitar ejecución en login
+            if (currentPath.includes("/login")) return;
+
+            const userId = @userId;
+            const refreshToken = '@(HttpContextAccessor.HttpContext?.Session.GetString("RefreshToken") ?? "")';
+
+            if (!userId || userId === 0 || !refreshToken || refreshToken.trim() === "") {
+                console.warn("No hay sesión o refresh token, no se refresca.");
+                return;
+            }
+
+            const refreshUrl = '@(Configuration["AuthApi:BaseUrl"] + "login/refresh")';
 
             try {
                 const res = await fetch(refreshUrl, {
@@ -143,19 +153,22 @@
                 });
 
                 if (res.ok) {
-                    console.log("Token actualizado automáticamente al cargar la página");
-                } else {
-                    console.warn("Refresh falló, redirigiendo al login...");
-                    window.location.href = "/HU_MICHEL/Login/Index";
+                    console.log("Token actualizado automáticamente:", new Date().toLocaleTimeString());
+                } else if (res.status === 401) {
+                    console.warn("Token expirado o inválido. Esperando próxima acción del usuario.");
                 }
-            } catch {
-                console.error("Error al intentar refrescar token, redirigiendo...");
-                window.location.href = "/HU_MICHEL/Login/Index";
+            } catch (error) {
+                console.error("Error al refrescar token:", error);
             }
-        })();
+        }
+
+        // Ejecutar el refresh solo después de unos segundos (evita colisión tras login)
+        setTimeout(tryRefreshToken, 7000);
+
+        // Y cada 5 minutos mientras navega
+        setInterval(tryRefreshToken, 5 * 60 * 1000);
     </script>
 
     @RenderSection("Scripts", required: false)
 </body>
 </html>
-

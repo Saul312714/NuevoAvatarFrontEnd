@@ -32,8 +32,9 @@ namespace NuevoAvatarFront.Pages.Shared
             foreach (var cookie in Request.Cookies.Keys)
                 Response.Cookies.Delete(cookie);
 
-            // Redirigir al login
-            return RedirectToPage("/HU_MICHEL/Login/Index");
+            // Redirigir al login con mensaje de sesión cerrada
+            return Redirect("/HU_MICHEL/Login/Index?logout=1");
         }
     }
 }
+

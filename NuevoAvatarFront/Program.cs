@@ -83,6 +83,8 @@ app.UseSession();
 
 app.UseAuthorization();
 
+
+
 app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraApi) =>
 {
     var idUsuario = context.Session.GetInt32("UsuarioID") ?? 0;
@@ -93,7 +95,7 @@ app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraAp
     }
     catch
     {
-        Console.WriteLine("⚠️ No se pudo registrar el logout en bitácora.");
+        Console.WriteLine("No se pudo registrar el logout en bitácora.");
     }
 
     //Limpiar sesión y cookies

@@ -1,0 +1,29 @@
+﻿@page "{id?}"
+@model NuevoAvatarFront.Pages.Roles.UpsertModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar Rol" : "Nuevo Rol";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="post">
+
+    <!-- NECESARIO para edición -->
+    <input type="hidden" asp-for="Rol.ID_Rol" />
+
+    <div class="form-group mb-3">
+        <label>Nombre del Rol</label>
+        <input asp-for="Rol.Nombre" class="form-control" required />
+        <span asp-validation-for="Rol.Nombre" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        @(Model.EsEdicion ? "Actualizar" : "Crear")
+    </button>
+
+    <a href="/Roles/Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

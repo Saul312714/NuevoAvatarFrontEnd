@@ -1,0 +1,177 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Usuarios.IndexModel
+@{
+    ViewData["Title"] = "Listado de Usuarios";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<!-- Filtros -->
+<form id="filtroForm" class="mb-3">
+    <div class="row">
+        <div class="col-md-3">
+            <label>Identificación</label>
+            <input type="text" class="form-control" id="filtroIdentificacion" placeholder="Identificación" />
+        </div>
+        <div class="col-md-3">
+            <label>Nombre</label>
+            <input type="text" class="form-control" id="filtroNombre" placeholder="Nombre" />
+        </div>
+        <div class="col-md-3">
+            <label>Rol</label>
+            <select class="form-select" id="filtroRol">
+                <option value="">Seleccionar Rol</option>
+                <option value="Estudiante">Estudiante</option>
+                <option value="Profesor">Profesor</option>
+                <option value="Administrador">Administrador</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label>Dominio</label>
+            <select class="form-select" id="filtroDominio">
+                <option value="">Seleccionar Dominio</option>
+                <option value="cuc.cr">cuc.cr</option>
+                <option value="cuc.ac.cr">cuc.ac.cr</option>
+            </select>
+        </div>
+    </div>
+</form>
+
+<!-- Botón para crear nuevo usuario -->
+<a href="/Usuarios/Upsert" class="btn btn-success mb-3">
+    <i class="fas fa-plus"></i> Crear Nuevo Usuario
+</a>
+
+<!-- Tabla de Usuarios -->
+<table id="usuariosTable" class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Tipo Identificación</th>
+            <th>Identificación</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var usuario in Model.Usuarios)
+        {
+            <tr class="usuario-row" data-email="@usuario.Email" data-rol="@usuario.RolNombre" data-dominio="@usuario.Email.Split('@')[1]">
+                <td>@usuario.Email</td>
+                <td>@usuario.Tipo_Identificacion</td>
+                <td>@usuario.Identificacion</td>
+                <td>@usuario.Nombre</td>
+                <td>@usuario.RolNombre</td>
+                <td>
+                    <a href="/Usuarios/Upsert?id=@usuario.ID_Usuario" class="btn btn-warning btn-sm">Editar</a>
+
+                    <!-- Botón para eliminar -->
+                    <form method="post" asp-page-handler="Delete" class="d-inline" onsubmit="return confirmDelete(event, @usuario.ID_Usuario)">
+                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+<!-- Paginación -->
+<div class="d-flex justify-content-center">
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                <a class="page-link" href="?page=@(Model.Page - 1)&filtro=@Model.Filtro&rol=@Model.Rol">Anterior</a>
+            </li>
+            <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="?page=@(Model.Page + 1)&filtro=@Model.Filtro&rol=@Model.Rol">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+@section Scripts {
+    <script>
+        // Función para filtrar los usuarios en la tabla
+        function filterTable() {
+            const filtroIdentificacion = document.getElementById('filtroIdentificacion').value.toLowerCase();
+            const filtroNombre = document.getElementById('filtroNombre').value.toLowerCase();
+            const filtroRol = document.getElementById('filtroRol').value.toLowerCase();
+            const filtroDominio = document.getElementById('filtroDominio').value.toLowerCase();
+
+            const rows = document.querySelectorAll('#usuariosTable tbody tr.usuario-row');
+
+            rows.forEach(row => {
+                const email = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const tipoIdentificacion = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const identificacion = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                const nombre = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                const rol = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+                const dominio = row.getAttribute('data-dominio').toLowerCase();
+
+                const matchesIdentificacion = identificacion.includes(filtroIdentificacion);
+                const matchesNombre = nombre.includes(filtroNombre);
+                const matchesRol = filtroRol === '' || rol.includes(filtroRol);
+                const matchesDominio = filtroDominio === '' || dominio.includes(filtroDominio);
+
+                if (matchesIdentificacion && matchesNombre && matchesRol && matchesDominio) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Agregar eventos para ejecutar el filtro cuando cambie el valor de cualquier campo
+        document.getElementById('filtroIdentificacion').addEventListener('input', filterTable);
+        document.getElementById('filtroNombre').addEventListener('input', filterTable);
+        document.getElementById('filtroRol').addEventListener('change', filterTable);
+        document.getElementById('filtroDominio').addEventListener('change', filterTable);
+
+        // Función para confirmar eliminación
+        function confirmDelete(event, idUsuario) {
+            event.preventDefault(); // Prevenir el envío inmediato del formulario
+
+            // Mostrar cuadro de confirmación con SweetAlert
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¡No podrás revertir esto!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminarlo',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Si el usuario confirma, enviar el formulario con el id de usuario
+                    // Adjuntar el id al formulario para enviarlo correctamente al backend
+                    let form = event.target;
+                    let formData = new FormData(form);
+                    formData.append('id', idUsuario); // Añadimos el id del usuario al formulario
+
+                    // Enviar el formulario con el id
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload(); // Recargar la página para reflejar los cambios
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Error al eliminar:', error);
+                    });
+                }
+            });
+        }
+
+        // Ejecutar filtro inicial cuando la página se cargue
+        window.onload = function() {
+            filterTable();
+        };
+    </script>
+}

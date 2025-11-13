@@ -44,21 +44,6 @@
                 <span asp-validation-for="Carrera.ID_Institucion" class="text-danger"></span>
             </div>
 
-            <!-- DIRECTOR -->
-            <div class="col-md-6">
-                <label class="form-label fw-bold">Director (Profesor)</label>
-                <select asp-for="Carrera.ID_ProfesorDirector"
-                        class="form-select shadow-sm"
-                        required>
-                    <option value="">Seleccione…</option>
-                    @foreach (var prof in Model.Profesores)
-                    {
-                        <option value="@prof.ID_Profesor">@prof.Nombre</option>
-                    }
-                </select>
-                <span asp-validation-for="Carrera.ID_ProfesorDirector" class="text-danger"></span>
-            </div>
-
             <!-- BOTONES -->
             <div class="col-12 text-end mt-4">
 

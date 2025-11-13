@@ -2,17 +2,42 @@
 @model NuevoAvatarFront.Pages.Instituciones.CreateModel
 @{
     ViewData["Title"] = "Nueva Institución";
+    Layout = "_Layout";
 }
-<h2>Nueva Institución</h2>
 
-<form method="post" class="card p-3 shadow-sm">
-    <div class="mb-3">
-        <label class="form-label">Nombre</label>
-        <input asp-for="Form.Nombre" class="form-control" />
-        <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+<div class="card shadow mb-4">
+
+    <!-- HEADER -->
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-plus"></i> Nueva Institución
+        </h6>
     </div>
-    <div class="text-end">
-        <a asp-page="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button class="btn btn-primary">Guardar</button>
+
+    <div class="card-body">
+
+        <form method="post" class="row g-3">
+
+            <!-- NOMBRE -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Nombre</label>
+                <input asp-for="Form.Nombre"
+                       class="form-control shadow-sm" />
+                <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+            </div>
+
+            <!-- BOTONES -->
+            <div class="col-12 text-end mt-3">
+                <a asp-page="Index" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Cancelar
+                </a>
+
+                <button class="btn btn-primary btn-sm">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+
+        </form>
+
     </div>
-</form>
+</div>

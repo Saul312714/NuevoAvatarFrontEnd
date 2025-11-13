@@ -9,24 +9,24 @@
 
 <div class="mb-3">
     <label class="form-label">Institución</label>
-    <select asp-for="InstitucionId" class="form-select">
+    <select asp-for="ID_Institucion" class="form-select">
         @if (ViewData["Instituciones"] is IEnumerable<InstitucionDto> instituciones && instituciones != null)
         {
             @foreach (var i in instituciones)
             {
-                <option value="@i.Id">@i.Nombre</option>
+                <option value="@i.ID_Institucion">@i.Nombre</option>
             }
         }
     </select>
-    <span asp-validation-for="InstitucionId" class="text-danger"></span>
+    <span asp-validation-for="ID_Institucion" class="text-danger"></span>
 </div>
 
 <div class="mb-3">
     <label class="form-label">Director (Profesor)</label>
     <input id="profSearch" type="text" class="form-control" placeholder="Buscar profesor..." />
-    <input type="hidden" asp-for="DirectorId" />
+    <input type="hidden" asp-for="ID_Profesor_Director" />
     <div id="profResults" class="list-group mt-1"></div>
-    <span asp-validation-for="DirectorId" class="text-danger"></span>
+    <span asp-validation-for="ID_Profesor_Director" class="text-danger"></span>
 </div>
 
 @section Scripts {
@@ -49,7 +49,9 @@
               item.className = 'list-group-item list-group-item-action';
               item.textContent = p.nombreCompleto || p.nombre;
               item.onclick = () => {
-                document.querySelector('[name="DirectorId"]').value = p.id;
+                //  CAMBIO CORRECTO
+                document.querySelector('[name="ID_Profesor_Director"]').value = p.id;
+
                 input.value = p.nombreCompleto || p.nombre;
                 list.innerHTML = '';
               };

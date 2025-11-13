@@ -7,36 +7,35 @@ namespace NuevoAvatarFront.Pages.Cursos
 {
     public class IndexModel : PageModel
     {
-        private readonly ICursoApiClient _cursoService;
-        private readonly ICarreraApiClient _carreraService;
-        private readonly IBitacoraApiClient _bitacoraService;
+        private readonly ICursoApiClient _cursoApi;
 
-        public IndexModel(ICursoApiClient cursoService, ICarreraApiClient carreraService, IBitacoraApiClient bitacoraService)
+        public IndexModel(ICursoApiClient cursoApi)
         {
-            _cursoService = cursoService;
-            _carreraService = carreraService;
-            _bitacoraService = bitacoraService;
+            _cursoApi = cursoApi;
         }
 
-        [BindProperty(SupportsGet = true)]
-        public int CarreraId { get; set; }
-
-        [BindProperty(SupportsGet = true)]
-        public int? Nivel { get; set; }
-
-        public List<CarreraDto> Carreras { get; set; } = new();
         public List<CursoDto> Cursos { get; set; } = new();
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
-            Carreras = await _carreraService.GetAllAsync();
-            Cursos = await _cursoService.GetByCarreraAndNivelAsync(CarreraId, Nivel);
+            // Ya no se usa token aquí, ApiClient lo obtiene solo
+            Cursos = await _cursoApi.GetAllAsync();
 
-            // Bitácora de consulta
-            await _bitacoraService.RegistrarAsync(GetUsuarioId(), $"Consultó listado de cursos (CarreraId={CarreraId}, Nivel={Nivel})");
+            return Page();
         }
 
-        private int GetUsuarioId() =>
-            HttpContext.Session.GetInt32("UsuarioID") ?? 0;
+        public async Task<IActionResult> OnGetDeleteAsync(int id)
+        {
+            bool eliminado = await _cursoApi.DeleteAsync(id);
+
+            if (!eliminado)
+            {
+                TempData["Error"] = "No se pudo eliminar. Puede estar asociado a grupos.";
+                return RedirectToPage();
+            }
+
+            TempData["Success"] = "Curso eliminado correctamente.";
+            return RedirectToPage();
+        }
     }
 }

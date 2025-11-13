@@ -20,93 +20,101 @@ namespace NuevoAvatarFront.Services
         {
             var token = _contextAccessor.HttpContext?.Session.GetString("AccessToken");
 
-            if (!string.IsNullOrEmpty(token))
-                _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            // SIEMPRE sobrescribir, aunque antes estuviera vacío
+            _http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
         }
 
         private int GetUsuarioAccion()
         {
-            return _contextAccessor.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
+            var id = _contextAccessor.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
+
+            if (id == 0)
+                Console.WriteLine(" ADVERTENCIA: UsuarioID viene en 0. Revisar login o sesión.");
+
+            return id;
         }
 
         // Obtener todas
         public async Task<List<InstitucionDto>> GetAllAsync(string? q = null)
         {
             AddAuthorizationHeader();
-
             int idUsuarioAccion = GetUsuarioAccion();
 
-            var url = string.IsNullOrWhiteSpace(q)
-                ? $"institucion?idUsuarioAccion={idUsuarioAccion}"
-                : $"institucion?q={Uri.EscapeDataString(q)}&idUsuarioAccion={idUsuarioAccion}";
+            string url = $"institucion?idUsuarioAccion={idUsuarioAccion}";
+            if (!string.IsNullOrWhiteSpace(q))
+                url = $"institucion?q={Uri.EscapeDataString(q)}&idUsuarioAccion={idUsuarioAccion}";
 
-            var data = await _http.GetFromJsonAsync<List<InstitucionDto>>(url);
-            return data ?? new List<InstitucionDto>();
+            var res = await _http.GetAsync(url);
+
+            if (!res.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"❌ Error API Institución GetAll: {await res.Content.ReadAsStringAsync()}");
+                return new List<InstitucionDto>();
+            }
+
+            return await res.Content.ReadFromJsonAsync<List<InstitucionDto>>() ?? new List<InstitucionDto>();
         }
 
         // Obtener por ID
         public async Task<InstitucionDto?> GetByIdAsync(int id)
         {
             AddAuthorizationHeader();
-
             int idUsuarioAccion = GetUsuarioAccion();
 
-            var response = await _http.GetAsync($"institucion/{id}?idUsuarioAccion={idUsuarioAccion}");
+            var res = await _http.GetAsync($"institucion/{id}?idUsuarioAccion={idUsuarioAccion}");
 
-            if (!response.IsSuccessStatusCode)
+            if (!res.IsSuccessStatusCode)
                 return null;
 
-            return await response.Content.ReadFromJsonAsync<InstitucionDto>();
+            return await res.Content.ReadFromJsonAsync<InstitucionDto>();
         }
 
         // Crear
         public async Task<(bool Ok, string Msg)> CreateAsync(InstitucionDto institucion)
         {
             AddAuthorizationHeader();
-
             int idUsuarioAccion = GetUsuarioAccion();
 
-            var resp = await _http.PostAsJsonAsync(
+            var res = await _http.PostAsJsonAsync(
                 $"institucion?idUsuarioAccion={idUsuarioAccion}",
                 institucion);
 
-            return resp.IsSuccessStatusCode
+            return res.IsSuccessStatusCode
                 ? (true, "Institución creada correctamente.")
-                : (false, await resp.Content.ReadAsStringAsync());
+                : (false, await res.Content.ReadAsStringAsync());
         }
 
         // Actualizar
         public async Task<(bool Ok, string Msg)> UpdateAsync(int id, InstitucionDto institucion)
         {
             AddAuthorizationHeader();
-
             int idUsuarioAccion = GetUsuarioAccion();
 
-            var resp = await _http.PutAsJsonAsync(
+            var res = await _http.PutAsJsonAsync(
                 $"institucion/{id}?idUsuarioAccion={idUsuarioAccion}",
                 institucion);
 
-            return resp.IsSuccessStatusCode
+            return res.IsSuccessStatusCode
                 ? (true, "Institución actualizada correctamente.")
-                : (false, await resp.Content.ReadAsStringAsync());
+                : (false, await res.Content.ReadAsStringAsync());
         }
 
         // Eliminar
         public async Task<(bool Ok, string Msg)> DeleteAsync(int id)
         {
             AddAuthorizationHeader();
-
             int idUsuarioAccion = GetUsuarioAccion();
 
-            var resp = await _http.DeleteAsync(
+            var res = await _http.DeleteAsync(
                 $"institucion/{id}?idUsuarioAccion={idUsuarioAccion}");
 
-            if (resp.StatusCode == System.Net.HttpStatusCode.Conflict)
+            if (res.StatusCode == System.Net.HttpStatusCode.Conflict)
                 return (false, "No se puede eliminar la institución, tiene carreras asociadas.");
 
-            return resp.IsSuccessStatusCode
+            return res.IsSuccessStatusCode
                 ? (true, "Institución eliminada correctamente.")
-                : (false, await resp.Content.ReadAsStringAsync());
+                : (false, await res.Content.ReadAsStringAsync());
         }
     }
 }

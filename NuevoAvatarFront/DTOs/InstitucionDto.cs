@@ -2,7 +2,7 @@
 {
     public class InstitucionDto
     {
-        public int Id { get; set; }
+        public int ID_Institucion { get; set; }
         public string Nombre { get; set; } = string.Empty;
     }
 }

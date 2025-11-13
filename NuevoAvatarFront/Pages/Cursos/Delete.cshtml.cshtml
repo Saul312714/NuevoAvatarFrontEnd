@@ -2,16 +2,38 @@
 @model NuevoAvatarFront.Pages.Cursos.DeleteModel
 @{
     ViewData["Title"] = "Eliminar Curso";
+    Layout = "_Layout";
 }
 
-<h3>¿Está seguro de eliminar este curso?</h3>
-<hr />
+<div class="card shadow mb-4">
 
-<div class="alert alert-warning">
-    <strong>@Model.Curso?.Nombre</strong> – Carrera: @Model.Curso?.CarreraNombre
+    <!-- HEADER -->
+    <div class="card-header py-3 bg-danger text-white">
+        <h6 class="m-0 font-weight-bold">
+            <i class="fas fa-exclamation-triangle"></i> Eliminar Curso
+        </h6>
+    </div>
+
+    <div class="card-body">
+
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            ¿Está seguro de que desea eliminar el curso
+            <b>@Model.Curso?.Nombre</b>
+            <br />
+            <small class="text-muted">Carrera: @Model.Curso?.NombreCarrera</small>
+        </div>
+
+        <form method="post" class="mt-3">
+
+            <button type="submit" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+
+            <a asp-page="Index" class="btn btn-outline-secondary btn-sm ms-2">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+
+        </form>
+    </div>
 </div>
-
-<form method="post">
-    <button type="submit" class="btn btn-danger">Eliminar</button>
-    <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
-</form>

@@ -2,10 +2,11 @@
 {
     public class ProfesorDto
     {
-        public int Id { get; set; }
-        public string NombreCompleto { get; set; } = string.Empty;
-        public string? Identificacion { get; set; }
-        public string? Correo { get; set; }
-        public bool Activo { get; set; } = true;
+        public int ID_Profesor { get; set; }
+        public string Identificacion { get; set; } = string.Empty;
+        public string Tipo_Identificacion { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+        public DateTime Fecha_Nacimiento { get; set; }
     }
 }

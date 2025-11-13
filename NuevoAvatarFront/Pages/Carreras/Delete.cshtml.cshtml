@@ -1,17 +1,37 @@
-﻿@page "{id:int}"
+﻿@page 
 @model NuevoAvatarFront.Pages.Carreras.DeleteModel
 @{
     ViewData["Title"] = "Eliminar Carrera";
+    Layout = "_Layout";
 }
 
-<h3>¿Está seguro de eliminar esta carrera?</h3>
-<hr />
+<div class="card shadow mb-4">
 
-<div class="alert alert-warning">
-    <strong>@Model.Carrera?.Nombre</strong> – Director: @Model.Carrera?.DirectorNombre
+    <!-- HEADER ROJO -->
+    <div class="card-header py-3 bg-danger text-white">
+        <h6 class="m-0 font-weight-bold">
+            <i class="fas fa-exclamation-triangle"></i> Eliminar Carrera
+        </h6>
+    </div>
+
+    <div class="card-body">
+
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            ¿Está seguro de que desea eliminar esta carrera?
+        </div>
+
+        <form method="post" class="mt-3">
+            <input type="hidden" asp-for="ID_Carrera" />
+
+            <button class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+
+            <a href="/Carreras/Index" class="btn btn-outline-secondary btn-sm ms-2">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+        </form>
+
+    </div>
 </div>
-
-<form method="post">
-    <button type="submit" class="btn btn-danger">Eliminar</button>
-    <a asp-page="Index" asp-route-institucionId="@Model.Carrera?.InstitucionId" class="btn btn-secondary">Cancelar</a>
-</form>

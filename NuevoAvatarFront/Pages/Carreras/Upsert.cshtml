@@ -1,0 +1,83 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Carreras.UpsertModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar Carrera" : "Nueva Carrera";
+    Layout = "_Layout";
+}
+
+<div class="card shadow mb-4">
+
+    <!-- HEADER -->
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas @(Model.EsEdicion ? "fa-edit" : "fa-plus")"></i>
+            @ViewData["Title"]
+        </h6>
+    </div>
+
+    <div class="card-body">
+
+        <form method="post" class="row g-3">
+            <input asp-for="Carrera.ID_Carrera" type="hidden" />
+
+            <!-- NOMBRE -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Nombre</label>
+                <input asp-for="Carrera.Nombre"
+                       class="form-control shadow-sm"
+                       required />
+                <span asp-validation-for="Carrera.Nombre" class="text-danger"></span>
+            </div>
+
+            <!-- INSTITUCIÓN -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Institución</label>
+                <select asp-for="Carrera.ID_Institucion"
+                        class="form-select shadow-sm"
+                        required>
+                    <option value="">Seleccione…</option>
+                    @foreach (var inst in Model.Instituciones)
+                    {
+                        <option value="@inst.ID_Institucion">@inst.Nombre</option>
+                    }
+                </select>
+                <span asp-validation-for="Carrera.ID_Institucion" class="text-danger"></span>
+            </div>
+
+            <!-- DIRECTOR -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Director (Profesor)</label>
+                <select asp-for="Carrera.ID_ProfesorDirector"
+                        class="form-select shadow-sm"
+                        required>
+                    <option value="">Seleccione…</option>
+                    @foreach (var prof in Model.Profesores)
+                    {
+                        <option value="@prof.ID_Profesor">@prof.Nombre</option>
+                    }
+                </select>
+                <span asp-validation-for="Carrera.ID_ProfesorDirector" class="text-danger"></span>
+            </div>
+
+            <!-- BOTONES -->
+            <div class="col-12 text-end mt-4">
+
+                <button class="btn btn-primary btn-sm">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+
+                <a class="btn btn-outline-secondary btn-sm ms-2"
+                   href="/Carreras/Index">
+                    <i class="fas fa-arrow-left"></i> Cancelar
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

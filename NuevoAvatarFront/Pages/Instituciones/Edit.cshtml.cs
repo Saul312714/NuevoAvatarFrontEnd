@@ -44,7 +44,7 @@ namespace NuevoAvatarFront.Pages.Instituciones
             if (!ModelState.IsValid)
                 return Page();
 
-            var inst = new InstitucionDto { Id = id, Nombre = Form.Nombre.Trim() };
+            var inst = new InstitucionDto { ID_Institucion = id, Nombre = Form.Nombre.Trim() };
             var (ok, msg) = await _client.UpdateAsync(id, inst);
 
             if (ok)

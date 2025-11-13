@@ -4,6 +4,7 @@ namespace NuevoAvatarFront.Services
 {
     public interface IInstitucionApiClient
     {
+       
         Task<List<InstitucionDto>> GetAllAsync(string? q = null);  // Listado de instituciones con filtro por nombre
         Task<InstitucionDto?> GetByIdAsync(int id);  // Obtener institución por ID
         Task<(bool Ok, string Msg)> CreateAsync(InstitucionDto institucion);  // Crear institución

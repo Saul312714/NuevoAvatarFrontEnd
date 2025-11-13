@@ -7,41 +7,44 @@ namespace NuevoAvatarFront.Pages.Carreras
 {
     public class DeleteModel : PageModel
     {
-        private readonly ICarreraApiClient _carreraService;
-        private readonly IBitacoraApiClient _bitacoraService;
+        private readonly ICarreraApiClient _carreraApi;
 
-        public DeleteModel(ICarreraApiClient carreraService, IBitacoraApiClient bitacoraService)
+        public DeleteModel(ICarreraApiClient carreraApi)
         {
-            _carreraService = carreraService;
-            _bitacoraService = bitacoraService;
+            _carreraApi = carreraApi;
         }
+
+        // IMPORTANTE: Debe soportar GET
+        [BindProperty(SupportsGet = true)]
+        public int ID_Carrera { get; set; }
 
         public CarreraDto? Carrera { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int id)
+        public async Task<IActionResult> OnGetAsync()
         {
-            Carrera = await _carreraService.GetByIdAsync(id);
-            return Carrera == null ? RedirectToPage("Index") : Page();
-        }
+            // El valor llega automáticamente desde ?id=
+            Carrera = await _carreraApi.GetByIdAsync(ID_Carrera);
 
-        public async Task<IActionResult> OnPostAsync(int id)
-        {
-            var carrera = await _carreraService.GetByIdAsync(id);
-            if (carrera == null)
-                return RedirectToPage("Index");
-
-            var ok = await _carreraService.DeleteAsync(id);
-            if (ok)
+            if (Carrera == null)
             {
-                await _bitacoraService.RegistrarAsync(GetUsuarioId(), $"Eliminó carrera: {carrera.Nombre}");
-                return RedirectToPage("Index", new { institucionId = carrera.InstitucionId });
+                TempData["Error"] = "La carrera no existe.";
+                return RedirectToPage("/Carreras/Index");
             }
 
-            TempData["error"] = "No se puede eliminar: existen cursos vinculados.";
-            return RedirectToPage("Index", new { institucionId = carrera.InstitucionId });
+            return Page();
         }
 
-        private int GetUsuarioId() =>
-            HttpContext.Session.GetInt32("UsuarioID") ?? 0;
+        public async Task<IActionResult> OnPostAsync()
+        {
+            var ok = await _carreraApi.DeleteAsync(ID_Carrera);
+
+            if (ok)
+                TempData["Success"] = "Carrera eliminada correctamente.";
+            else
+                TempData["Error"] = "No se pudo eliminar la carrera.";
+
+            return RedirectToPage("/Carreras/Index");
+        }
     }
 }
+

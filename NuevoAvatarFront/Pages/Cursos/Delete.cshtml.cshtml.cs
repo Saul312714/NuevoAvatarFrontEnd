@@ -31,7 +31,7 @@ namespace NuevoAvatarFront.Pages.Cursos
                 return RedirectToPage("Index");
 
             // Verificamos si hay grupos asociados
-            if (curso.GruposVinculados > 0)
+            if (curso.ID_Curso > 0)
             {
                 TempData["error"] = "No se puede eliminar: el curso tiene grupos asociados.";
                 return RedirectToPage("Index");

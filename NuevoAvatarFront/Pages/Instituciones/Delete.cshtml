@@ -2,15 +2,36 @@
 @model NuevoAvatarFront.Pages.Instituciones.DeleteModel
 @{
     ViewData["Title"] = "Eliminar Institución";
+    Layout = "_Layout";
 }
 
-<h2>Eliminar Institución</h2>
+<div class="card shadow mb-4">
 
-<div class="alert alert-warning">
-    ¿Está seguro que desea eliminar la institución <b>@Model.Nombre</b>?
+    <!-- HEADER -->
+    <div class="card-header py-3 bg-danger text-white">
+        <h6 class="m-0 font-weight-bold">
+            <i class="fas fa-exclamation-triangle"></i> Eliminar Institución
+        </h6>
+    </div>
+
+    <div class="card-body">
+
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            ¿Está seguro que desea eliminar la institución
+            <b>@Model.Nombre</b>?
+        </div>
+
+        <form method="post" class="mt-3">
+
+            <a asp-page="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+
+            <button class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+
+        </form>
+    </div>
 </div>
-
-<form method="post">
-    <a asp-page="Index" class="btn btn-outline-secondary">Cancelar</a>
-    <button class="btn btn-danger">Eliminar</button>
-</form>

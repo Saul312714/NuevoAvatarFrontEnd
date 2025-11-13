@@ -7,37 +7,54 @@ namespace NuevoAvatarFront.Pages.Carreras
 {
     public class IndexModel : PageModel
     {
-        private readonly ICarreraApiClient _carreraService;
-        private readonly IInstitucionApiClient _instService;
-        private readonly IBitacoraApiClient _bitacoraService;
+        private readonly ICarreraApiClient _carreraApi;
+        private readonly IInstitucionApiClient _institucionApi;
+        private readonly IProfesorApiClient _profesorApi;
 
-        public IndexModel(ICarreraApiClient carreraService, IInstitucionApiClient instService, IBitacoraApiClient bitacoraService)
+        public IndexModel(
+            ICarreraApiClient carreraApi,
+            IInstitucionApiClient institucionApi,
+            IProfesorApiClient profesorApi)
         {
-            _carreraService = carreraService;
-            _instService = instService;
-            _bitacoraService = bitacoraService;
+            _carreraApi = carreraApi;
+            _institucionApi = institucionApi;
+            _profesorApi = profesorApi;
         }
 
-        [BindProperty(SupportsGet = true)]
-        public int InstitucionId { get; set; }
-
-        [BindProperty(SupportsGet = true)]
-        public string? Q { get; set; }
-
-        public List<InstitucionDto> Instituciones { get; set; } = new();
         public List<CarreraDto> Carreras { get; set; } = new();
+        public List<InstitucionDto> Instituciones { get; set; } = new();
+        public List<ProfesorDto> Profesores { get; set; } = new();
 
-        public async Task OnGetAsync()
+        [BindProperty(SupportsGet = true)]
+        public int FiltroInstitucion { get; set; }
+
+        public async Task<IActionResult> OnGetAsync()
         {
-            Instituciones = await _instService.GetAllAsync();
-            if (Instituciones.Any() && InstitucionId == 0)
-                InstitucionId = Instituciones.First().Id;
+            // Obtener instituciones y profesores para mostrar nombres
+            Instituciones = await _institucionApi.GetAllAsync();
+            Profesores = await _profesorApi.GetAllAsync();
 
-            Carreras = await _carreraService.GetByInstitucionAsync(InstitucionId, Q);
-            await _bitacoraService.RegistrarAsync(GetUsuarioId(), $"Consultó listado de carreras (InstituciónId={InstitucionId})");
+            // Consultar según filtros
+            if (FiltroInstitucion > 0)
+            {
+                Carreras = await _carreraApi.GetByInstitucionAsync(FiltroInstitucion);
+            }
+            else
+            {
+                Carreras = await _carreraApi.GetAllAsync();
+            }
+
+            // Enriquecer datos con nombres
+            foreach (var c in Carreras)
+            {
+                c.NombreInstitucion = Instituciones
+                    .FirstOrDefault(i => i.ID_Institucion == c.ID_Institucion)?.Nombre ?? "";
+
+                c.NombreDirector = Profesores
+                    .FirstOrDefault(p => p.ID_Profesor == c.ID_ProfesorDirector)?.Nombre ?? "";
+            }
+
+            return Page();
         }
-
-        private int GetUsuarioId() =>
-            HttpContext.Session.GetInt32("UsuarioID") ?? 0;
     }
 }

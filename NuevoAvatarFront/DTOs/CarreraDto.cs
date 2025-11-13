@@ -2,12 +2,12 @@
 {
     public class CarreraDto
     {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = "";
-        public int InstitucionId { get; set; }
-        public string InstitucionNombre { get; set; } = "";
-        public int DirectorId { get; set; }              // id del profesor
-        public string DirectorNombre { get; set; } = "";
-        public int CursosVinculados { get; set; }        // para mostrar si bloquea eliminación
+        public int ID_Carrera { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public int ID_Institucion { get; set; }
+        public int ID_ProfesorDirector { get; set; }
+
+        public string NombreInstitucion { get; set; } = string.Empty;
+        public string NombreDirector { get; set; } = string.Empty;
     }
 }

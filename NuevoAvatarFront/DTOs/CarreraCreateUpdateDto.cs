@@ -10,9 +10,9 @@ namespace NuevoAvatarFront.DTOs
         public string Nombre { get; set; } = "";
 
         [Range(1, int.MaxValue, ErrorMessage = "Seleccione institución")]
-        public int InstitucionId { get; set; }
+        public int ID_Institucion { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Seleccione director")]
-        public int DirectorId { get; set; }
+        public int ID_Profesor_Director { get; set; }
     }
 }

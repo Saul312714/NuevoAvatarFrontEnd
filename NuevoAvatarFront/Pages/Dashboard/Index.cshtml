@@ -1,0 +1,170 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Panel de Bienvenida";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Bienvenido, @Model.NombreUsuario</h1>
+    <span class="text-muted">Rol: @Model.RolUsuario</span>
+</div>
+
+
+<div class="row">
+  
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Usuarios</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalUsuarios</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Carreras</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalCarreras</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Cursos</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalCursos</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Facturas pendientes</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalFacturasPendientes</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Notificaciones recientes</h6>
+                <span class="badge bg-primary text-white">@((Model.Notificaciones?.Count ?? 0))</span>
+            </div>
+            <div class="card-body">
+                @if (Model.Notificaciones?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle" width="100%" cellspacing="0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Destino</th>
+                                    <th>Asunto</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var n in Model.Notificaciones)
+                                {
+                                    <tr>
+                                        <td>@n.ID_Notificacion</td>
+                                        <td>@n.email_Destino</td>
+                                        <td>@n.asunto</td>
+                                        <td>@n.fechaEnvio.ToString("yyyy-MM-dd HH:mm")</td>
+                                        <td>
+                                            <span class="badge bg-success">@n.estado</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">No hay notificaciones recientes.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+   
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary"> Últimas bitácoras</h6>
+                <span class="badge bg-primary text-white">@((Model.Bitacoras?.Count ?? 0))</span>
+            </div>
+            <div class="card-body">
+                @if (Model.Bitacoras?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle" width="100%" cellspacing="0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var b in Model.Bitacoras)
+                                {
+                                    <tr>
+                                        <td>@b.ID_Bitacora</td>
+                                        <td>@b.ID_Usuario</td>
+                                        <td>@b.accion</td>
+                                        <td>@b.fecha.ToString("yyyy-MM-dd HH:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Sin registros recientes.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="text-center mt-3 mb-4">
+    <a href="#" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-question-circle"></i> Ayuda
+    </a>
+    <a href="#" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-user"></i> Perfil
+    </a>
+</div>
+
+@section Scripts {
+    <script>
+    
+        $(document).ready(function () {
+            $('table').DataTable({
+                paging: false,
+                searching: false,
+                info: false,
+                language: {
+                    emptyTable: "No hay datos disponibles"
+                }
+            });
+        });
+    </script>
+}

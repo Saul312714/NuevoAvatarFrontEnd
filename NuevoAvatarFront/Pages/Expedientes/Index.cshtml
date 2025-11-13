@@ -1,0 +1,52 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Expedientes.IndexModel
+@{
+    ViewData["Title"] = "Expedientes de Estudiantes";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Expedientes</h6>
+        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#expModal"><i class="fas fa-plus"></i> Nuevo</button>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered" id="dataTable">
+            <thead>
+                <tr>
+                    <th>Identificación</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfonos</th>
+                    <th>Provincia</th>
+                    <th>Cantón</th>
+                    <th>Distrito</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model.Expedientes)
+                {
+                    <tr>
+                        <td>@e.Identificacion</td>
+                        <td>@e.Nombre</td>
+                        <td>@e.Email</td>
+                        <td>@e.Telefonos</td>
+                        <td>@e.Provincia</td>
+                        <td>@e.Canton</td>
+                        <td>@e.Distrito</td>
+                        <td>
+                            <a href="#" class="btn btn-info btn-sm"><i class="fas fa-edit"></i></a>
+                            <a href="#" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#dataTable').DataTable();
+    </script>
+}

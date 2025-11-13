@@ -1,0 +1,126 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.PreMatriculas.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Prematrícula";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-trash"></i> Eliminar Prematrícula
+                    </h4>
+                    <a asp-page="./Index" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.MensajeError))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> @Model.MensajeError
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <h5 class="text-danger mb-3">
+                        ¿Está seguro que desea eliminar esta prematrícula?
+                    </h5>
+
+                    @if (Model.PreMatricula is not null)
+                    {
+                        <dl class="row">
+                            <dt class="col-sm-3">ID</dt>
+                            <dd class="col-sm-9">@Model.PreMatricula.ID_Prematricula</dd>
+
+                            <dt class="col-sm-3">Estudiante</dt>
+                            <dd class="col-sm-9">
+                                @(
+                                    string.IsNullOrEmpty(Model.PreMatricula.NombreEstudiante)
+                                        ? $"{Model.PreMatricula.ID_Estudiante}"
+                                        : $"{Model.PreMatricula.ID_Estudiante} - {Model.PreMatricula.NombreEstudiante}"
+                                 )
+                            </dd>
+
+                            <dt class="col-sm-3">Carrera</dt>
+                            <dd class="col-sm-9">
+                                @(
+                                    string.IsNullOrEmpty(Model.PreMatricula.NombreCarrera)
+                                        ? $"{Model.PreMatricula.ID_Carrera}"
+                                        : $"{Model.PreMatricula.ID_Carrera} - {Model.PreMatricula.NombreCarrera}"
+                                 )
+                            </dd>
+
+                            <dt class="col-sm-3">Curso</dt>
+                            <dd class="col-sm-9">
+                                @(
+                                    string.IsNullOrEmpty(Model.PreMatricula.NombreCurso)
+                                        ? $"{Model.PreMatricula.ID_Curso}"
+                                        : $"{Model.PreMatricula.ID_Curso} - {Model.PreMatricula.NombreCurso}"
+                                 )
+                            </dd>
+
+                            <dt class="col-sm-3">Periodo</dt>
+                            <dd class="col-sm-9">
+                                @(
+                                    string.IsNullOrEmpty(Model.PreMatricula.NombrePeriodo)
+                                        ? $"{Model.PreMatricula.ID_Periodo}"
+                                        : $"{Model.PreMatricula.NombrePeriodo}"
+                                 )
+                            </dd>
+
+                            <dt class="col-sm-3">Observaciones</dt>
+                            <dd class="col-sm-9">
+                                @if (string.IsNullOrWhiteSpace(Model.PreMatricula.Observaciones))
+                                {
+                                    <span class="text-muted fst-italic">Sin observaciones</span>
+                                }
+                                else
+                                {
+                                    @Model.PreMatricula.Observaciones
+                                }
+                            </dd>
+                        </dl>
+
+                        <hr />
+
+                        <form method="post">
+                            <input type="hidden" asp-for="PreMatricula.ID_Prematricula" />
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a asp-page="./Index" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i> Eliminar definitivamente
+                                </button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            No se encontró la prematrícula solicitada.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-cerrar alertas después de 5 segundos
+        setTimeout(function () {
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+}

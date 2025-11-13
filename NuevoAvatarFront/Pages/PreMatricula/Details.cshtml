@@ -1,0 +1,70 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.PreMatriculas.DetailsModel
+@{
+    ViewData["Title"] = "Detalle de Prematrícula";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-eye"></i> Detalle de Prematrícula
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.PreMatricula is null)
+                    {
+                        <div class="alert alert-warning">
+                            No se encontró la prematrícula solicitada.
+                        </div>
+                    }
+                    else
+                    {
+                        <dl class="row">
+                            <dt class="col-sm-4">ID Prematrícula</dt>
+                            <dd class="col-sm-8">@Model.PreMatricula.ID_Prematricula</dd>
+
+                            <dt class="col-sm-4">Estudiante</dt>
+                            <dd class="col-sm-8">@Model.PreMatricula.ID_Estudiante</dd>
+
+                            <dt class="col-sm-4">Carrera</dt>
+                            <dd class="col-sm-8">@Model.PreMatricula.ID_Carrera</dd>
+
+                            <dt class="col-sm-4">Curso</dt>
+                            <dd class="col-sm-8">@Model.PreMatricula.ID_Curso</dd>
+
+                            <dt class="col-sm-4">Periodo</dt>
+                            <dd class="col-sm-8">@Model.PreMatricula.ID_Periodo</dd>
+
+                            <dt class="col-sm-4">Observaciones</dt>
+                            <dd class="col-sm-8">
+                                @if (string.IsNullOrWhiteSpace(Model.PreMatricula.Observaciones))
+                                {
+                                    <span class="text-muted fst-italic">Sin observaciones</span>
+                                }
+                                else
+                                {
+                                    @Model.PreMatricula.Observaciones
+                                }
+                            </dd>
+                        </dl>
+                    }
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <a asp-page="./Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left-circle"></i> Volver
+                        </a>
+                        @if (Model.PreMatricula is not null)
+                        {
+                            <a asp-page="./Edit" asp-route-id="@Model.PreMatricula.ID_Prematricula" class="btn btn-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

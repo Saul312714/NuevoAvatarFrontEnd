@@ -1,0 +1,71 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Profesores.UpsertModel
+@{
+    bool esEdicion = Model.Profesor.ID_Profesor > 0;
+    ViewData["Title"] = esEdicion ? "Editar Profesor" : "Nuevo Profesor";
+    Layout = "_Layout";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">
+            @ViewData["Title"]
+        </h6>
+        <a asp-page="./Index" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card-body">
+        <form method="post" class="needs-validation" novalidate>
+            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+            <input type="hidden" asp-for="Profesor.ID_Profesor" />
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Tipo ID</label>
+                    <input asp-for="Profesor.Tipo_Identificacion" class="form-control" />
+                    <span asp-validation-for="Profesor.Tipo_Identificacion" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Identificación</label>
+                    <input asp-for="Profesor.Identificacion" class="form-control" />
+                    <span asp-validation-for="Profesor.Identificacion" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Nombre</label>
+                    <input asp-for="Profesor.Nombre" class="form-control" />
+                    <span asp-validation-for="Profesor.Nombre" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input asp-for="Profesor.Email" class="form-control" />
+                    <span asp-validation-for="Profesor.Email" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Nacimiento</label>
+                    <input asp-for="Profesor.Fecha_Nacimiento" type="date" class="form-control" />
+                    <span asp-validation-for="Profesor.Fecha_Nacimiento" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" asp-page-handler="Save" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+                <a asp-page="./Index" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

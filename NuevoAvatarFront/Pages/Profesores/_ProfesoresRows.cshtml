@@ -1,0 +1,19 @@
+﻿@model List<NuevoAvatarFront.Models.ProfesorDto>
+
+@foreach (var p in Model)
+{
+    <tr>
+        <td>@p.ID_Profesor</td>
+        <td>@p.Tipo_Identificacion - @p.Identificacion</td>
+        <td>@p.Nombre</td>
+        <td>@p.Email</td>
+        <td class="text-end">
+            <a asp-page="./Upsert" asp-route-id="@p.ID_Profesor" class="btn btn-info btn-sm me-1">
+                <i class="fas fa-edit"></i> Modificar
+            </a>
+            <a asp-page="./Eliminar" asp-route-id="@p.ID_Profesor" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> Eliminar
+            </a>
+        </td>
+    </tr>
+}

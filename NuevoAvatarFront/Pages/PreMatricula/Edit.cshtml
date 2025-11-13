@@ -1,0 +1,166 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.PreMatriculas.EditModel
+@{
+    ViewData["Title"] = "Editar Prematrícula";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil-square"></i> Editar Prematrícula
+                    </h4>
+                    <a asp-page="./Index" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.MensajeError))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> @Model.MensajeError
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form method="post">
+                        <input type="hidden" asp-for="PreMatricula.ID_Prematricula" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="PreMatricula.ID_Estudiante" class="form-label">
+                                <i class="bi bi-person"></i> Estudiante *
+                            </label>
+                            <select asp-for="PreMatricula.ID_Estudiante"
+                                    class="form-select"
+                                    asp-items="Model.Estudiantes">
+                                <option value="">-- Seleccione un estudiante --</option>
+                            </select>
+                            <span asp-validation-for="PreMatricula.ID_Estudiante" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Seleccione el estudiante que realiza la prematrícula
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PreMatricula.ID_Carrera" class="form-label">
+                                <i class="bi bi-book"></i> Carrera *
+                            </label>
+                            <select asp-for="PreMatricula.ID_Carrera"
+                                    class="form-select"
+                                    asp-items="Model.Carreras">
+                                <option value="">-- Seleccione una carrera --</option>
+                            </select>
+                            <span asp-validation-for="PreMatricula.ID_Carrera" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Carrera a la que desea ingresar
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PreMatricula.ID_Curso" class="form-label">
+                                <i class="bi bi-journal-text"></i> Curso (Nivel 1) *
+                            </label>
+                            <select asp-for="PreMatricula.ID_Curso"
+                                    class="form-select"
+                                    asp-items="Model.Cursos">
+                                <option value="">-- Seleccione un curso --</option>
+                            </select>
+                            <span asp-validation-for="PreMatricula.ID_Curso" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Solo se pueden prematricular cursos de primer nivel
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PreMatricula.ID_Periodo" class="form-label">
+                                <i class="bi bi-calendar-event"></i> Periodo *
+                            </label>
+                            <select asp-for="PreMatricula.ID_Periodo"
+                                    class="form-select"
+                                    asp-items="Model.PeriodosFuturos">
+                                <option value="">-- Seleccione un periodo --</option>
+                            </select>
+                            <span asp-validation-for="PreMatricula.ID_Periodo" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Solo se muestran periodos futuros (fecha de inicio posterior a hoy)
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PreMatricula.Observaciones" class="form-label">
+                                <i class="bi bi-card-text"></i> Observaciones
+                            </label>
+                            <textarea asp-for="PreMatricula.Observaciones"
+                                      class="form-control"
+                                      rows="4"
+                                      placeholder="Ingrese observaciones adicionales (opcional)"
+                                      maxlength="500"></textarea>
+                            <span asp-validation-for="PreMatricula.Observaciones" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Campo opcional. Máximo 500 caracteres.
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-page="./Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-save"></i> Guardar cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3" role="alert">
+                <h6 class="alert-heading">
+                    <i class="bi bi-lightbulb"></i> Información importante:
+                </h6>
+                <ul class="mb-0">
+                    <li>Los campos marcados con * son obligatorios</li>
+                    <li>El periodo debe ser futuro (esto lo valida el backend)</li>
+                    <li>No se permiten duplicados de estudiante–curso–periodo</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        
+        setTimeout(function () {
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            const observaciones = document.querySelector('textarea[name="PreMatricula.Observaciones"]');
+            if (observaciones) {
+                observaciones.addEventListener('input', function () {
+                    const maxLength = 500;
+                    const currentLength = this.value.length;
+
+                    if (currentLength > maxLength) {
+                        this.value = this.value.substring(0, maxLength);
+                    }
+                });
+            }
+        });
+    </script>
+}
+

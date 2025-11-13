@@ -1,0 +1,73 @@
+﻿@page "{id?}"
+@model NuevoAvatarFront.Pages.Periodos.UpsertModel
+@{
+    ViewData["Title"] = Model.Periodo.ID_Periodo > 0 ? "Editar Periodo" : "Nuevo Periodo";
+    Layout = "_Layout";
+}
+
+<div class="card shadow">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">@ViewData["Title"]</h6>
+        <a asp-page="./Index" class="btn btn-light">Volver</a>
+    </div>
+
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <input type="hidden" asp-for="Periodo.ID_Periodo" />
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Año</label>
+                    <input asp-for="Periodo.Anno" type="number" min="2000" max="2100" class="form-control" />
+                    <small class="text-muted">Rango permitido: 2000–2100</small>
+                    <span asp-validation-for="Periodo.Anno" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Número</label>
+                    <input asp-for="Periodo.Numero" type="number" min="1" max="4" class="form-control" />
+                    <small class="text-muted">Valores válidos: 1, 2, 3 o 4</small>
+                    <span asp-validation-for="Periodo.Numero" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha de inicio</label>
+                    <input asp-for="Periodo.Fecha_Inicio" type="date" class="form-control" />
+                    <span asp-validation-for="Periodo.Fecha_Inicio" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha de fin</label>
+                    <input asp-for="Periodo.Fecha_Fin" type="date" class="form-control" />
+                    <small class="text-muted">Debe ser ≥ a la fecha de inicio</small>
+                    <span asp-validation-for="Periodo.Fecha_Fin" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" asp-page-handler="Save" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+                <a asp-page="./Index" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Validación simple fin >= inicio (opcional)
+        document.querySelector('form')?.addEventListener('submit', function (e) {
+          const ini = new Date(document.querySelector('[name="Periodo.Fecha_Inicio"]').value);
+          const fin = new Date(document.querySelector('[name="Periodo.Fecha_Fin"]').value);
+          if (isFinite(ini) && isFinite(fin) && fin < ini) {
+            e.preventDefault();
+            alert('La fecha de fin debe ser mayor o igual a la fecha de inicio.');
+          }
+        });
+    </script>
+}
+

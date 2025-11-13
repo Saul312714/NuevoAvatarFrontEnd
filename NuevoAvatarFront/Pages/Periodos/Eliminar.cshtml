@@ -1,0 +1,45 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.Periodos.EliminarModel
+@{
+    ViewData["Title"] = "Eliminar Período";
+    Layout = "_Layout";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-danger">
+            <i class="fas fa-exclamation-triangle"></i> @ViewData["Title"]
+        </h6>
+
+        <div>
+            <span class="badge bg-secondary">ID: @Model.id</span>
+            <a asp-page="./Index" class="btn btn-outline-secondary btn-sm ms-2">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <div>
+                Esta acción <strong>no se puede deshacer</strong>. Si existen relaciones (por ejemplo, grupos activos),
+                el microservicio podría impedir la eliminación.
+            </div>
+        </div>
+
+        <p class="mb-4">
+            ¿Seguro que desea eliminar el período con ID <strong>@Model.id</strong>?
+        </p>
+
+        <form method="post" class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+            <a asp-page="./Index" class="btn btn-secondary">
+                Cancelar
+            </a>
+        </form>
+    </div>
+</div>
+

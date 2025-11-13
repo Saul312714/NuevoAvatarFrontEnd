@@ -1,0 +1,17 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.Cursos.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Curso";
+}
+
+<h3>¿Está seguro de eliminar este curso?</h3>
+<hr />
+
+<div class="alert alert-warning">
+    <strong>@Model.Curso?.Nombre</strong> – Carrera: @Model.Curso?.CarreraNombre
+</div>
+
+<form method="post">
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
+</form>

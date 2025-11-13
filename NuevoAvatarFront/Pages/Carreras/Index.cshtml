@@ -1,0 +1,53 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Carreras.IndexModel
+@{
+    ViewData["Title"] = "Carreras por institución";
+}
+
+<h2 class="mb-3">Carreras</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Institución</label>
+        <select name="InstitucionId" class="form-select" onchange="this.form.submit()">
+            @foreach (var inst in Model.Instituciones)
+            {
+                <option value="@inst.Id" selected="@(inst.Id == Model.InstitucionId)">
+                    @inst.Nombre
+                </option>
+            }
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Buscar</label>
+        <input type="text" name="Q" value="@Model.Q" placeholder="Buscar carrera..." class="form-control" />
+    </div>
+    <div class="col-md-4 align-self-end">
+        <a asp-page="Create" asp-route-institucionId="@Model.InstitucionId" class="btn btn-primary">Nueva Carrera</a>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Director</th>
+            <th>Cursos</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model.Carreras)
+        {
+            <tr>
+                <td>@c.Nombre</td>
+                <td>@c.DirectorNombre</td>
+                <td>@c.CursosVinculados</td>
+                <td class="text-end">
+                    <a asp-page="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-secondary">Editar</a>
+                    <a asp-page="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

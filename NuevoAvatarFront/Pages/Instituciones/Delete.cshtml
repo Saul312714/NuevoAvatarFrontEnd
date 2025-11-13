@@ -1,0 +1,16 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.Instituciones.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Institución";
+}
+
+<h2>Eliminar Institución</h2>
+
+<div class="alert alert-warning">
+    ¿Está seguro que desea eliminar la institución <b>@Model.Nombre</b>?
+</div>
+
+<form method="post">
+    <a asp-page="Index" class="btn btn-outline-secondary">Cancelar</a>
+    <button class="btn btn-danger">Eliminar</button>
+</form>

@@ -46,6 +46,31 @@ builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(client =>
     client.BaseAddress = new Uri(baseUrl);
 });
 
+// Cliente HTTP para Oferta Académica (Instituciones, Carreras, etc.)
+builder.Services.AddHttpClient<IInstitucionApiClient, InstitucionApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
+        ?? throw new InvalidOperationException("OfertaAcademicaApi:BaseUrl no configurado");
+    client.BaseAddress = new Uri(baseUrl);
+});
+
+
+builder.Services.AddHttpClient<IProfesorApiClient, ProfesorApiClient>(c =>
+    c.BaseAddress = new Uri(builder.Configuration["OfertaAcademicaApi:BaseUrl"]!));
+
+builder.Services.AddHttpClient<ICarreraApiClient, CarreraApiClient>(c =>
+    c.BaseAddress = new Uri(builder.Configuration["OfertaAcademicaApi:BaseUrl"]!));
+
+// Cliente HTTP para Cursos
+builder.Services.AddHttpClient<ICursoApiClient, CursoApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
+        ?? throw new InvalidOperationException("OfertaAcademicaApi:BaseUrl no configurado");
+    client.BaseAddress = new Uri(baseUrl);
+});
+
+builder.Services.AddAutoMapper(typeof(InstitucionProfile).Assembly);
+
 // Habilitar sesiones para guardar tokens
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -77,6 +102,7 @@ app.UseCookiePolicy(new CookiePolicyOptions
 });
 
 
+
 app.UseRouting();
 
 app.UseSession();
@@ -106,8 +132,6 @@ app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraAp
     //Guardar bandera temporal (querystring)
     context.Response.Redirect("/HU_MICHEL/Login/Index?logout=1");
 });
-
-
 
 app.MapGet("/", context =>
 {

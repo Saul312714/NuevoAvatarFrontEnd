@@ -1,0 +1,16 @@
+﻿@page  
+@model NuevoAvatarFront.Pages.Carreras.CreateModel  
+@{  
+    ViewData["Title"] = "Nueva Carrera";  
+}  
+
+<h2>Nueva Carrera</h2>  
+<hr />  
+
+<form method="post">  
+    <partial name="_Form" model="Model.Form" view-data='new ViewDataDictionary(ViewData) { ["Instituciones"] = Model.Instituciones }' />  
+    <button type="submit" class="btn btn-success">Guardar</button>  
+    <a asp-page="Index" asp-route-institucionId="@Model.Form.InstitucionId" class="btn btn-secondary">Volver</a>  
+</form>  
+
+<partial name="_ValidationScriptsPartial" />

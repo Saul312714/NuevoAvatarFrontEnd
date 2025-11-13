@@ -1,0 +1,57 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Instituciones.IndexModel
+@{
+    ViewData["Title"] = "Instituciones";
+}
+
+    <h2 class="mb-3">Instituciones</h2>
+
+    <form method="get" class="row mb-3">
+        <div class="col-md-4">
+            <input asp-for="q" class="form-control" placeholder="Buscar por nombre..." />
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary">Buscar</button>
+            <a asp-page="Create" class="btn btn-primary ms-2">Nueva</a>
+        </div>
+    </form>
+
+    @if (Model.Instituciones.Count == 0)
+    {
+        <div class="alert alert-info">No hay instituciones registradas.</div>
+    }
+    else
+    {
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th style="width:180px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var i in Model.Instituciones)
+                {
+                    <tr>
+                        <td>@i.Id</td> <!-- Asegúrate de que el ID se esté mostrando aquí -->
+                        <td>@i.Nombre</td>
+                        <td class="text-end">
+                            <a asp-page="Edit" asp-route-id="@i.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                            <a asp-page="Delete" asp-route-id="@i.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+<script>
+    // Imprime la lista de instituciones en la consola para depuración
+    var instituciones = @Html.Raw(Json.Serialize(Model.Instituciones));
+    console.log(instituciones);  // Esto imprimirá los datos de 'Instituciones' en la consola
+
+    // También puedes verificar específicamente el ID
+    instituciones.forEach(function (institucion) {
+        console.log("ID de Institución:", institucion.id);  // Asegúrate de que el ID esté presente
+    });
+</script>

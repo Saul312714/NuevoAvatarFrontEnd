@@ -1,0 +1,61 @@
+﻿@using NuevoAvatarFront.DTOs
+@model CarreraCreateUpdateDto
+
+<div class="mb-3">
+    <label class="form-label">Nombre</label>
+    <input asp-for="Nombre" class="form-control" />
+    <span asp-validation-for="Nombre" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Institución</label>
+    <select asp-for="InstitucionId" class="form-select">
+        @if (ViewData["Instituciones"] is IEnumerable<InstitucionDto> instituciones && instituciones != null)
+        {
+            @foreach (var i in instituciones)
+            {
+                <option value="@i.Id">@i.Nombre</option>
+            }
+        }
+    </select>
+    <span asp-validation-for="InstitucionId" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Director (Profesor)</label>
+    <input id="profSearch" type="text" class="form-control" placeholder="Buscar profesor..." />
+    <input type="hidden" asp-for="DirectorId" />
+    <div id="profResults" class="list-group mt-1"></div>
+    <span asp-validation-for="DirectorId" class="text-danger"></span>
+</div>
+
+@section Scripts {
+    <script>
+        const input = document.getElementById('profSearch');
+        const list = document.getElementById('profResults');
+        let timeout;
+
+        input.addEventListener('input', () => {
+          clearTimeout(timeout);
+          const q = input.value.trim();
+          if (q.length < 2) { list.innerHTML = ''; return; }
+
+          timeout = setTimeout(async () => {
+            const res = await fetch(`SearchProfesor?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            list.innerHTML = '';
+            data.forEach(p => {
+              const item = document.createElement('a');
+              item.className = 'list-group-item list-group-item-action';
+              item.textContent = p.nombreCompleto || p.nombre;
+              item.onclick = () => {
+                document.querySelector('[name="DirectorId"]').value = p.id;
+                input.value = p.nombreCompleto || p.nombre;
+                list.innerHTML = '';
+              };
+              list.appendChild(item);
+            });
+          }, 300);
+        });
+    </script>
+}

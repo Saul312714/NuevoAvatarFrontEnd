@@ -1,23 +1,30 @@
 ﻿@page
 @model NuevoAvatarFront.Pages.Parametros.IndexModel
 @{
-    ViewData["Title"] = "Parámetros del sistema";
+    ViewData["Title"] = "Administración de Parámetros";
 }
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between">
-        <h6 class="m-0 font-weight-bold text-primary">Listado de Parámetros</h6>
-        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#paramModal">
-            <i class="fas fa-plus"></i> Nuevo
-        </button>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Parámetros del Sistema</h1>
+    <a asp-page="Upsert" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Parámetro
+    </a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="card shadow">
     <div class="card-body">
-        <table class="table table-bordered" id="dataTable" width="100%">
-            <thead>
+
+        <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
                 <tr>
                     <th>ID</th>
                     <th>Valor</th>
-                    <th>Acciones</th>
+                    <th style="width:150px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,42 +34,106 @@
                         <td>@p.ID_Parametro</td>
                         <td>@p.Valor</td>
                         <td>
-                            <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#paramModal" data-id="@p.ID_Parametro"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm" onclick="eliminar('@p.ID_Parametro')"><i class="fas fa-trash"></i></button>
+                            <a asp-page="Upsert"
+                               asp-route-id="@p.ID_Parametro"
+                               class="btn btn-sm btn-warning">
+                                Editar
+                            </a>
+
+                            <form method="post"
+                                  asp-page-handler="Delete"
+                                  asp-route-id="@p.ID_Parametro"
+                                  class="d-inline delete-form">
+
+                                <button type="button"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="confirmDelete(event)">
+                                    Eliminar
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-    </div>
-</div>
 
-<!-- Modal -->
-<div class="modal fade" id="paramModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title">Gestión de Parámetro</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <label>ID</label>
-                    <input type="text" name="IdParametro" class="form-control text-uppercase" maxlength="10" required />
-                    <label>Valor</label>
-                    <textarea name="Valor" class="form-control" maxlength="500" required></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Guardar</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                </div>
-            </form>
-        </div>
+        <!-- PAGINACIÓN -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-end">
+                <!-- Anterior -->
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="#"
+                       onclick="navigateToPage(@(Model.Page - 1)); return false;">
+                        Anterior
+                    </a>
+                </li>
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                        <a class="page-link" href="#"
+                           onclick="navigateToPage(@i); return false;">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                <!-- Siguiente -->
+                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="#"
+                       onclick="navigateToPage(@(Model.Page + 1)); return false;">
+                        Siguiente
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        $('#dataTable').DataTable();
+        function confirmDelete(event) {
+            event.preventDefault(); // Prevenir el comportamiento por defecto (evitar recargar la página)
+
+            // Usar SweetAlert para confirmar la eliminación
+            Swal.fire({
+                title: '¿Eliminar parámetro?',
+                text: 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Accedemos al formulario usando el target de la acción (button) para hacer submit
+                    let form = event.target.closest("form");  // Cambié event.currentTarget por event.target
+
+                    if (form) {
+                        form.submit(); // Realizamos el submit del formulario
+                    } else {
+                        console.error('Formulario no encontrado.');
+                    }
+                }
+            });
+        }
+
+        function navigateToPage(pageNum) {
+            const totalPages = @Model.TotalPages;
+
+            if (pageNum < 1 || pageNum > totalPages) {
+                return false;
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            params.set('page', pageNum);
+
+            window.location.href = window.location.pathname + '?' + params.toString();
+            return false;
+        }
     </script>
 }

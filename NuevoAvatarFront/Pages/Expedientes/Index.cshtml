@@ -1,52 +1,125 @@
 ﻿@page
 @model NuevoAvatarFront.Pages.Expedientes.IndexModel
 @{
-    ViewData["Title"] = "Expedientes de Estudiantes";
+    ViewData["Title"] = "Administración de Expedientes";
 }
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between">
-        <h6 class="m-0 font-weight-bold text-primary">Expedientes</h6>
-        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#expModal"><i class="fas fa-plus"></i> Nuevo</button>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Expedientes</h1>
+
+    <a asp-page="Upsert" class="btn btn-primary shadow-sm">
+        <i class="fas fa-plus"></i> Nuevo Expediente
+    </a>
+</div>
+
+<!-- FILTROS -->
+<form method="get" class="row g-3 mb-4">
+
+    <div class="col-md-4">
+        <label class="form-label fw-bold text-gray-800">Identificación</label>
+        <input asp-for="FiltroIdentificacion" class="form-control shadow-sm" placeholder="Buscar por ID" />
     </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-bold text-gray-800">Nombre</label>
+        <input asp-for="FiltroNombre" class="form-control shadow-sm" placeholder="Buscar por nombre" />
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary shadow me-2">
+            <i class="fas fa-filter"></i> Filtrar
+        </button>
+
+        <a asp-page="./Index" class="btn btn-secondary shadow">
+            Limpiar
+        </a>
+    </div>
+
+</form>
+
+<div class="card shadow">
     <div class="card-body">
-        <table class="table table-bordered" id="dataTable">
-            <thead>
+
+        <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
                 <tr>
                     <th>Identificación</th>
+                    <th>Tipo</th>
                     <th>Nombre</th>
                     <th>Email</th>
-                    <th>Teléfonos</th>
                     <th>Provincia</th>
                     <th>Cantón</th>
                     <th>Distrito</th>
-                    <th>Acciones</th>
+                    <th style="width:140px;">Acciones</th>
                 </tr>
             </thead>
+
             <tbody>
                 @foreach (var e in Model.Expedientes)
                 {
                     <tr>
                         <td>@e.Identificacion</td>
+                        <td>@e.Tipo_Identificacion</td>
                         <td>@e.Nombre</td>
                         <td>@e.Email</td>
-                        <td>@e.Telefonos</td>
                         <td>@e.Provincia</td>
                         <td>@e.Canton</td>
                         <td>@e.Distrito</td>
-                        <td>
-                            <a href="#" class="btn btn-info btn-sm"><i class="fas fa-edit"></i></a>
-                            <a href="#" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
+
+                        <td class="text-center">
+                            <a asp-page="Upsert" asp-route-id="@e.ID_Estudiante"
+                               class="btn btn-sm btn-warning">
+                                Editar
+                            </a>
+
+                            <form method="post"
+                                  asp-page-handler="Delete"
+                                  asp-route-id="@e.ID_Estudiante"
+                                  class="d-inline">
+
+                                <button type="button"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="confirmDelete(event)">
+                                    Eliminar
+                                </button>
+
+                            </form>
                         </td>
                     </tr>
                 }
             </tbody>
+
         </table>
+
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        $('#dataTable').DataTable();
+
+        function confirmDelete(event) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: '¿Eliminar expediente?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    // Encuentra el formulario padre del botón
+                    let form = event.target.closest("form");
+                    form.submit();
+                }
+            });
+        }
+
     </script>
 }

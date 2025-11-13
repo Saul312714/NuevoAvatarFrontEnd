@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace NuevoAvatarFront.Pages.Parametros
@@ -17,59 +18,93 @@ namespace NuevoAvatarFront.Pages.Parametros
 
         public List<ParametroDto> Parametros { get; set; } = new();
 
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 5;
+        public int TotalPages { get; set; }
+        public string? ErrorMessage { get; set; }
+
         public async Task OnGetAsync()
         {
-            var token = HttpContext.Session.GetString("access_token") ?? "";
-            _http.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            // Leer página desde querystring
+            if (Request.Query.ContainsKey("page"))
+            {
+                int.TryParse(Request.Query["page"], out int p);
+                Page = p > 0 ? p : 1;
+            }
 
-            var url = $"{_config["ApiUsuariosRoles"]}/parametro";
-            var result = await _http.GetFromJsonAsync<List<ParametroDto>>(url);
-            Parametros = result ?? new();
+            var token = HttpContext.Session.GetString("AccessToken");
+            var userId = HttpContext.Session.GetInt32("UsuarioID");
+
+            if (string.IsNullOrWhiteSpace(token) || userId == null)
+            {
+                Response.Redirect("/HU_MICHEL/Login");
+                return;
+            }
+
+            _http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            var url = $"{_config["ApiUsuariosRoles"]}/parametro?idUsuarioAccion={userId}";
+            var json = await _http.GetStringAsync(url);
+
+            var lista = JsonSerializer.Deserialize<List<ParametroDto>>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? new();
+
+            TotalPages = (int)Math.Ceiling(lista.Count / (double)PageSize);
+
+            if (Page > TotalPages && TotalPages > 0)
+                Page = TotalPages;
+
+            Parametros = lista
+                .Skip((Page - 1) * PageSize)
+                .Take(PageSize)
+                .ToList();
         }
 
-     
-        public async Task<IActionResult> OnPostSaveAsync(ParametroDto data)
-        {
-            var token = HttpContext.Session.GetString("access_token") ?? "";
-            var idUsuario = HttpContext.Session.GetInt32("usuarioID") ?? 1;
-            _http.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-            var baseUrl = $"{_config["ApiUsuariosRoles"]}/parametro";
-            HttpResponseMessage response;
-
-            
-            if (!string.IsNullOrWhiteSpace(data.ID_Parametro))
-                response = await _http.PutAsJsonAsync($"{baseUrl}/{data.ID_Parametro}?idUsuarioAccion={idUsuario}", data);
-            else
-                response = await _http.PostAsJsonAsync($"{baseUrl}?idUsuarioAccion={idUsuario}", data);
-
-            if (response.IsSuccessStatusCode)
-                await RegistrarBitacora(idUsuario, "Gestión de parámetros del sistema");
-
-            return RedirectToPage();
-        }
-
+        // ================== DELETE (handler Delete) ==================
         public async Task<IActionResult> OnPostDeleteAsync(string id)
         {
-            var token = HttpContext.Session.GetString("access_token") ?? "";
-            var idUsuario = HttpContext.Session.GetInt32("usuarioID") ?? 1;
+            var token = HttpContext.Session.GetString("AccessToken");
+            var userId = HttpContext.Session.GetInt32("UsuarioID");
+
+            if (string.IsNullOrWhiteSpace(token) || userId == null)
+                return Redirect("/HU_MICHEL/Login");
+
             _http.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                new AuthenticationHeaderValue("Bearer", token);
 
-            var url = $"{_config["ApiUsuariosRoles"]}/parametro/{id}?idUsuarioAccion={idUsuario}";
-            await _http.DeleteAsync(url);
-            await RegistrarBitacora(idUsuario, $"Eliminó parámetro {id}");
-            return RedirectToPage();
+            var response = await _http.DeleteAsync(
+                $"{_config["ApiUsuariosRoles"]}/parametro/{id}?idUsuarioAccion={userId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "No se pudo eliminar el parámetro.";
+                await OnGetAsync();
+                return Page();
+            }
+
+            // Bitácora (no bloqueante)
+            try
+            {
+                await _http.PostAsJsonAsync($"{_config["ApiSeguridad"]}/bitacora", new
+                {
+                    ID_Usuario = userId,
+                    Fecha = DateTime.Now,
+                    Accion = $"Eliminó parámetro {id}"
+                });
+            }
+            catch { }
+
+            // mantener página actual
+            int currentPage = 1;
+            if (Request.Query.ContainsKey("page"))
+                int.TryParse(Request.Query["page"], out currentPage);
+
+            return RedirectToPage("./Index", new { page = currentPage });
         }
 
-        private async Task RegistrarBitacora(int idUsuario, string accion)
-        {
-            var url = $"{_config["ApiSeguridad"]}/bitacora";
-            await _http.PostAsJsonAsync(url, new { ID_Usuario = idUsuario, Fecha = DateTime.Now, Accion = accion });
-        }
-
+        // DTO
         public class ParametroDto
         {
             public string ID_Parametro { get; set; } = "";

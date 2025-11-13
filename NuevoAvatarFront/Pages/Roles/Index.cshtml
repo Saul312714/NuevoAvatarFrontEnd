@@ -1,0 +1,106 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Roles.IndexModel
+@{
+    ViewData["Title"] = "Listado de Roles";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<!-- Filtros -->
+<form id="filtroForm" class="mb-3">
+    <div class="row">
+        <div class="col-md-6">
+            <label>Nombre del Rol</label>
+            <input type="text" class="form-control" id="filtroNombre" placeholder="Nombre del Rol" />
+        </div>
+    </div>
+</form>
+
+<!-- Botón para crear nuevo rol -->
+<a href="/Roles/Upsert" class="btn btn-success mb-3">
+    <i class="fas fa-plus"></i> Crear Nuevo Rol
+</a>
+
+<!-- Tabla de Roles -->
+<table class="table table-bordered" id="rolesTable">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var rol in Model.Roles)
+        {
+            <tr>
+                <td>@rol.Nombre</td>
+                <td>
+                    <!-- Editar -->
+                    <a href="/Roles/Upsert?id=@rol.ID_Rol"
+                       class="btn btn-warning btn-sm">Editar</a>
+
+                    <!-- Eliminar -->
+                    <form method="post"
+                          asp-page-handler="Delete"
+                          asp-route-id="@rol.ID_Rol"
+                          class="d-inline"
+                          onsubmit="return confirmDelete(event)">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            Eliminar
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+
+        // Filtrar tabla
+        function filterTable() {
+            const filtroNombre = document.getElementById('filtroNombre').value.toLowerCase();
+            const rows = document.querySelectorAll('#rolesTable tbody tr');
+
+            rows.forEach(row => {
+                const nombre = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                row.style.display = nombre.includes(filtroNombre) ? '' : 'none';
+            });
+        }
+
+        document.getElementById('filtroNombre')
+            .addEventListener('input', filterTable);
+
+        // 🔥 Confirmación de eliminación (corregida)
+        function confirmDelete(event) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¡No podrás revertir esto!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminarlo',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    // 🔥 ESTA ES LA LÍNEA CORRECTA: toma el FORM real
+                    let form = event.target.closest("form");
+
+                    form.submit();
+                }
+            });
+
+            return false;
+        }
+
+        window.onload = function () {
+            filterTable();
+        };
+
+    </script>
+}

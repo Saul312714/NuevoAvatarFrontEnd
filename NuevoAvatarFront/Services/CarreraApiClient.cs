@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Http;
+using NuevoAvatarFront.Entities;
 using NuevoAvatarFront.DTOs;
 
 namespace NuevoAvatarFront.Services
@@ -9,93 +10,135 @@ namespace NuevoAvatarFront.Services
     {
         private readonly HttpClient _http;
         private readonly IHttpContextAccessor _contextAccessor;
-        private readonly string _baseUrl;
 
-        public CarreraApiClient(HttpClient http, IConfiguration config, IHttpContextAccessor accessor)
+        public CarreraApiClient(HttpClient http, IHttpContextAccessor contextAccessor)
         {
             _http = http;
-            _contextAccessor = accessor;
-            _baseUrl = config["ApiUrls:OfertaApi"]; // EJ: https://localhost:7217
+            _contextAccessor = contextAccessor;
         }
 
-        
-        private void AddAuthHeader()
+        private void AddAuthorizationHeader()
         {
             var token = _contextAccessor.HttpContext?.Session.GetString("AccessToken");
 
-            if (!string.IsNullOrEmpty(token))
-            {
-                _http.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
-            }
+            _http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
         }
 
+        // 
+        // GET todas carreras
+        // 
         public async Task<List<CarreraDto>> GetAllAsync()
         {
-            AddAuthHeader();
+            AddAuthorizationHeader();
+            string url = "carrera";
 
-            var result = await _http.GetAsync($"{_baseUrl}/carrera");
+            var res = await _http.GetAsync(url);
 
-            if (!result.IsSuccessStatusCode)
+            if (!res.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"❌ Error API Carrera GetAll: {await res.Content.ReadAsStringAsync()}");
                 return new List<CarreraDto>();
+            }
 
-            return await result.Content.ReadFromJsonAsync<List<CarreraDto>>()
+            return await res.Content.ReadFromJsonAsync<List<CarreraDto>>()
                    ?? new List<CarreraDto>();
         }
 
+        // 
+        // GET carrera por Institución
+        // 
         public async Task<List<CarreraDto>> GetByInstitucionAsync(int idInstitucion)
         {
-            AddAuthHeader();
+            AddAuthorizationHeader();
+            string url = $"carrera/institucion/{idInstitucion}";
 
-            var result = await _http.GetAsync($"{_baseUrl}/carrera/institucion/{idInstitucion}");
+            var res = await _http.GetAsync(url);
 
-            if (!result.IsSuccessStatusCode)
+            if (!res.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"❌ Error API Carrera GetByInstitucion: {await res.Content.ReadAsStringAsync()}");
                 return new List<CarreraDto>();
+            }
 
-            return await result.Content.ReadFromJsonAsync<List<CarreraDto>>()
+            return await res.Content.ReadFromJsonAsync<List<CarreraDto>>()
                    ?? new List<CarreraDto>();
         }
 
+        // 
+        // GET por ID
+        // 
         public async Task<CarreraDto?> GetByIdAsync(int id)
         {
-            AddAuthHeader();
+            AddAuthorizationHeader();
+            string url = $"carrera/{id}";
 
-            var result = await _http.GetAsync($"{_baseUrl}/carrera/{id}");
+            var res = await _http.GetAsync(url);
 
-            if (!result.IsSuccessStatusCode)
+            if (!res.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"❌ Error API Carrera GetById: {await res.Content.ReadAsStringAsync()}");
                 return null;
+            }
 
-            return await result.Content.ReadFromJsonAsync<CarreraDto>();
+            return await res.Content.ReadFromJsonAsync<CarreraDto>();
         }
 
-        public async Task<bool> CreateAsync(CarreraDto carrera)
+        // 
+        // CREATE
+        // 
+        public async Task<bool> CreateAsync(CarreraCreateDto dto)
         {
-            AddAuthHeader();
+            AddAuthorizationHeader();
+            string url = $"carrera";
 
-            var result = await _http.PostAsJsonAsync($"{_baseUrl}/carrera", carrera);
+            var res = await _http.PostAsJsonAsync(url, dto);
 
-            return result.IsSuccessStatusCode;
+            if (!res.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"❌ Error API Carrera Create: {await res.Content.ReadAsStringAsync()}");
+                return false;
+            }
+
+            return true;
         }
 
-      
-        public async Task<bool> UpdateAsync(CarreraDto carrera)
+        // 
+        // UPDATE
+        // 
+        public async Task<bool> UpdateAsync(int id, CarreraUpdateDto dto)
         {
-            AddAuthHeader();
+            AddAuthorizationHeader();
+            string url = $"carrera/{id}";
 
-            var result = await _http.PutAsJsonAsync($"{_baseUrl}/carrera", carrera);
+            var res = await _http.PutAsJsonAsync(url, dto);
 
-            return result.IsSuccessStatusCode;
+            if (!res.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"❌ Error API Carrera Update: {await res.Content.ReadAsStringAsync()}");
+                return false;
+            }
+
+            return true;
         }
 
-
-   
+        //
+        // DELETE
+        // 
         public async Task<bool> DeleteAsync(int id)
         {
-            AddAuthHeader();
+            AddAuthorizationHeader();
+            string url = $"carrera/{id}";
 
-            var result = await _http.DeleteAsync($"{_baseUrl}/carrera/{id}");
+            var res = await _http.DeleteAsync(url);
 
-            return result.IsSuccessStatusCode;
+            if (!res.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"❌ Error API Carrera Delete: {await res.Content.ReadAsStringAsync()}");
+                return false;
+            }
+
+            return true;
         }
     }
 }

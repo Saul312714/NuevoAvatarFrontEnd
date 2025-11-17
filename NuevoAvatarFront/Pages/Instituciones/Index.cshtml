@@ -5,13 +5,26 @@
     Layout = "_Layout";
 }
 
+<!-- SWEET ALERT MENSAJES -->
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <script>
+        Swal.fire({
+            icon: '@Model.StatusType',
+            title: '@Model.StatusMessage',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    </script>
+}
+
 <div class="card shadow mb-4">
 
     <!-- HEADER -->
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">Listado de Instituciones</h6>
 
-        <a asp-page="/Instituciones/Create" class="btn btn-success btn-sm">
+        <a asp-page="/Instituciones/Upsert" class="btn btn-success btn-sm">
             <i class="fas fa-plus"></i> Nueva
         </a>
     </div>
@@ -21,11 +34,10 @@
         <!-- FILTRO -->
         <form method="get" class="row g-3 mb-4">
             <div class="col-md-4">
-                <input asp-for="q" class="form-control" placeholder="Buscar por nombre..." />
+                <input asp-for="nombre" class="form-control" placeholder="Buscar por nombre..." />
             </div>
-
             <div class="col-md-2">
-                <button class="btn btn-outline-secondary btn-sm">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-search"></i> Buscar
                 </button>
             </div>
@@ -59,7 +71,7 @@
                                 <td>
 
                                     <!-- EDITAR -->
-                                    <a asp-page="/Instituciones/Edit"
+                                    <a asp-page="/Instituciones/Upsert"
                                        asp-route-id="@i.ID_Institucion"
                                        class="btn btn-info btn-sm">
                                         <i class="fas fa-edit"></i> Editar

@@ -1,60 +1,152 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using NuevoAvatarFront.DTOs;
+using NuevoAvatarFront.Entities;
 using NuevoAvatarFront.Services;
 
 namespace NuevoAvatarFront.Pages.Carreras
 {
     public class UpsertModel : PageModel
     {
-        private readonly ICarreraApiClient _carreraApi;
-        private readonly IInstitucionApiClient _institucionApi;
-        private readonly IProfesorApiClient _profesorApi;
+        private readonly ICarreraApiClient _carreraService;
+        private readonly IInstitucionApiClient _institucionService;
+        private readonly IProfesorApiClient _profesorService;
 
         public UpsertModel(
-            ICarreraApiClient carreraApi,
-            IInstitucionApiClient institucionApi,
-            IProfesorApiClient profesorApi)
+            ICarreraApiClient carreraService,
+            IInstitucionApiClient institucionService,
+            IProfesorApiClient profesorService)
         {
-            _carreraApi = carreraApi;
-            _institucionApi = institucionApi;
-            _profesorApi = profesorApi;
+            _carreraService = carreraService;
+            _institucionService = institucionService;
+            _profesorService = profesorService;
+
+            Carrera = new CarreraUpdateDto(); // Se reutiliza para create/update
         }
 
+        // PROPIEDADES PARA LA VISTA
         [BindProperty]
-        public CarreraDto Carrera { get; set; } = new();
+        public CarreraUpdateDto Carrera { get; set; }
 
-        public List<InstitucionDto> Instituciones { get; set; } = new();
-        public List<ProfesorDto> Profesores { get; set; } = new();
+        public List<SelectListItem> Instituciones { get; set; } = new();
+        public List<SelectListItem> Profesores { get; set; } = new();
 
         public bool EsEdicion => Carrera.ID_Carrera > 0;
 
-        public async Task<IActionResult> OnGetAsync(int? id, string searchTerm = "")
+        public string BotonTexto => EsEdicion ? "Actualizar" : "Crear";
+
+        public string? ErrorMessage { get; set; }
+        public string? SuccessMessage { get; set; }
+
+
+        // 
+        // GET
+        // 
+        public async Task<IActionResult> OnGetAsync(int? id)
         {
-            Instituciones = await _institucionApi.GetAllAsync();
-            Profesores = await _profesorApi.SearchAsync(searchTerm);
-
-            if (id.HasValue)
+            try
             {
-                Carrera = await _carreraApi.GetByIdAsync(id.Value) ?? new CarreraDto();
-            }
+                await CargarSelects();
 
-            return Page();
+                if (id.HasValue)
+                {
+                    var data = await _carreraService.GetByIdAsync(id.Value);
+
+                    if (data == null)
+                    {
+                        ErrorMessage = "La carrera no existe.";
+                        return Page();
+                    }
+
+                    Carrera = new CarreraUpdateDto
+                    {
+                        ID_Carrera = data.ID_Carrera,
+                        Nombre = data.Nombre,
+                        ID_Institucion = data.ID_Institucion,
+                        ID_Profesor_Director = data.ID_Profesor_Director
+                    };
+                }
+
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error al cargar datos: {ex.Message}";
+                return Page();
+            }
         }
 
+        // 
+        // POST
+        // 
         public async Task<IActionResult> OnPostAsync()
         {
-            bool ok;
+            try
+            {
+                await CargarSelects();
 
-            if (EsEdicion)
-                ok = await _carreraApi.UpdateAsync(Carrera);
-            else
-                ok = await _carreraApi.CreateAsync(Carrera);
+                if (!ModelState.IsValid)
+                {
+                    ErrorMessage = "Por favor revise los campos.";
+                    return Page();
+                }
 
-            if (!ok)
-                TempData["Error"] = "No se pudo guardar la carrera.";
+                bool ok;
 
-            return RedirectToPage("/Carreras/Index");
+                if (Carrera.ID_Carrera == 0)
+                {
+                    // CREAR
+                    var createDto = new CarreraCreateDto
+                    {
+                        Nombre = Carrera.Nombre,
+                        ID_Institucion = Carrera.ID_Institucion,
+                        ID_Profesor_Director = Carrera.ID_Profesor_Director
+                    };
+
+                    ok = await _carreraService.CreateAsync(createDto);
+                }
+                else
+                {
+                    // ACTUALIZAR
+                    ok = await _carreraService.UpdateAsync(Carrera.ID_Carrera, Carrera);
+                }
+
+                if (!ok)
+                {
+                    ErrorMessage = "Ocurrió un error al guardar la carrera (validación del backend).";
+                    return Page();
+                }
+
+                SuccessMessage = EsEdicion
+                    ? "Carrera actualizada correctamente."
+                    : "Carrera creada correctamente.";
+
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error inesperado: {ex.Message}";
+                return Page();
+            }
+        }
+
+        // 
+        // Cargar selects (Institución + Profesores)
+        // 
+        private async Task CargarSelects()
+        {
+            // Instituciones
+            var inst = await _institucionService.GetAllAsync();
+            Instituciones = inst.Select(i =>
+                new SelectListItem(i.Nombre, i.ID_Institucion.ToString())
+            ).ToList();
+
+            // Profesores
+            var prof = await _profesorService.GetAllAsync(); // tu service debe existir
+            Profesores = prof.Select(p =>
+                new SelectListItem(p.Nombre, p.ID_Profesor.ToString())
+            ).ToList();
         }
     }
 }

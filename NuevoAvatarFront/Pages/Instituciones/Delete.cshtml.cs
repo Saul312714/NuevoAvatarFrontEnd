@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using NuevoAvatarFront.DTOs;
 using NuevoAvatarFront.Services;
 
 namespace NuevoAvatarFront.Pages.Instituciones
@@ -7,40 +8,54 @@ namespace NuevoAvatarFront.Pages.Instituciones
     public class DeleteModel : PageModel
     {
         private readonly IInstitucionApiClient _client;
-        private readonly IBitacoraApiClient _bitacora;
 
-        public DeleteModel(IInstitucionApiClient client, IBitacoraApiClient bitacora)
+        public DeleteModel(IInstitucionApiClient client)
         {
             _client = client;
-            _bitacora = bitacora;
         }
 
-        [BindProperty] public string Nombre { get; set; } = "";
+        [BindProperty]
+        public InstitucionDto Institucion { get; set; } = new();
 
+        [TempData]
+        public string? StatusMessage { get; set; }
+
+        [TempData]
+        public string? StatusType { get; set; }  // success | error
+
+        // GET ? cargar la institución
         public async Task<IActionResult> OnGetAsync(int id)
         {
-            var data = await _client.GetByIdAsync(id);
-            if (data == null) return RedirectToPage("Index");
+            var inst = await _client.GetByIdAsync(id);
 
-            Nombre = data.Nombre;
+            if (inst == null)
+            {
+                StatusType = "error";
+                StatusMessage = "La institución no existe.";
+                return RedirectToPage("/Instituciones/Index");
+            }
+
+            Institucion = inst;
             return Page();
         }
 
+        // POST ? ejecutar eliminación
         public async Task<IActionResult> OnPostAsync(int id)
         {
-            var (ok, msg) = await _client.DeleteAsync(id);
+            var resultado = await _client.DeleteAsync(id);
 
-            if (ok)
+            if (resultado.Ok)
             {
-                var idUsuario = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
-                await _bitacora.RegistrarAsync(idUsuario, $"Eliminó institución con ID={id}");
-
-                TempData["Success"] = "Institución eliminada correctamente.";
-                return RedirectToPage("Index");
+                StatusType = "success";
+                StatusMessage = "Institución eliminada correctamente.";
+            }
+            else
+            {
+                StatusType = "error";
+                StatusMessage = resultado.Msg;
             }
 
-            TempData["Error"] = msg;
-            return RedirectToPage("Index");
+            return RedirectToPage("/Instituciones/Index");
         }
     }
 }

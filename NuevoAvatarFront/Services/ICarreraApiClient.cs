@@ -7,8 +7,8 @@ namespace NuevoAvatarFront.Services
         Task<List<CarreraDto>> GetAllAsync();
         Task<List<CarreraDto>> GetByInstitucionAsync(int idInstitucion);
         Task<CarreraDto?> GetByIdAsync(int id);
-        Task<bool> CreateAsync(CarreraDto carrera);
-        Task<bool> UpdateAsync(CarreraDto carrera);
+        Task<bool> CreateAsync(CarreraCreateDto dto);
+        Task<bool> UpdateAsync(int id, CarreraUpdateDto dto);
         Task<bool> DeleteAsync(int id);
     }
 }

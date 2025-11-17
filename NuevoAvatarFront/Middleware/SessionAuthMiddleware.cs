@@ -18,6 +18,7 @@ namespace NuevoAvatarFront.Middleware
             // Rutas permitidas sin autenticación
             var rutasPublicas = new[]
             {
+                "/",
                 "/hu_michel/login",
                 "/hu_michel/login/index",
                 "/hu_michel/login/index?expired=1",
@@ -31,7 +32,7 @@ namespace NuevoAvatarFront.Middleware
                 "/favicon.ico"
             };
 
-            // Si la ruta es pública → dejar pasar
+            // Si la ruta es pública dejar pasar
             if (rutasPublicas.Any(r => path.StartsWith(r)))
             {
                 await _next(context);

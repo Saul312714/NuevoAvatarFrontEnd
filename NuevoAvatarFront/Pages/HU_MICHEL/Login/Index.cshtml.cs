@@ -72,14 +72,16 @@ namespace NuevoAvatarFront.Pages.HU_MICHEL.Login
                 ErrorMessage = "La contraseña es requerida.";
                 return Page();
             }
-            
-            var login = await _authApi.LoginAsync(Email, Password);
-            if (login == null)
+
+            var (data, error) = await _authApi.LoginAsync(Email, Password);
+
+            if (error != null)
             {
-                await _bitacoraApi.RegistrarAsync(0, $"Login fallido ({Email})");
-                ErrorMessage = "Usuario y/o contraseña incorrectos.";
+                ErrorMessage = error.Message;
                 return Page();
             }
+
+            var login = data!;
 
             // Guardar tokens y usuario ID
             HttpContext.Session.SetString("AccessToken", login.Access_Token);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.CookiePolicy;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Middleware;
 using NuevoAvatarFront.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,6 +74,7 @@ app.UseCookiePolicy(new CookiePolicyOptions
 
 app.UseRouting();
 app.UseSession();
+app.UseSessionAuth();
 app.UseAuthorization();
 
 app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraApi) =>

@@ -30,6 +30,30 @@ namespace NuevoAvatarFront.Pages.HU_MICHEL.Login
 
         public void OnGet() => HttpContext.Session.Clear();
 
+        public async Task<IActionResult> OnGetLogoutAsync()
+        {
+            var idUsuario = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
+
+            try
+            {
+                await _bitacoraApi.RegistrarAsync(idUsuario, "Logout de sesión");
+            }
+            catch
+            {
+                Console.WriteLine("No se pudo registrar el logout en bitácora.");
+            }
+
+            // Limpiar sesión
+            HttpContext.Session.Clear();
+
+            // Borrar TODAS las cookies
+            foreach (var cookie in Request.Cookies.Keys)
+                Response.Cookies.Delete(cookie);
+
+            return Redirect("/HU_MICHEL/Login/Index?logout=1");
+        }
+
+
         public async Task<IActionResult> OnPostAsync()
         {
             // Validaciones básicas

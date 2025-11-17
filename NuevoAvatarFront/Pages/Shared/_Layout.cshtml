@@ -81,6 +81,20 @@
     <script>
         const params = new URLSearchParams(window.location.search);
 
+        if (params.get("expired") === "1") {
+            Swal.fire({
+                icon: "warning",
+                title: "Sesión expirada",
+                text: "Debe iniciar sesión nuevamente.",
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            sessionStorage.clear();
+            localStorage.clear();
+        }
+
+
         if (params.get("logout") === "1") {
             Swal.fire({
                 icon: "success",

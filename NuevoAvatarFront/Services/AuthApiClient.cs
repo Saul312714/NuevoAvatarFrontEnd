@@ -45,11 +45,11 @@ namespace NuevoAvatarFront.Services
                 StatusCode = (int)response.StatusCode,
                 Message = response.StatusCode switch
                 {
-                    System.Net.HttpStatusCode.BadRequest => "Solicitud incorrecta. Faltan datos.",
+                    System.Net.HttpStatusCode.BadRequest => "Datos Incompletos.",
                     System.Net.HttpStatusCode.Unauthorized => "Usuario y/o contraseña incorrectos.",
-                    System.Net.HttpStatusCode.Forbidden => "No tiene permisos.",
-                    System.Net.HttpStatusCode.NotFound => "El recurso no existe.",
-                    System.Net.HttpStatusCode.InternalServerError => "Error interno del servidor.",
+                    System.Net.HttpStatusCode.Forbidden => "Usuario Inautorizado.",
+                    System.Net.HttpStatusCode.NotFound => "El recurso no fue encontrado.",
+                    System.Net.HttpStatusCode.InternalServerError => "Hubo un error. Inténtalo más tarde.",
                     _ => "Error desconocido."
                 },
                 Details = rawContent

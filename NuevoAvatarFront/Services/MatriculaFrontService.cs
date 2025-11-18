@@ -1,10 +1,9 @@
 ﻿using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
+using NuevoAvatarFront.Helpers;
 
 namespace NuevoAvatarFront.Services
 {
@@ -24,14 +23,12 @@ namespace NuevoAvatarFront.Services
         private readonly HttpClient _http;
         private readonly ILogger<MatriculaFrontService> _logger;
 
-        // Si tienes otra forma de obtener el usuario, cámbialo aquí
-        private const int ID_USUARIO_DEFECTO = 5;
-
         public MatriculaFrontService(
             IHttpClientFactory factory,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<MatriculaFrontService> logger)
-            : base(httpContextAccessor)
+            TokenHelper tokenHelper,
+            ILogger<MatriculaFrontService> logger
+        ) : base(httpContextAccessor, tokenHelper)
         {
             _http = factory.CreateClient("MatriculaClient");
             _logger = logger;
@@ -39,56 +36,86 @@ namespace NuevoAvatarFront.Services
 
         private int ObtenerIdUsuario()
         {
-            // Aquí puedes luego leer de Session o de Claims.
-            // Por ahora dejamos el 5 como en tus pruebas.
-            return ID_USUARIO_DEFECTO;
+            // 🔥 Ahora obtenemos el UsuarioID REAL desde la sesión del login
+            var id = _httpContextAccessor.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
+
+            if (id == 0)
+            {
+                _logger.LogWarning("⚠ UsuarioID no encontrado en sesión, posible sesión expirada.");
+            }
+
+            return id;
         }
 
         public async Task<int> CrearAsync(MatriculaCreateDto dto)
         {
-            AttachBearer(_http);
-            var idUsuario = ObtenerIdUsuario();
-
-            var response = await _http.PostAsJsonAsync($"/matricula?idUsuario={idUsuario}", dto);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                // Tu endpoint devuelve la matrícula creada (Matricula)
-                var creada = await response.Content.ReadFromJsonAsync<Matricula>();
-                return creada?.ID_Matricula ?? 0;
+                // 🔥 Adjunta AccessToken válido
+                await AttachBearerAsync(_http);
+
+                var idUsuario = ObtenerIdUsuario();
+
+                var response = await _http.PostAsJsonAsync($"/matricula?idUsuario={idUsuario}", dto);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Tu endpoint devuelve un objeto Matricula
+                    var creada = await response.Content.ReadFromJsonAsync<Matricula>();
+                    return creada?.ID_Matricula ?? 0;
+                }
+
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Error al crear matrícula. Status: {Status}. Body: {Body}",
+                    response.StatusCode, error);
+
+                throw new Exception($"Error al crear matrícula: {error}");
             }
-
-            var error = await response.Content.ReadAsStringAsync();
-            _logger.LogError("Error al crear matrícula. Status: {Status}. Body: {Body}",
-                response.StatusCode, error);
-
-            throw new Exception($"Error al crear matrícula: {error}");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al crear matrícula");
+                throw;
+            }
         }
 
         public async Task<List<MatriculadoDto>> GetMatriculadosPorCursoGrupoAsync(int idCurso, int idGrupo)
         {
-            AttachBearer(_http);
-            var idUsuario = ObtenerIdUsuario();
-
-            var response = await _http.GetAsync($"/matricula/curso/{idCurso}/grupo/{idGrupo}?idUsuario={idUsuario}");
-
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            try
             {
-                // Tu endpoint devuelve 404 cuando no hay matriculados
-                return new List<MatriculadoDto>();
-            }
+                
+                await AttachBearerAsync(_http);
 
-            if (!response.IsSuccessStatusCode)
+                var idUsuario = ObtenerIdUsuario();
+
+                var response = await _http.GetAsync(
+                    $"/matricula/curso/{idCurso}/grupo/{idGrupo}?idUsuario={idUsuario}"
+                );
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    
+                    return new List<MatriculadoDto>();
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError(
+                        "Error al obtener matriculados. Status: {Status}. Body: {Body}",
+                        response.StatusCode, error
+                    );
+
+                    throw new Exception($"Error al consultar matriculados: {error}");
+                }
+
+                var lista = await response.Content.ReadFromJsonAsync<List<MatriculadoDto>>();
+                return lista ?? new List<MatriculadoDto>();
+            }
+            catch (Exception ex)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al obtener matriculados. Status: {Status}. Body: {Body}",
-                    response.StatusCode, error);
-
-                throw new Exception($"Error al consultar matriculados: {error}");
+                _logger.LogError(ex, "Error inesperado al obtener matriculados");
+                throw;
             }
-
-            var lista = await response.Content.ReadFromJsonAsync<List<MatriculadoDto>>();
-            return lista ?? new List<MatriculadoDto>();
         }
     }
 }

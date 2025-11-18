@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+Ôªøusing Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -9,13 +10,16 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
     {
         private readonly IPreMatriculaService _prematricula;
         private readonly ILogger<DeleteModel> _logger;
+        private readonly TokenHelper _tokenHelper;
 
         public DeleteModel(
             IPreMatriculaService prematricula,
-            ILogger<DeleteModel> logger)
+            ILogger<DeleteModel> logger,
+            TokenHelper tokenHelper)
         {
             _prematricula = prematricula;
             _logger = logger;
+            _tokenHelper = tokenHelper;
         }
 
         [BindProperty]
@@ -27,14 +31,18 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         [TempData]
         public string? MensajeExito { get; set; }
 
+        // üî• Validaci√≥n de sesi√≥n antes de cargar la p√°gina
         public async Task<IActionResult> OnGetAsync(int id)
         {
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index"); // Redirige si no hay token
+
             try
             {
                 var existente = await _prematricula.GetByIdAsync(id);
                 if (existente is null)
                 {
-                    MensajeError = "No se encontrÛ la prematrÌcula solicitada.";
+                    MensajeError = "No se encontr√≥ la prematr√≠cula solicitada.";
                     return RedirectToPage("./Index");
                 }
 
@@ -43,36 +51,38 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cargar la prematrÌcula para eliminar");
-                MensajeError = "Error al cargar la prematrÌcula: " + ex.Message;
+                _logger.LogError(ex, "Error al cargar la prematr√≠cula para eliminar");
+                MensajeError = "Error al cargar la prematr√≠cula: " + ex.Message;
                 return RedirectToPage("./Index");
             }
         }
 
         public async Task<IActionResult> OnPostAsync(int id)
         {
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index"); 
+
             try
             {
                 var ok = await _prematricula.DeleteAsync(id);
 
                 if (ok)
                 {
-                    MensajeExito = "PrematrÌcula eliminada correctamente.";
+                    MensajeExito = "Prematr√≠cula eliminada correctamente.";
                 }
                 else
                 {
-                    MensajeError = "No se encontrÛ la prematrÌcula a eliminar.";
+                    MensajeError = "No se encontr√≥ la prematr√≠cula a eliminar.";
                 }
 
                 return RedirectToPage("./Index");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al eliminar prematrÌcula");
-                MensajeError = "Error al eliminar la prematrÌcula: " + ex.Message;
+                _logger.LogError(ex, "Error al eliminar prematr√≠cula");
+                MensajeError = "Error al eliminar la prematr√≠cula: " + ex.Message;
                 return RedirectToPage("./Index");
             }
         }
     }
 }
-

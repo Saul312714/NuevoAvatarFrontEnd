@@ -1,9 +1,9 @@
 ﻿using System.Net.Http.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
+using NuevoAvatarFront.Helpers;
 
 namespace NuevoAvatarFront.Services
 {
@@ -22,8 +22,9 @@ namespace NuevoAvatarFront.Services
         public CursoService(
             IHttpClientFactory httpClientFactory,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<CursoService> logger)
-            : base(httpContextAccessor)
+            TokenHelper tokenHelper,
+            ILogger<CursoService> logger
+        ) : base(httpContextAccessor, tokenHelper)
         {
             _http = httpClientFactory.CreateClient("OfertaClient");
             _logger = logger;
@@ -33,23 +34,24 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_http);
+                
+                await AttachBearerAsync(_http);
 
-                var response = await _http.GetAsync("/curso");
+                var resp = await _http.GetAsync("/curso");
 
-                if (!response.IsSuccessStatusCode)
+                if (!resp.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
+                    var error = await resp.Content.ReadAsStringAsync();
                     _logger.LogError("Error al obtener cursos. Status: {Status}, Error: {Error}",
-                        response.StatusCode, error);
+                        resp.StatusCode, error);
 
                     return new List<CursoDTO>();
                 }
 
-                var data = await response.Content.ReadFromJsonAsync<List<CursoDTO>>()
+                var data = await resp.Content.ReadFromJsonAsync<List<CursoDTO>>()
                            ?? new List<CursoDTO>();
 
-                // Solo nivel 1
+                
                 return data
                     .Where(c => c.Nivel == 1)
                     .OrderBy(c => c.Nombre)
@@ -57,7 +59,7 @@ namespace NuevoAvatarFront.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al consumir la API de cursos");
+                _logger.LogError(ex, "Error al consumir la API de cursos (GetNivel1Async)");
                 throw;
             }
         }
@@ -66,20 +68,23 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_http);
+                
+                await AttachBearerAsync(_http);
 
-                var response = await _http.GetAsync("/curso");
+                var resp = await _http.GetAsync("/curso");
 
-                if (!response.IsSuccessStatusCode)
+                if (!resp.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Error al obtener cursos por carrera. Status: {Status}, Error: {Error}",
-                        response.StatusCode, error);
+                    var error = await resp.Content.ReadAsStringAsync();
+                    _logger.LogError(
+                        "Error al obtener cursos por carrera. Status: {Status}, Error: {Error}",
+                        resp.StatusCode, error
+                    );
 
                     return new List<CursoDTO>();
                 }
 
-                var data = await response.Content.ReadFromJsonAsync<List<CursoDTO>>()
+                var data = await resp.Content.ReadFromJsonAsync<List<CursoDTO>>()
                            ?? new List<CursoDTO>();
 
                 return data
@@ -98,23 +103,25 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_http);
+                
+                await AttachBearerAsync(_http);
 
-                var response = await _http.GetAsync("/curso");
+                var resp = await _http.GetAsync("/curso");
 
-                if (!response.IsSuccessStatusCode)
+                if (!resp.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Error al obtener todos los cursos. Status: {Status}, Error: {Error}",
-                        response.StatusCode, error);
+                    var error = await resp.Content.ReadAsStringAsync();
+                    _logger.LogError(
+                        "Error al obtener todos los cursos. Status: {Status}, Error: {Error}",
+                        resp.StatusCode, error
+                    );
 
                     return new List<CursoDTO>();
                 }
 
-                var data = await response.Content.ReadFromJsonAsync<List<CursoDTO>>()
+                var data = await resp.Content.ReadFromJsonAsync<List<CursoDTO>>()
                            ?? new List<CursoDTO>();
 
-                
                 return data
                     .OrderBy(c => c.Nombre)
                     .ToList();

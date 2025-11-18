@@ -138,7 +138,7 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        
+        // Auto-cerrar alertas después de 5 segundos
         setTimeout(function () {
             const alerts = document.querySelectorAll('.alert-dismissible');
             alerts.forEach(alert => {
@@ -147,7 +147,7 @@
             });
         }, 5000);
 
-        
+        // Validación del lado del cliente para el límite de caracteres
         document.addEventListener('DOMContentLoaded', function () {
             const observaciones = document.querySelector('textarea[name="PreMatricula.Observaciones"]');
             if (observaciones) {
@@ -163,4 +163,3 @@
         });
     </script>
 }
-

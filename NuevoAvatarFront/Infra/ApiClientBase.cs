@@ -1,19 +1,33 @@
-﻿namespace NuevoAvatarFront.Infra
-{
-    using Microsoft.AspNetCore.Http;
-    using System.Net.Http.Headers;
+﻿using Microsoft.AspNetCore.Http;
+using NuevoAvatarFront.Helpers;
+using System.Net.Http.Headers;
 
+namespace NuevoAvatarFront.Infra
+{
     public abstract class ApiClientBase
     {
-        private readonly IHttpContextAccessor _ctx;
-        protected ApiClientBase(IHttpContextAccessor ctx) => _ctx = ctx;
+        protected readonly IHttpContextAccessor _httpContextAccessor;
+        protected readonly TokenHelper _tokenHelper;
 
-        protected void AttachBearer(HttpClient http)
+        protected ApiClientBase(IHttpContextAccessor httpContextAccessor, TokenHelper tokenHelper)
         {
-            var token = _ctx.HttpContext?.Session.GetString("access_token");
-            if (!string.IsNullOrWhiteSpace(token))
-                http.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
+            _httpContextAccessor = httpContextAccessor;
+            _tokenHelper = tokenHelper;
+        }
+
+        protected async Task AttachBearerAsync(HttpClient client)
+        {
+            var token = await _tokenHelper.EnsureValidAccessTokenAsync();
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Console.WriteLine("⚠ No se encontró un AccessToken válido en sesión.");
+                return;
+            }
+
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
         }
     }
 }
+

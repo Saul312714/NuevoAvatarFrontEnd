@@ -1,8 +1,10 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
+using NuevoAvatarFront.Helpers;
 
 namespace NuevoAvatarFront.Services
 {
@@ -19,10 +21,10 @@ namespace NuevoAvatarFront.Services
         public PeriodoService(
             IHttpClientFactory httpClientFactory,
             IHttpContextAccessor httpContextAccessor,
+            TokenHelper tokenHelper,
             ILogger<PeriodoService> logger
-        ) : base(httpContextAccessor)
+        ) : base(httpContextAccessor, tokenHelper)
         {
-           
             _http = httpClientFactory.CreateClient("OfertaClient");
             _logger = logger;
         }
@@ -31,16 +33,18 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_http); 
+                // 🔥 Adjunta token real (con refresh automático)
+                await AttachBearerAsync(_http);
 
-                
                 var resp = await _http.GetAsync("/periodo");
 
                 if (!resp.IsSuccessStatusCode)
                 {
                     var err = await resp.Content.ReadAsStringAsync();
-                    _logger.LogError("Error al obtener periodos. Status: {Status}, Error: {Error}",
-                        resp.StatusCode, err);
+                    _logger.LogError(
+                        "Error al obtener periodos. Status: {Status}, Error: {Error}",
+                        resp.StatusCode, err
+                    );
                     return new List<PeriodoDto>();
                 }
 
@@ -54,7 +58,7 @@ namespace NuevoAvatarFront.Services
 
                 var hoy = DateTime.Today;
 
-                
+                // 🔎 Mantengo tu mismo filtro ORIGINAL
                 return lista
                     .Where(p => p.Fecha_Inicio.Date > hoy)
                     .OrderBy(p => p.Anno)
@@ -69,3 +73,4 @@ namespace NuevoAvatarFront.Services
         }
     }
 }
+

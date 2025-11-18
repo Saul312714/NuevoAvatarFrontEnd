@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -9,17 +10,23 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
     {
         private readonly IPreMatriculaService _prematricula;
         private readonly ILogger<DetailsModel> _logger;
+        private readonly TokenHelper _tokenHelper;
 
-        public DetailsModel(IPreMatriculaService prematricula, ILogger<DetailsModel> logger)
+        public DetailsModel(IPreMatriculaService prematricula, ILogger<DetailsModel> logger, TokenHelper tokenHelper)
         {
             _prematricula = prematricula;
             _logger = logger;
+            _tokenHelper = tokenHelper;
         }
 
         public PreMatriculaDTO? PreMatricula { get; set; }
 
+        
         public async Task<IActionResult> OnGetAsync(int id)
         {
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index");
+
             try
             {
                 PreMatricula = await _prematricula.GetByIdAsync(id);

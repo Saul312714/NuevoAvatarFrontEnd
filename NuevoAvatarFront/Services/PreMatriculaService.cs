@@ -1,8 +1,12 @@
-﻿using NuevoAvatarFront.Models;
-using NuevoAvatarFront.Infra;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Models;
 
 namespace NuevoAvatarFront.Services
 {
@@ -25,8 +29,9 @@ namespace NuevoAvatarFront.Services
             IHttpClientFactory httpClientFactory,
             IHttpContextAccessor httpContextAccessor,
             IConfiguration configuration,
-            ILogger<PreMatriculaService> logger)
-            : base(httpContextAccessor)
+            TokenHelper tokenHelper,
+            ILogger<PreMatriculaService> logger
+        ) : base(httpContextAccessor, tokenHelper)
         {
             _httpClient = httpClientFactory.CreateClient("MatriculaClient");
             _configuration = configuration;
@@ -35,7 +40,6 @@ namespace NuevoAvatarFront.Services
 
         private int ObtenerIdUsuario()
         {
-            
             var userId = _configuration["Auth:DevUserId"];
             return int.TryParse(userId, out var id) ? id : 0;
         }
@@ -44,19 +48,23 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_httpClient);
+                await AttachBearerAsync(_httpClient);
                 var idUsuario = ObtenerIdUsuario();
 
-                var response = await _httpClient.GetAsync($"/prematricula?idUsuario={idUsuario}");
+                var response =
+                    await _httpClient.GetAsync($"/prematricula?idUsuario={idUsuario}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var prematriculas = await response.Content.ReadFromJsonAsync<List<PreMatriculaDTO>>();
+                    var prematriculas =
+                        await response.Content.ReadFromJsonAsync<List<PreMatriculaDTO>>();
                     return prematriculas ?? new List<PreMatriculaDTO>();
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"Error al obtener prematrículas. Status: {response.StatusCode}, Error: {errorContent}");
+                _logger.LogError(
+                    $"Error al obtener prematrículas. Status: {response.StatusCode}, Error: {errorContent}");
+
                 return new List<PreMatriculaDTO>();
             }
             catch (Exception ex)
@@ -70,10 +78,11 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_httpClient);
+                await AttachBearerAsync(_httpClient);
                 var idUsuario = ObtenerIdUsuario();
 
-                var response = await _httpClient.GetAsync($"/prematricula/{id}?idUsuario={idUsuario}");
+                var response =
+                    await _httpClient.GetAsync($"/prematricula/{id}?idUsuario={idUsuario}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -81,12 +90,12 @@ namespace NuevoAvatarFront.Services
                 }
 
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
                     return null;
-                }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"Error al obtener prematrícula {id}. Status: {response.StatusCode}, Error: {errorContent}");
+                _logger.LogError(
+                    $"Error al obtener prematrícula {id}. Status: {response.StatusCode}, Error: {errorContent}");
+
                 throw new Exception($"Error al obtener la prematrícula: {errorContent}");
             }
             catch (Exception ex)
@@ -100,26 +109,31 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_httpClient);
+                await AttachBearerAsync(_httpClient);
                 var idUsuario = ObtenerIdUsuario();
 
                 var json = JsonSerializer.Serialize(prematricula);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var content =
+                    new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"/prematricula?idUsuario={idUsuario}", content);
+                var response =
+                    await _httpClient.PostAsync($"/prematricula?idUsuario={idUsuario}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var creada = await response.Content.ReadFromJsonAsync<PreMatriculaDTO>();
+                    var creada =
+                        await response.Content.ReadFromJsonAsync<PreMatriculaDTO>();
                     return creada ?? prematricula;
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"Error al crear prematrícula. Status: {response.StatusCode}, Error: {errorContent}");
+                _logger.LogError(
+                    $"Error al crear prematrícula. Status: {response.StatusCode}, Error: {errorContent}");
 
                 if (errorContent.Contains("periodos FUTUROS"))
                 {
-                    throw new Exception("Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)");
+                    throw new Exception(
+                        "Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)");
                 }
 
                 throw new Exception($"Error al crear la prematrícula: {errorContent}");
@@ -135,29 +149,33 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_httpClient);
+                await AttachBearerAsync(_httpClient);
                 var idUsuario = ObtenerIdUsuario();
 
                 prematricula.ID_Prematricula = id;
 
                 var json = JsonSerializer.Serialize(prematricula);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var content =
+                    new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"/prematricula/{id}?idUsuario={idUsuario}", content);
+                var response =
+                    await _httpClient.PutAsync($"/prematricula/{id}?idUsuario={idUsuario}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var actualizada = await response.Content.ReadFromJsonAsync<PreMatriculaDTO>();
+                    var actualizada =
+                        await response.Content.ReadFromJsonAsync<PreMatriculaDTO>();
                     return actualizada ?? prematricula;
                 }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"Error al actualizar prematrícula {id}. Status: {response.StatusCode}, Error: {errorContent}");
+                _logger.LogError(
+                    $"Error al actualizar prematrícula {id}. Status: {response.StatusCode}, Error: {errorContent}");
 
-                
                 if (errorContent.Contains("periodos FUTUROS"))
                 {
-                    throw new Exception("Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)");
+                    throw new Exception(
+                        "Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)");
                 }
 
                 throw new Exception($"Error al actualizar la prematrícula: {errorContent}");
@@ -173,23 +191,22 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_httpClient);
+                await AttachBearerAsync(_httpClient);
                 var idUsuario = ObtenerIdUsuario();
 
-                var response = await _httpClient.DeleteAsync($"/prematricula/{id}?idUsuario={idUsuario}");
+                var response =
+                    await _httpClient.DeleteAsync($"/prematricula/{id}?idUsuario={idUsuario}");
 
                 if (response.IsSuccessStatusCode)
-                {
                     return true;
-                }
 
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
                     return false;
-                }
 
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"Error al eliminar prematrícula {id}. Status: {response.StatusCode}, Error: {errorContent}");
+                _logger.LogError(
+                    $"Error al eliminar prematrícula {id}. Status: {response.StatusCode}, Error: {errorContent}");
+
                 throw new Exception($"Error al eliminar la prematrícula: {errorContent}");
             }
             catch (Exception ex)
@@ -200,3 +217,4 @@ namespace NuevoAvatarFront.Services
         }
     }
 }
+

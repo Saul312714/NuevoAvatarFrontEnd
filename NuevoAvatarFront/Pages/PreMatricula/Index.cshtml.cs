@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -9,19 +10,17 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
     {
         private readonly IPreMatriculaService _prematricula;
         private readonly ILogger<IndexModel> _logger;
+        private readonly TokenHelper _tokenHelper;
 
         // Para servicios adicionales que necesites para los filtros
-        // private readonly IPeriodoService _periodo;
-        // private readonly ICarreraService _carrera;
-        // private readonly ICursoService _curso;
-        // private readonly IEstudianteService _estudiante;
-
         public IndexModel(
             IPreMatriculaService prematricula,
-            ILogger<IndexModel> logger)
+            ILogger<IndexModel> logger,
+            TokenHelper tokenHelper)
         {
             _prematricula = prematricula;
             _logger = logger;
+            _tokenHelper = tokenHelper;
         }
 
         public List<PreMatriculaDTO> PreMatriculas { get; set; } = new();
@@ -44,29 +43,22 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         [TempData]
         public string? MensajeError { get; set; }
 
-        // Listas para los dropdowns de filtros
-        // public List<SelectListItem> Periodos { get; set; } = new();
-        // public List<SelectListItem> Carreras { get; set; } = new();
-        // public List<SelectListItem> Cursos { get; set; } = new();
-        // public List<SelectListItem> Estudiantes { get; set; } = new();
-
         public async Task<IActionResult> OnGetAsync()
         {
+            // Validar si el usuario tiene un token de sesión válido
+            var token = await _tokenHelper.EnsureValidAccessTokenAsync();
+            if (token == null) return RedirectToPage("/HU_MICHEL/Login/Index");
+
             try
             {
-                
                 var todasPrematriculas = await _prematricula.GetAllAsync();
 
-                
                 PreMatriculas = todasPrematriculas.Where(p =>
                     (!FiltroPeriodo.HasValue || p.ID_Periodo == FiltroPeriodo.Value) &&
                     (!FiltroCarrera.HasValue || p.ID_Carrera == FiltroCarrera.Value) &&
                     (!FiltroCurso.HasValue || p.ID_Curso == FiltroCurso.Value) &&
                     (!FiltroEstudiante.HasValue || p.ID_Estudiante == FiltroEstudiante.Value)
                 ).ToList();
-
-                // Aquí cargarías los datos para los dropdowns
-                // await CargarDatosDropdowns();
 
                 return Page();
             }
@@ -80,6 +72,10 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
+            // Validar si el usuario tiene un token de sesión válido
+            var token = await _tokenHelper.EnsureValidAccessTokenAsync();
+            if (token == null) return RedirectToPage("/HU_MICHEL/Login/Index");
+
             try
             {
                 var resultado = await _prematricula.DeleteAsync(id);
@@ -104,6 +100,10 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
         public async Task<IActionResult> OnGetLimpiarFiltrosAsync()
         {
+            // Validar si el usuario tiene un token de sesión válido
+            var token = await _tokenHelper.EnsureValidAccessTokenAsync();
+            if (token == null) return RedirectToPage("/HU_MICHEL/Login/Index");
+
             FiltroPeriodo = null;
             FiltroCarrera = null;
             FiltroCurso = null;
@@ -111,28 +111,5 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
             return RedirectToPage();
         }
-
-        // Método auxiliar para cargar datos de los dropdowns
-        /*
-        private async Task CargarDatosDropdowns()
-        {
-            try
-            {
-                // Ejemplo de cómo cargar periodos futuros
-                // var periodos = await _periodo.GetPeriodosFuturosAsync();
-                // Periodos = periodos.Select(p => new SelectListItem
-                // {
-                //     Value = p.ID_Periodo.ToString(),
-                //     Text = $"{p.Anno} - Periodo {p.Numero}"
-                // }).ToList();
-
-                // Similar para carreras, cursos, estudiantes...
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al cargar datos para dropdowns");
-            }
-        }
-        */
     }
 }

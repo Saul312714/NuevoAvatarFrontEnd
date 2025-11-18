@@ -1,6 +1,9 @@
 ﻿using System.Net.Http.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
+using NuevoAvatarFront.Helpers;
 
 namespace NuevoAvatarFront.Services
 {
@@ -12,35 +15,35 @@ namespace NuevoAvatarFront.Services
     public class EstudianteService : ApiClientBase, IEstudianteService
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<EstudianteService> _logger;
 
         public EstudianteService(
             IHttpClientFactory httpClientFactory,
             IHttpContextAccessor httpContextAccessor,
-            IConfiguration configuration,
-            ILogger<EstudianteService> logger)
-            : base(httpContextAccessor)
+            TokenHelper tokenHelper,
+            ILogger<EstudianteService> logger
+        ) : base(httpContextAccessor, tokenHelper)
         {
             _httpClient = httpClientFactory.CreateClient("MatriculaClient");
-            _configuration = configuration;
             _logger = logger;
-        }
-
-        private int ObtenerIdUsuario()
-        {
-            var userId = _configuration["Auth:DevUserId"];
-            return int.TryParse(userId, out var id) ? id : 0;
         }
 
         public async Task<List<EstudianteDto>> GetAllAsync()
         {
             try
             {
-                AttachBearer(_httpClient);
-                var idUsuario = ObtenerIdUsuario();
-
                 
+                await AttachBearerAsync(_httpClient);
+
+                var idUsuario = _httpContextAccessor.HttpContext?
+                    .Session.GetInt32("UsuarioID") ?? 0;
+
+                if (idUsuario == 0)
+                {
+                    _logger.LogWarning("⚠ No se encontró UsuarioID en sesión. Devolviendo lista vacía.");
+                    return new List<EstudianteDto>();
+                }
+
                 var response = await _httpClient.GetAsync($"/expediente?idUsuario={idUsuario}");
 
                 if (response.IsSuccessStatusCode)
@@ -52,7 +55,8 @@ namespace NuevoAvatarFront.Services
                 var err = await response.Content.ReadAsStringAsync();
                 _logger.LogError(
                     "Error al obtener estudiantes. Status: {Status}, Error: {Error}",
-                    response.StatusCode, err);
+                    response.StatusCode, err
+                );
 
                 return new List<EstudianteDto>();
             }

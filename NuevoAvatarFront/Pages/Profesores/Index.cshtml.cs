@@ -1,21 +1,29 @@
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
-using System.Linq;
 
 namespace NuevoAvatarFront.Pages.Profesores
 {
     public class IndexModel : PageModel
     {
         private readonly ProfesorClient _api;
-        public IndexModel(ProfesorClient api) { _api = api; }
+        private readonly TokenHelper _tokenHelper;
+        private readonly ILogger<IndexModel> _logger;
+
+        public IndexModel(ProfesorClient api, TokenHelper tokenHelper, ILogger<IndexModel> logger)
+        {
+            _api = api;
+            _tokenHelper = tokenHelper;
+            _logger = logger;
+        }
 
         public List<ProfesorDto> Profesores { get; set; } = new();
         public int Total { get; set; }
 
-        // Filtros/orden/paginación
         [BindProperty(SupportsGet = true)] public string? q { get; set; }
         [BindProperty(SupportsGet = true)] public string? sort { get; set; }
         [BindProperty(SupportsGet = true)] public int page { get; set; } = 1;
@@ -37,13 +45,19 @@ namespace NuevoAvatarFront.Pages.Profesores
 
         public async Task OnGet()
         {
+            // Validación de token antes de proceder
+            var token = await _tokenHelper.EnsureValidAccessTokenAsync();
+            if (token == null)
+            {
+                // Redirigimos a la página de login si el token es inválido
+                RedirectToPage("/HU_MICHEL/Login/Index");
+            }
+
             page = page <= 0 ? 1 : page;
             size = size <= 0 ? 10 : size;
 
-          
             var (datosApi, totalApi) = await _api.GetAllAsync(q, sort);
 
-            
             IEnumerable<ProfesorDto> query = datosApi;
 
             if (!string.IsNullOrWhiteSpace(q))
@@ -55,7 +69,6 @@ namespace NuevoAvatarFront.Pages.Profesores
                     || (p.Identificacion?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
             }
 
-           
             query = sort switch
             {
                 "nombre" => query.OrderBy(p => p.Nombre),
@@ -63,16 +76,13 @@ namespace NuevoAvatarFront.Pages.Profesores
                 _ => query.OrderBy(p => p.ID_Profesor)
             };
 
-            
             Total = query.Count();
 
-            
             Profesores = query
                 .Skip((page - 1) * size)
                 .Take(size)
                 .ToList();
 
-            
             foreach (var it in SortOptions) it.Selected = string.Equals(it.Value, sort ?? "", StringComparison.OrdinalIgnoreCase);
             foreach (var it in SizeOptions) it.Selected = it.Value == size.ToString();
         }

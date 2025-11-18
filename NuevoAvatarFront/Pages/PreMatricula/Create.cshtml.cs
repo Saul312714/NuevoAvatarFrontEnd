@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -10,36 +11,28 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
     {
         private readonly IPreMatriculaService _prematricula;
         private readonly ILogger<CreateModel> _logger;
-
-        // Servicios adicionales que necesitarás
-        // private readonly IPeriodoService _periodo;
-        // private readonly ICarreraService _carrera;
-        // private readonly ICursoService _curso;
-        // private readonly IEstudianteService _estudiante;
-
-        // 👇 Servicios reales para consumir APIs
         private readonly IEstudianteService _estudiante;
         private readonly ICarreraService _carrera;
         private readonly ICursoService _curso;
         private readonly IPeriodoService _periodo;
+        private readonly TokenHelper _tokenHelper;
 
         public CreateModel(
             IPreMatriculaService prematricula,
             ILogger<CreateModel> logger,
-            IEstudianteService estudiante,     // 👈 expedientes (Matricula)
-            ICarreraService carrera,           // 👈 carreras (Oferta)
-            ICursoService curso,               // 👈 cursos (Oferta)
-            IPeriodoService periodo            // 👈 periodos (Oferta)
-        )
+            IEstudianteService estudiante,
+            ICarreraService carrera,
+            ICursoService curso,
+            IPeriodoService periodo,
+            TokenHelper tokenHelper)
         {
             _prematricula = prematricula;
             _logger = logger;
-
-            // 👇 guardamos las dependencias
             _estudiante = estudiante;
             _carrera = carrera;
             _curso = curso;
             _periodo = periodo;
+            _tokenHelper = tokenHelper;
         }
 
         [BindProperty]
@@ -53,8 +46,12 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         public List<SelectListItem> Cursos { get; set; } = new();
         public List<SelectListItem> PeriodosFuturos { get; set; } = new();
 
+        // 🔥 Validación de sesión antes de cargar la página
         public async Task<IActionResult> OnGetAsync()
         {
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index"); // Redirige si no hay token
+
             try
             {
                 await CargarDatosDropdowns();
@@ -68,8 +65,12 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             }
         }
 
+        // 🔥 Validación de sesión antes de guardar
         public async Task<IActionResult> OnPostAsync()
         {
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index"); // Redirige si no hay token
+
             if (!ModelState.IsValid)
             {
                 await CargarDatosDropdowns();
@@ -102,9 +103,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         {
             try
             {
-                // =====================================================
-                //  ESTUDIANTES (API Matricula -> /expediente)
-                // =====================================================
                 var estudiantesApi = await _estudiante.GetAllAsync();
 
                 Estudiantes = estudiantesApi
@@ -125,9 +123,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     };
                 }
 
-                // =====================================================
-                //  CARRERAS (API Oferta -> /carrera)
-                // =====================================================
                 var carrerasApi = await _carrera.GetAllAsync();
 
                 Carreras = carrerasApi
@@ -148,11 +143,7 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     };
                 }
 
-                // =====================================================
-                //  CURSOS NIVEL 1 (API Oferta -> /curso)
-                //  Usamos GetAllAsync y filtramos Nivel == 1
-                // =====================================================
-                var cursosApi = await _curso.GetNivel1Async();  
+                var cursosApi = await _curso.GetNivel1Async();
 
                 var cursosNivel1 = cursosApi
                     .Where(c => c.Nivel == 1);
@@ -175,9 +166,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     };
                 }
 
-                // =====================================================
-                //  PERIODOS FUTUROS (API Oferta -> /periodo)
-                // =====================================================
                 var periodos = await _periodo.GetPeriodosFuturosAsync();
 
                 PeriodosFuturos = periodos
@@ -206,3 +194,4 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         }
     }
 }
+

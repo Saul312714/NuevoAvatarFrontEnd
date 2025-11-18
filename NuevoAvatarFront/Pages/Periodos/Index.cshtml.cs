@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -9,34 +10,41 @@ namespace NuevoAvatarFront.Pages.Periodos
     public class IndexModel : PageModel
     {
         private readonly PeriodoClient _api;
-        public IndexModel(PeriodoClient api) => _api = api;
+        private readonly TokenHelper _tokenHelper;
+
+        public IndexModel(PeriodoClient api, TokenHelper tokenHelper)
+        {
+            _api = api;
+            _tokenHelper = tokenHelper;
+        }
 
         public List<PeriodoDto> Periodos { get; private set; } = new();
         public int Total { get; private set; }
 
-        
         [BindProperty(SupportsGet = true)] public string? q { get; set; }
         [BindProperty(SupportsGet = true)] public string? sort { get; set; } = "inicio";
         [BindProperty(SupportsGet = true)] public int page { get; set; } = 1;
         [BindProperty(SupportsGet = true)] public int size { get; set; } = 10;
 
-        
         public IEnumerable<SelectListItem> SortOptions { get; private set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> SizeOptions { get; private set; } = Enumerable.Empty<SelectListItem>();
 
+        // 🔥 Se asegura de que haya token antes de continuar
         public async Task OnGet()
         {
-            
+            // Verificar si hay token válido antes de continuar
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                RedirectToPage("/HU_MICHEL/Login/Index");
+
             page = page <= 0 ? 1 : page;
             size = size <= 0 ? 10 : size;
 
-            
             SortOptions = new[]
             {
-                new SelectListItem("Inicio",  "inicio",  sort == "inicio"),
-                new SelectListItem("Fin",     "fin",     sort == "fin"),
-                new SelectListItem("Año",     "anio",    sort == "anio"),
-                new SelectListItem("Número",  "numero",  sort == "numero"),
+                new SelectListItem("Inicio", "inicio", sort == "inicio"),
+                new SelectListItem("Fin", "fin", sort == "fin"),
+                new SelectListItem("Año", "anio", sort == "anio"),
+                new SelectListItem("Número", "numero", sort == "numero"),
             };
             SizeOptions = new[]
             {
@@ -45,10 +53,8 @@ namespace NuevoAvatarFront.Pages.Periodos
                 new SelectListItem("50", "50", size == 50),
             };
 
-            
             IEnumerable<PeriodoDto> datos = await _api.GetAllAsync();
 
-            
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var t = q.Trim().ToLower();
@@ -59,7 +65,6 @@ namespace NuevoAvatarFront.Pages.Periodos
                     p.Fecha_Fin.ToString("yyyy-MM-dd").Contains(t));
             }
 
-           
             datos = sort switch
             {
                 "fin" => datos.OrderBy(p => p.Fecha_Fin),
@@ -75,7 +80,6 @@ namespace NuevoAvatarFront.Pages.Periodos
                 .ToList();
         }
 
-       
         public string EstadoDe(PeriodoDto p)
         {
             var hoy = DateTime.Today;
@@ -84,12 +88,11 @@ namespace NuevoAvatarFront.Pages.Periodos
             return "Cerrado";
         }
 
-        
         public string EstadoClase(string estado) => estado switch
         {
-            "Futuro" => "badge rounded-pill bg-warning text-dark", 
-            "Activo" => "badge rounded-pill bg-success",           
-            _ => "badge rounded-pill bg-danger"              
+            "Futuro" => "badge rounded-pill bg-warning text-dark",
+            "Activo" => "badge rounded-pill bg-success",
+            _ => "badge rounded-pill bg-danger"
         };
     }
 }

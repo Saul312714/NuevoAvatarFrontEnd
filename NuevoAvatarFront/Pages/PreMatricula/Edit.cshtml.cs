@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -10,8 +11,9 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
     {
         private readonly IPreMatriculaService _prematricula;
         private readonly ILogger<EditModel> _logger;
+        private readonly TokenHelper _tokenHelper;
 
-        // 👇 mismos servicios que usas en CreateModel
+        // Servicios adicionales que usas en CreateModel
         private readonly IEstudianteService _estudiante;
         private readonly ICarreraService _carrera;
         private readonly ICursoService _curso;
@@ -23,7 +25,9 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             IEstudianteService estudiante,
             ICarreraService carrera,
             ICursoService curso,
-            IPeriodoService periodo)
+            IPeriodoService periodo,
+            TokenHelper tokenHelper
+        )
         {
             _prematricula = prematricula;
             _logger = logger;
@@ -31,6 +35,7 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             _carrera = carrera;
             _curso = curso;
             _periodo = periodo;
+            _tokenHelper = tokenHelper;
         }
 
         [BindProperty]
@@ -50,8 +55,12 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         // GET: cargamos la prematrícula y los dropdowns
         public async Task<IActionResult> OnGetAsync(int id)
         {
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index"); // Redirige si no hay token
+
             try
             {
+                // Obtener la prematrícula
                 var existente = await _prematricula.GetByIdAsync(id);
                 if (existente is null)
                 {
@@ -61,6 +70,7 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
                 PreMatricula = existente;
 
+                // Cargar los datos para los dropdowns
                 await CargarDatosDropdowns();
 
                 return Page();
@@ -86,6 +96,7 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             {
                 PreMatricula.ID_Prematricula = id;
 
+                // Llamar al servicio para actualizar la prematrícula
                 await _prematricula.UpdateAsync(id, PreMatricula);
                 MensajeExito = "Prematrícula actualizada correctamente.";
                 return RedirectToPage("./Index");
@@ -94,6 +105,7 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             {
                 _logger.LogError(ex, "Error al actualizar prematrícula");
 
+                // Manejo de errores relacionados con los periodos futuros
                 var mensajeError = ex.Message;
                 if (ex.Message.Contains("periodos FUTUROS", StringComparison.OrdinalIgnoreCase))
                 {
@@ -103,6 +115,7 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                 ModelState.AddModelError(string.Empty, mensajeError);
                 MensajeError = mensajeError;
 
+                // Recargar los dropdowns
                 await CargarDatosDropdowns();
                 return Page();
             }
@@ -115,9 +128,8 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         {
             try
             {
-                
+                // Cargar estudiantes
                 var estudiantes = await _estudiante.GetAllAsync();
-
                 Estudiantes = estudiantes
                     .OrderBy(e => e.Nombre)
                     .Select(e => new SelectListItem
@@ -127,18 +139,9 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     })
                     .ToList();
 
-                if (!Estudiantes.Any())
-                {
-                    Estudiantes = new List<SelectListItem>
-                    {
-                        new SelectListItem { Value = "1", Text = "Estudiante Demo 1" },
-                        new SelectListItem { Value = "2", Text = "Estudiante Demo 2" }
-                    };
-                }
-
-                var carrerasApi = await _carrera.GetAllAsync();
-
-                Carreras = carrerasApi
+                // Cargar carreras
+                var carreras = await _carrera.GetAllAsync();
+                Carreras = carreras
                     .OrderBy(c => c.Nombre)
                     .Select(c => new SelectListItem
                     {
@@ -147,19 +150,9 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     })
                     .ToList();
 
-                if (!Carreras.Any())
-                {
-                    Carreras = new List<SelectListItem>
-                    {
-                        new SelectListItem { Value = "1", Text = "Carrera Demo 1" },
-                        new SelectListItem { Value = "2", Text = "Carrera Demo 2" }
-                    };
-                }
-
-                
-                var cursosApi = await _curso.GetNivel1Async(); 
-
-                Cursos = cursosApi
+                // Cargar cursos (solo de nivel 1)
+                var cursos = await _curso.GetNivel1Async();  // Suponiendo que hay un método para obtener cursos de nivel 1
+                Cursos = cursos
                     .OrderBy(c => c.Nombre)
                     .Select(c => new SelectListItem
                     {
@@ -168,35 +161,17 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     })
                     .ToList();
 
-                if (!Cursos.Any())
-                {
-                    Cursos = new List<SelectListItem>
-                    {
-                        new SelectListItem { Value = "1", Text = "Curso Demo 1" },
-                        new SelectListItem { Value = "2", Text = "Curso Demo 2" }
-                    };
-                }
-
-               
+                // Cargar periodos futuros
                 var periodos = await _periodo.GetPeriodosFuturosAsync();
-
                 PeriodosFuturos = periodos
-                    .OrderBy(p => p.Anno).ThenBy(p => p.Numero)
+                    .OrderBy(p => p.Anno)
+                    .ThenBy(p => p.Numero)
                     .Select(p => new SelectListItem
                     {
                         Value = p.ID_Periodo.ToString(),
                         Text = $"{p.Anno} - Período {p.Numero} (Inicio: {p.Fecha_Inicio:dd/MM/yyyy})"
                     })
                     .ToList();
-
-                if (!PeriodosFuturos.Any())
-                {
-                    PeriodosFuturos = new List<SelectListItem>
-                    {
-                        new SelectListItem { Value = "1", Text = "2025 - Periodo 1" },
-                        new SelectListItem { Value = "2", Text = "2025 - Periodo 2" }
-                    };
-                }
             }
             catch (Exception ex)
             {
@@ -205,3 +180,4 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         }
     }
 }
+

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
+using NuevoAvatarFront.Helpers;
 
 namespace NuevoAvatarFront.Services
 {
@@ -21,8 +22,9 @@ namespace NuevoAvatarFront.Services
         public CarreraService(
             IHttpClientFactory httpClientFactory,
             IHttpContextAccessor httpContextAccessor,
+            TokenHelper tokenHelper,
             ILogger<CarreraService> logger
-        ) : base(httpContextAccessor)
+        ) : base(httpContextAccessor, tokenHelper)
         {
             _http = httpClientFactory.CreateClient("OfertaClient");
             _logger = logger;
@@ -32,15 +34,17 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_http);
+                await AttachBearerAsync(_http);
 
                 using var resp = await _http.GetAsync("/carrera");
 
                 if (!resp.IsSuccessStatusCode)
                 {
                     var error = await resp.Content.ReadAsStringAsync();
-                    _logger.LogError("GET /carrera falló. Status: {Status} - Error: {Error}",
-                        resp.StatusCode, error);
+                    _logger.LogError(
+                        "GET /carrera falló. Status: {Status} - Error: {Error}",
+                        resp.StatusCode, error
+                    );
                     return new List<CarreraDto>();
                 }
 
@@ -58,7 +62,8 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                AttachBearer(_http);
+                
+                await AttachBearerAsync(_http);
 
                 using var resp = await _http.GetAsync($"/carrera/{id}");
 
@@ -68,8 +73,10 @@ namespace NuevoAvatarFront.Services
                 if (!resp.IsSuccessStatusCode)
                 {
                     var error = await resp.Content.ReadAsStringAsync();
-                    _logger.LogError("GET /carrera/{Id} falló. Status: {Status} - Error: {Error}",
-                        id, resp.StatusCode, error);
+                    _logger.LogError(
+                        "GET /carrera/{Id} falló. Status: {Status} - Error: {Error}",
+                        id, resp.StatusCode, error
+                    );
                     throw new Exception("Error al obtener la carrera.");
                 }
 

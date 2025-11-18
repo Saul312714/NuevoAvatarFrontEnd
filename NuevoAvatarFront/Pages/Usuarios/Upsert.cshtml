@@ -1,0 +1,65 @@
+﻿@page "{id?}"
+@model NuevoAvatarFront.Pages.Usuarios.UpsertModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar Usuario" : "Nuevo Usuario";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">@ViewData["Title"]</h6>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <input type="hidden" asp-for="Usuario.ID_Usuario" />
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Email</label>
+                    <input asp-for="Usuario.Email" class="form-control" placeholder="correo@cuc.cr" required />
+                </div>
+                <div class="col-md-6">
+                    <label>Nombre completo</label>
+                    <input asp-for="Usuario.Nombre" class="form-control" required />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Tipo de identificación</label>
+                    <input asp-for="Usuario.Tipo_Identificacion" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label>Identificación</label>
+                    <input asp-for="Usuario.Identificacion" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Rol</label>
+                    <select asp-for="Usuario.ID_Rol" class="form-select">
+                        <option value="7">Administrador</option>
+                        <option value="2">Profesor</option>
+                        <option value="3">Estudiante</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label>Contraseña</label>
+                    <input asp-for="Usuario.Contrasena" type="password" class="form-control"
+                           placeholder="@(Model.EsEdicion ? "Dejar vacío para no cambiar" : "Requerida")" />
+                </div>
+            </div>
+
+            <div class="text-end">
+                <a href="/Usuarios/Index" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

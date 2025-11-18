@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using System.Linq;               
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,7 +10,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
 {
     public class IndexModel : PageModel
     {
-        
         private readonly IMatriculaFrontService _matriculaService;
         private readonly IEstudianteService _estudianteService;
         private readonly ICursoService _cursoService;
@@ -24,7 +23,7 @@ namespace NuevoAvatarFront.Pages.Matriculas
             ICursoService cursoService,
             IPeriodoService periodoService,
             ILogger<IndexModel> logger,
-            IGrupoService grupoService  
+            IGrupoService grupoService
         )
         {
             _matriculaService = matriculaService;
@@ -32,17 +31,16 @@ namespace NuevoAvatarFront.Pages.Matriculas
             _cursoService = cursoService;
             _periodoService = periodoService;
             _logger = logger;
-            _grupoService = grupoService;      
+            _grupoService = grupoService;
         }
 
-        
         public List<SelectListItem> Estudiantes { get; set; } = new();
         public List<SelectListItem> Cursos { get; set; } = new();
         public List<SelectListItem> PeriodosActivos { get; set; } = new();
         public List<SelectListItem> Grupos { get; set; } = new();
+
         [BindProperty]
         public MatriculaCreateDto NuevaMatricula { get; set; } = new();
-
 
         [BindProperty(SupportsGet = true)]
         public int? FiltroCurso { get; set; }
@@ -50,7 +48,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
         [BindProperty(SupportsGet = true)]
         public int? FiltroGrupo { get; set; }
 
-      
         public List<MatriculadoDto> Matriculados { get; set; } = new();
 
         [TempData]
@@ -59,9 +56,12 @@ namespace NuevoAvatarFront.Pages.Matriculas
         [TempData]
         public string? MensajeError { get; set; }
 
-       
         public async Task<IActionResult> OnGetAsync()
         {
+            // 🔥 VALIDAR SESIÓN
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index");
+
             try
             {
                 await CargarCombosAsync();
@@ -82,9 +82,12 @@ namespace NuevoAvatarFront.Pages.Matriculas
             }
         }
 
-      
         public async Task<IActionResult> OnPostMatricularAsync()
         {
+            // 🔥 VALIDAR SESIÓN
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index");
+
             if (!ModelState.IsValid)
             {
                 await CargarCombosAsync();
@@ -97,7 +100,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
 
                 MensajeExito = $"Matrícula registrada correctamente (ID: {idGenerado}).";
 
-                
                 return RedirectToPage(new
                 {
                     FiltroCurso = NuevaMatricula.ID_Curso,
@@ -116,9 +118,12 @@ namespace NuevoAvatarFront.Pages.Matriculas
             }
         }
 
-        
         public async Task<IActionResult> OnGetExportCsvAsync()
         {
+            // 🔥 VALIDAR SESIÓN
+            if (HttpContext.Session.GetString("AccessToken") == null)
+                return RedirectToPage("/HU_MICHEL/Login/Index");
+
             if (!FiltroCurso.HasValue || !FiltroGrupo.HasValue)
             {
                 MensajeError = "Debe seleccionar un curso y un grupo para exportar el CSV.";
@@ -138,7 +143,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
 
                 var sb = new StringBuilder();
 
-               
                 sb.AppendLine("ID_Estudiante;Identificacion;Nombre;Email;ID_Curso;ID_Grupo;ID_Periodo");
 
                 foreach (var m in data)
@@ -160,12 +164,14 @@ namespace NuevoAvatarFront.Pages.Matriculas
             }
         }
 
-        
         private async Task CargarCombosAsync()
         {
             try
             {
-                
+                // 🔥 SI NO HAY TOKEN, NO INTENTAR CARGAR NADA
+                if (HttpContext.Session.GetString("AccessToken") == null)
+                    return;
+
                 var estudiantes = await _estudianteService.GetAllAsync();
                 Estudiantes = estudiantes
                     .OrderBy(e => e.Nombre)
@@ -176,7 +182,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
                     })
                     .ToList();
 
-                
                 var cursos = await _cursoService.GetAllAsync();
                 Cursos = cursos
                     .OrderBy(c => c.Nombre)
@@ -187,10 +192,9 @@ namespace NuevoAvatarFront.Pages.Matriculas
                     })
                     .ToList();
 
-                
                 var periodos = await _periodoService.GetPeriodosFuturosAsync();
                 PeriodosActivos = periodos
-                    .Where(p => p.Fecha_Inicio > DateTime.Now) 
+                    .Where(p => p.Fecha_Inicio > DateTime.Now)
                     .OrderBy(p => p.Anno).ThenBy(p => p.Numero)
                     .Select(p => new SelectListItem
                     {
@@ -199,9 +203,7 @@ namespace NuevoAvatarFront.Pages.Matriculas
                     })
                     .ToList();
 
-                
                 var grupos = await _grupoService.GetAllAsync();
-
                 Grupos = grupos
                     .OrderBy(g => g.ID_Curso)
                     .ThenBy(g => g.Numero_Grupo)
@@ -219,4 +221,3 @@ namespace NuevoAvatarFront.Pages.Matriculas
         }
     }
 }
-

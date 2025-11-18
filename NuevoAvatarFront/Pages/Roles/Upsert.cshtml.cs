@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NuevoAvatarFront.Entities;
 using NuevoAvatarFront.Services;
-using System.Text.RegularExpressions;
 
 namespace NuevoAvatarFront.Pages.Roles
 {
@@ -15,22 +14,29 @@ namespace NuevoAvatarFront.Pages.Roles
         {
             _rolApi = rolApi;
             _bitacoraApi = bitacoraApi;
-            Rol = new RolDto();
         }
 
-        [BindProperty] public RolDto Rol { get; set; }
+        [BindProperty]
+        public RolDto Rol { get; set; } = new();
 
         public bool EsEdicion => Rol.ID_Rol > 0;
-
-        public RolDto RolAntes { get; set; }
+        public string? ErrorMessage { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
+            var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
+
             if (id.HasValue)
             {
-                Rol = await _rolApi.GetByIdAsync(id.Value, HttpContext.Session.GetInt32("UsuarioID") ?? 0);
-                RolAntes = Rol;
-                if (Rol == null) return NotFound();
+                var (ok, status, data, msg) = await _rolApi.GetByIdAsync(id.Value, idUsuarioAccion);
+
+                if (!ok || data == null)
+                {
+                    ErrorMessage = msg ?? "Rol no encontrado.";
+                    return Page();
+                }
+
+                Rol = data;
             }
 
             return Page();
@@ -40,39 +46,49 @@ namespace NuevoAvatarFront.Pages.Roles
         {
             var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
 
-            // Normalizar
             Rol.Nombre = Rol.Nombre?.Trim();
+
+            if (string.IsNullOrWhiteSpace(Rol.Nombre))
+            {
+                ModelState.AddModelError(nameof(Rol.Nombre), "El nombre del rol es obligatorio.");
+                return Page();
+            }
 
             if (!ModelState.IsValid)
                 return Page();
 
-            if (EsEdicion)
+            // CREAR
+            if (!EsEdicion)
             {
-                // Obtener datos ANTES de actualizar
-                var antes = await _rolApi.GetByIdAsync(Rol.ID_Rol, idUsuarioAccion);
+                var (ok, status, data, msg) = await _rolApi.CreateAsync(Rol, idUsuarioAccion);
 
-                // Actualizar
-                await _rolApi.UpdateAsync(Rol, idUsuarioAccion);
-
-                // Calcular JSON DIFF
-                var diff = new
+                if (!ok)
                 {
-                    Antes = antes,
-                    Despues = Rol
-                };
+                    ModelState.AddModelError(string.Empty, msg ?? "Error al crear el rol.");
+                    return Page();
+                }
 
-                await _bitacoraApi.RegistrarAsync(idUsuarioAccion,
-                    $"Modificación de rol: {Rol.Nombre} | Cambios: {System.Text.Json.JsonSerializer.Serialize(diff)}");
-            }
-            else
-            {
-                await _rolApi.CreateAsync(Rol, idUsuarioAccion);
-
-                // Registrar en bitácora
                 await _bitacoraApi.RegistrarAsync(idUsuarioAccion,
                     $"Creación de rol: {Rol.Nombre}");
+
+                TempData["SuccessMessage"] = "Rol creado correctamente.";
+                return RedirectToPage("/Roles/Index");
             }
 
+            // ACTUALIZAR
+            var (okUpdate, statusUpdate, dataUpdate, msgUpdate) =
+                await _rolApi.UpdateAsync(Rol, idUsuarioAccion);
+
+            if (!okUpdate)
+            {
+                ModelState.AddModelError(string.Empty, msgUpdate ?? "Error al actualizar el rol.");
+                return Page();
+            }
+
+            await _bitacoraApi.RegistrarAsync(idUsuarioAccion,
+                $"Modificación de rol: {Rol.Nombre}");
+
+            TempData["SuccessMessage"] = "Rol actualizado correctamente.";
             return RedirectToPage("/Roles/Index");
         }
     }

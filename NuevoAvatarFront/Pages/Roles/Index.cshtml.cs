@@ -17,34 +17,42 @@ namespace NuevoAvatarFront.Pages.Roles
         }
 
         public List<RolDto> Roles { get; set; } = new();
+        public string? ErrorMessage { get; set; }
 
         public async Task OnGetAsync()
         {
             var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
-            Roles = await _rolApi.GetAllRolesAsync(idUsuarioAccion);
+
+            var (ok, status, data, msg) = await _rolApi.GetAllAsync(idUsuarioAccion);
+
+            if (!ok)
+            {
+                ErrorMessage = msg ?? "No fue posible obtener la lista de roles.";
+                Roles = new();
+                return;
+            }
+
+            Roles = data ?? new();
+
+            await _bitacoraApi.RegistrarAsync(idUsuarioAccion, "Consulta listado de roles");
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
             var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
 
-            // Obtener rol antes de eliminar (para registrar en bitácora)
-            var rolAntes = await _rolApi.GetByIdAsync(id, idUsuarioAccion);
-
-            var ok = await _rolApi.DeleteAsync(id, idUsuarioAccion);
+            var (ok, status, msg) = await _rolApi.DeleteAsync(id, idUsuarioAccion);
 
             if (!ok)
             {
-                ModelState.AddModelError("", "Error al eliminar el rol.");
-                return Page();
+                TempData["ErrorMessage"] = msg ?? "No se pudo eliminar el rol.";
+                return RedirectToPage();
             }
 
-            // Registrar en bitácora
-            await _bitacoraApi.RegistrarAsync(idUsuarioAccion,
-                $"Eliminación de rol: {rolAntes?.Nombre}");
+            await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Eliminación de rol {id}");
+            TempData["SuccessMessage"] = "Rol eliminado correctamente.";
 
             return RedirectToPage();
         }
     }
-
 }

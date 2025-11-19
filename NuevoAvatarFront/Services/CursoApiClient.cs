@@ -1,139 +1,140 @@
-﻿using System.Net.Http.Headers;
-using System.Net.Http.Json;
+﻿using Microsoft.AspNetCore.Http;
 using NuevoAvatarFront.DTOs;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace NuevoAvatarFront.Services
 {
     public class CursoApiClient : ICursoApiClient
     {
         private readonly HttpClient _http;
-        private readonly IHttpContextAccessor _context;
+        private readonly IHttpContextAccessor _contextAccessor;
 
-        public CursoApiClient(HttpClient http, IHttpContextAccessor context)
+        public CursoApiClient(HttpClient http, IHttpContextAccessor contextAccessor)
         {
             _http = http;
-            _context = context;
+            _contextAccessor = contextAccessor;
         }
 
-        //  SIEMPRE actualizar el token antes de cada request
-        private void AddToken()
+        private void AddAuthorizationHeader()
         {
-            var token = _context.HttpContext?.Session.GetString("AccessToken");
+            var token = _contextAccessor.HttpContext?.Session.GetString("AccessToken");
 
             _http.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
         }
 
-        //  Obtener siempre el usuario en sesión
-        private int GetUsuarioAccion()
+        // 
+        // GET ALL
+        // 
+        public async Task<List<CursoDto>> GetAllAsync(int? nivel = null, int? idCarrera = null)
         {
-            var id = _context.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
+            AddAuthorizationHeader();
+            string url = "curso";
 
-            if (id == 0)
-                Console.WriteLine("⚠ Advertencia: UsuarioID = 0 en CursoApiClient (revisar sesión/login)");
+            var res = await _http.GetAsync(url);
 
-            return id;
-        }
-
-
-        public async Task<List<CursoDto>> GetAllAsync()
-        {
-            AddToken(); // << OBLIGATORIO
-            int usuario = GetUsuarioAccion();
-
-            var resp = await _http.GetAsync($"/curso?idUsuarioAccion={usuario}");
-
-            if (!resp.IsSuccessStatusCode)
+            if (!res.IsSuccessStatusCode)
             {
-                Console.WriteLine("❌ Error en GetAllAsync: " + await resp.Content.ReadAsStringAsync());
+                Console.WriteLine($"❌ Error API Curso GetAll: {await res.Content.ReadAsStringAsync()}");
                 return new List<CursoDto>();
             }
 
-            return await resp.Content.ReadFromJsonAsync<List<CursoDto>>() ?? new List<CursoDto>();
+            var lista = await res.Content.ReadFromJsonAsync<List<CursoDto>>()
+                        ?? new List<CursoDto>();
+
+            // Filtro en memoria: nivel
+            if (nivel is not null)
+                lista = lista.Where(c => c.Nivel == nivel).ToList();
+
+            // Filtro en memoria: carrera
+            if (idCarrera is not null)
+                lista = lista.Where(c => c.ID_Carrera == idCarrera).ToList();
+
+            return lista;
         }
 
-
-        //  Obtener cursos por carrera y nivel
-        public async Task<List<CursoDto>> GetByCarreraAndNivelAsync(int ID_Carrera, int? nivel)
-        {
-            AddToken();
-            int idUsuarioAccion = GetUsuarioAccion();
-
-            var url = $"curso?carreraId={ID_Carrera}&idUsuarioAccion={idUsuarioAccion}";
-
-            if (nivel.HasValue)
-                url += $"&nivel={nivel.Value}";
-
-            var resp = await _http.GetAsync(url);
-
-            if (!resp.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"❌ Error GetByCarreraAndNivel: {await resp.Content.ReadAsStringAsync()}");
-                return new List<CursoDto>();
-            }
-
-            return await resp.Content.ReadFromJsonAsync<List<CursoDto>>() ?? new List<CursoDto>();
-        }
-
-        //  Obtener curso por ID
+        //
+        // GET x ID
+        // 
         public async Task<CursoDto?> GetByIdAsync(int id)
         {
-            AddToken();
-            int idUsuarioAccion = GetUsuarioAccion();
+            AddAuthorizationHeader();
 
-            var resp = await _http.GetAsync($"curso/{id}?idUsuarioAccion={idUsuarioAccion}");
+            var res = await _http.GetAsync($"curso/{id}");
 
-            if (!resp.IsSuccessStatusCode)
+            if (!res.IsSuccessStatusCode)
                 return null;
 
-            return await resp.Content.ReadFromJsonAsync<CursoDto>();
+            return await res.Content.ReadFromJsonAsync<CursoDto>();
         }
 
-        //  Crear curso
-        public async Task<bool> CreateAsync(CursoCreateUpdateDto dto)
+        // 
+        // GET x CARRERA
+        // 
+        public async Task<List<CursoDto>> GetByCarreraAsync(int idCarrera)
         {
-            AddToken();
-            int idUsuarioAccion = GetUsuarioAccion();
+            AddAuthorizationHeader();
 
-            var resp = await _http.PostAsJsonAsync(
-                $"curso?idUsuarioAccion={idUsuarioAccion}", dto);
+            var res = await _http.GetAsync($"curso/carrera/{idCarrera}");
 
-            if (!resp.IsSuccessStatusCode)
-                Console.WriteLine($"❌ Error Create Curso: {await resp.Content.ReadAsStringAsync()}");
-
-            return resp.IsSuccessStatusCode;
-        }
-
-        //  Actualizar curso
-        public async Task<bool> UpdateAsync(int id, CursoCreateUpdateDto dto)
-        {
-            AddToken();
-            int idUsuarioAccion = GetUsuarioAccion();
-
-            var resp = await _http.PutAsJsonAsync(
-                $"curso/{id}?idUsuarioAccion={idUsuarioAccion}", dto);
-
-            if (!resp.IsSuccessStatusCode)
-                Console.WriteLine($"❌ Error Update Curso: {await resp.Content.ReadAsStringAsync()}");
-
-            return resp.IsSuccessStatusCode;
-        }
-
-        //  Eliminar curso
-        public async Task<bool> DeleteAsync(int id)
-        {
-            AddToken();
-            int idUsuarioAccion = GetUsuarioAccion();
-
-            var resp = await _http.DeleteAsync(
-                $"curso/{id}?idUsuarioAccion={idUsuarioAccion}");
-
-            if (!resp.IsSuccessStatusCode)
+            if (!res.IsSuccessStatusCode)
             {
-                Console.WriteLine($"❌ Error Delete Curso: {await resp.Content.ReadAsStringAsync()}");
+                Console.WriteLine($"❌ Error API Curso GetByCarrera: {await res.Content.ReadAsStringAsync()}");
+                return new List<CursoDto>();
             }
 
-            return resp.IsSuccessStatusCode;
+            return await res.Content.ReadFromJsonAsync<List<CursoDto>>()
+                   ?? new List<CursoDto>();
+        }
+
+        // 
+        // CREATE
+        // 
+        public async Task<(bool Ok, string Msg)> CreateAsync(CursoCreateDto dto)
+        {
+            AddAuthorizationHeader();
+
+            var res = await _http.PostAsJsonAsync($"curso", dto);
+
+            if (res.IsSuccessStatusCode)
+                return (true, "Curso creado correctamente.");
+
+            return (false, await res.Content.ReadAsStringAsync());
+        }
+
+        // 
+        // UPDATE
+        // 
+        public async Task<(bool Ok, string Msg)> UpdateAsync(int id, CursoUpdateDto dto)
+        {
+            AddAuthorizationHeader();
+
+            var res = await _http.PutAsJsonAsync($"curso/{id}", dto);
+
+            return res.IsSuccessStatusCode
+                ? (true, "Curso actualizado correctamente.")
+                : (false, await res.Content.ReadAsStringAsync());
+        }
+
+        // 
+        // DELETE
+        // 
+        public async Task<(bool Ok, string Msg)> DeleteAsync(int id)
+        {
+            AddAuthorizationHeader();
+
+            var res = await _http.DeleteAsync($"curso/{id}");
+
+            string content = await res.Content.ReadAsStringAsync();
+
+            // backend manda algo como:  "Mensaje": "No se puede eliminar..." 
+            if (!res.IsSuccessStatusCode)
+            {
+                return (false, content);
+            }
+
+            return (true, "Curso eliminado correctamente.");
         }
     }
 }

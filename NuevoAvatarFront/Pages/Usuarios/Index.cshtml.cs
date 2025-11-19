@@ -8,18 +8,21 @@ namespace NuevoAvatarFront.Pages.Usuarios
     public class IndexModel : PageModel
     {
         private readonly IUsuarioApiClient _usuarioApi;
-        private readonly IBitacoraApiClient _bitacoraApi;
+        private readonly IHttpContextAccessor _context;
 
-        public IndexModel(IUsuarioApiClient usuarioApi, IBitacoraApiClient bitacoraApi)
+        public IndexModel(IUsuarioApiClient usuarioApi, IHttpContextAccessor context)
         {
             _usuarioApi = usuarioApi;
-            _bitacoraApi = bitacoraApi;
+            _context = context;
         }
 
         public List<UsuarioDto> Usuarios { get; set; } = new();
-        public int Page { get; set; } = 1;
-        public int TotalPages { get; set; }
-        public int PageSize { get; set; } = 10;
+
+        public string ErrorMessage { get; set; } = string.Empty;
+        public string SuccessMessage { get; set; } = string.Empty;
+
+        public int Pagina { get; set; } = 1;
+        public int TotalPaginas { get; set; } = 1;
 
         [BindProperty(SupportsGet = true)]
         public string? Filtro { get; set; }
@@ -27,41 +30,42 @@ namespace NuevoAvatarFront.Pages.Usuarios
         [BindProperty(SupportsGet = true)]
         public string? Rol { get; set; }
 
-        public async Task OnGetAsync(int page = 1)
+        public async Task<IActionResult> OnGetAsync(int page = 1)
         {
-            var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
+            Pagina = page;
 
-            Page = page;
+            var idUsuarioAccion = _context.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
 
-            var (ok, status, data, message) = await _usuarioApi.GetAllAsync(Filtro, Rol, page, PageSize);
+            var result = await _usuarioApi.GetAllAsync(Filtro, Rol, Pagina, 10);
 
-            if (!ok)
-                ModelState.AddModelError(string.Empty, message ?? "Error al obtener usuarios.");
-            else
-                Usuarios = data ?? new();
+            if (!result.ok)
+            {
+                ErrorMessage = result.Message ?? "Error cargando usuarios.";
+                return Page();
+            }
 
-            // total sin paginar
-            var (okTotal, statusTotal, dataTotal, msgTotal) = await _usuarioApi.GetAllAsync(Filtro, Rol);
+            Usuarios = result.Data ?? new List<UsuarioDto>();
 
-            if (okTotal && dataTotal != null)
-                TotalPages = (int)Math.Ceiling(dataTotal.Count / (double)PageSize);
+            // El backend ya controla el tamaño, pero generamos paginación client-side:
+            TotalPaginas = Usuarios.Count < 10 ? Pagina : Pagina + 1;
 
-            await _bitacoraApi.RegistrarAsync(idUsuarioAccion, "Consulta listado usuarios");
+            return Page();
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
-            var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
+            var idUsuarioAccion = _context.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
 
-            var (ok, status, message) = await _usuarioApi.DeleteAsync(id, idUsuarioAccion);
+            var result = await _usuarioApi.DeleteAsync(id, idUsuarioAccion);
 
-            if (!ok)
+            if (!result.ok)
             {
-                TempData["Error"] = message;
-                return RedirectToPage();
+                TempData["ErrorMessage"] = result.Message;
             }
-
-            await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Eliminación usuario {id}");
+            else
+            {
+                TempData["SuccessMessage"] = "Usuario eliminado correctamente.";
+            }
 
             return RedirectToPage();
         }

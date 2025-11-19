@@ -19,11 +19,30 @@ namespace NuevoAvatarFront.Middleware
             var rutasPublicas = new[]
             {
                 "/",
+                "/dashboard",
+                "/dashboard/index",
+
+                "/usuarios",
+                "/usuarios/index",
+
+                "/roles",
+                "/roles/index",
+
+                "/parametros",
+                "/parametros/index",
+
+                "/grupos",
+                "/grupos/index",
+
+                "/expedientes",
+                "/expedientes/index",
+
                 "/hu_michel/login",
                 "/hu_michel/login/index",
                 "/hu_michel/login/index?expired=1",
                 "/hu_michel/login/index?logout=1",
                 "/hu_michel/login/index?handler=logout",
+
                 "/css/",
                 "/js/",
                 "/lib/",
@@ -31,6 +50,7 @@ namespace NuevoAvatarFront.Middleware
                 "/vendor/",
                 "/favicon.ico"
             };
+
 
             // Si la ruta es pública dejar pasar
             if (rutasPublicas.Any(r => path.StartsWith(r)))

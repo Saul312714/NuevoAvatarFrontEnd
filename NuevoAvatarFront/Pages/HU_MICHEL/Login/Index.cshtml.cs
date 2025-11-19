@@ -51,9 +51,6 @@ namespace NuevoAvatarFront.Pages.HU_MICHEL.Login
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // ============================
-            // VALIDACIONES FRONTEND
-            // ============================
             if (string.IsNullOrWhiteSpace(Email) || !Email.Contains("@"))
             {
                 ErrorMessage = "El correo electrónico es obligatorio.";
@@ -72,9 +69,7 @@ namespace NuevoAvatarFront.Pages.HU_MICHEL.Login
                 return Page();
             }
 
-            // ============================
-            // LOGIN → SOLO 2 VALORES
-            // ============================
+            // LOGIN
             var (loginData, loginError) = await _authApi.LoginAsync(Email, Password);
 
             if (loginError != null || loginData == null)
@@ -85,42 +80,42 @@ namespace NuevoAvatarFront.Pages.HU_MICHEL.Login
 
             var login = loginData;
 
-            // Guardar tokens y usuario ID
+            // GUARDAR TOKENS
             HttpContext.Session.SetString("AccessToken", login.Access_Token);
             HttpContext.Session.SetString("RefreshToken", login.Refresh_Token);
             HttpContext.Session.SetInt32("UsuarioID", login.UsuarioID);
 
-            // ============================
-            // CONSULTAR DATOS DEL USUARIO
-            // ============================
-            var (okUser, statusUser, usuarioData, msgUser) =
+            // OBTENER INFO COMPLETA DEL USUARIO
+            var (okUser, _, usuarioData, msgUser) =
                 await _usuarioApi.GetByIdAsync(login.UsuarioID, login.UsuarioID);
 
             if (okUser && usuarioData != null)
             {
                 HttpContext.Session.SetString("UserName", usuarioData.Nombre);
                 HttpContext.Session.SetString("UserRole", usuarioData.RolNombre);
+                HttpContext.Session.SetInt32("RolID", usuarioData.ID_Rol);
             }
             else
             {
                 HttpContext.Session.SetString("UserName", "Usuario");
                 HttpContext.Session.SetString("UserRole", "N/D");
+                HttpContext.Session.SetInt32("RolID", 0);
             }
 
-            // ============================
-            // RECORDARME → COOKIES
-            // ============================
+
+            // RECORDARME
             if (RememberMe)
             {
-                var options = new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(7) };
-                Response.Cookies.Append("AccessToken", login.Access_Token, options);
-                Response.Cookies.Append("RefreshToken", login.Refresh_Token, options);
-                Response.Cookies.Append("UsuarioID", login.UsuarioID.ToString(), options);
+                var opt = new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(7) };
+                Response.Cookies.Append("AccessToken", login.Access_Token, opt);
+                Response.Cookies.Append("RefreshToken", login.Refresh_Token, opt);
+                Response.Cookies.Append("UsuarioID", login.UsuarioID.ToString(), opt);
             }
 
             await _bitacoraApi.RegistrarAsync(login.UsuarioID, "Inicio de sesión exitoso");
 
             return RedirectToPage("/Dashboard/Index");
         }
+
     }
 }

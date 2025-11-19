@@ -5,82 +5,114 @@
     Layout = "_Layout";
 }
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">
-            @ViewData["Title"]
-        </h6>
-    </div>
+<div class="card shadow p-4">
+    <h3 class="text-primary mb-4">
+        @(Model.EsEdicion ? "Editar Carrera" : "Crear Nueva Carrera")
+    </h3>
 
-    <div class="card-body">
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
 
-        <form method="post">
-            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    <form method="post" id="carreraForm">
 
-            <input type="hidden" asp-for="Carrera.ID_Carrera" />
+        <!-- Campo oculto CRÍTICO para preservar el ID en ediciones -->
+        <input type="hidden" asp-for="Carrera.ID_Carrera" />
 
-            <!-- Nombre -->
-            <div class="mb-3">
-                <label class="form-label">Nombre de la Carrera</label>
-                <input asp-for="Carrera.Nombre" class="form-control" />
-                <span asp-validation-for="Carrera.Nombre" class="text-danger"></span>
-            </div>
+        <!-- Nombre de la Carrera -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Nombre de la Carrera</label>
+            <input asp-for="Carrera.Nombre"
+                   class="form-control shadow-sm"
+                   required
+                   placeholder="Ej: Ingeniería en Sistemas" />
+            <span asp-validation-for="Carrera.Nombre" class="text-danger"></span>
+        </div>
 
-            <!-- Institución -->
-            <div class="mb-3">
-                <label class="form-label">Institución</label>
-                <select class="form-select" asp-for="Carrera.ID_Institucion" asp-items="Model.Instituciones">
-                    <option value="">-- Seleccionar --</option>
-                </select>
-                <span asp-validation-for="Carrera.ID_Institucion" class="text-danger"></span>
-            </div>
+        <!-- Institución -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Institución</label>
+            <select asp-for="Carrera.ID_Institucion"
+                    class="form-control shadow-sm"
+                    required
+                    asp-items="Model.Instituciones">
+                <option value="">-- Seleccionar Institución --</option>
+            </select>
+            <span asp-validation-for="Carrera.ID_Institucion" class="text-danger"></span>
+        </div>
 
-            <!-- Director -->
-            <div class="mb-3">
-                <label class="form-label">Director de Carrera</label>
-                <select class="form-select" asp-for="Carrera.ID_Profesor_Director" asp-items="Model.Profesores">
-                    <option value="">-- Seleccionar --</option>
-                </select>
-                <span asp-validation-for="Carrera.ID_Profesor_Director" class="text-danger"></span>
-            </div>
+        <!-- Director de Carrera -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Director de Carrera</label>
+            <select asp-for="Carrera.ID_Profesor_Director"
+                    class="form-control shadow-sm"
+                    required
+                    asp-items="Model.Profesores">
+                <option value="">-- Seleccionar Director --</option>
+            </select>
+            <span asp-validation-for="Carrera.ID_Profesor_Director" class="text-danger"></span>
+        </div>
 
-            <div class="d-flex justify-content-between mt-4">
-                <a asp-page="/Carreras/Index" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </a>
+        <!-- Botones -->
+        <div class="mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-success" onclick="confirmSave()">
+                <i class="fas fa-save"></i> Guardar
+            </button>
 
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> @Model.BotonTexto
-                </button>
-            </div>
-        </form>
-    </div>
+            <a asp-page="./Index" class="btn btn-secondary">
+                Cancelar
+            </a>
+        </div>
+
+    </form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-@if (!string.IsNullOrEmpty(Model.ErrorMessage))
-{
     <script>
-        Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "@Model.ErrorMessage",
-        });
-    </script>
-}
+        function confirmSave() {
+            let form = document.getElementById("carreraForm");
 
-@if (!string.IsNullOrEmpty(Model.SuccessMessage))
-{
-    <script>
-        Swal.fire({
-            icon: "success",
-            title: "Éxito",
-            text: "@Model.SuccessMessage",
-            timer: 1800,
-            showConfirmButton: false
-        }).then(() => {
-            window.location.href = "/Carreras/Index";
-        });
+            // Validación HTML5
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Por favor complete todos los campos obligatorios'
+                });
+                return;
+            }
+
+            // Confirmación de guardado
+            Swal.fire({
+                title: '¿Guardar carrera?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
     </script>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <script>
+            Swal.fire({
+                icon: "success",
+                title: "Éxito",
+                text: "@Model.SuccessMessage",
+                timer: 1800,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = "/Carreras/Index";
+            });
+        </script>
+    }
 }

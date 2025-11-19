@@ -23,6 +23,9 @@ namespace NuevoAvatarFront.Pages.Cursos
         public List<SelectListItem> Carreras { get; set; } = new();
         public bool EsEdicion => Curso.ID_Curso > 0;
 
+        public string? ErrorMessage { get; set; }
+        public string? SuccessMessage { get; set; }
+
         // GET
         public async Task<IActionResult> OnGetAsync(int? id)
         {

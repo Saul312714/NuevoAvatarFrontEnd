@@ -26,6 +26,11 @@ namespace NuevoAvatarFront.Pages.Instituciones
         [TempData]
         public string? StatusType { get; set; }
 
+
+        public string? ErrorMessage { get; set; }
+        public string? SuccessMessage { get; set; }
+
+
         public async Task<IActionResult> OnGetAsync(int? id)
         {
             if (id.HasValue && id.Value > 0)

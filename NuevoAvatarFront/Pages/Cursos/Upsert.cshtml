@@ -5,64 +5,76 @@
     Layout = "_Layout";
 }
 
-<div class="card shadow">
+<div class="card shadow p-4">
+    <h3 class="text-primary mb-4">
+        @(Model.EsEdicion ? "Editar Curso" : "Crear Nuevo Curso")
+    </h3>
 
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">
-            @(Model.EsEdicion ? "Editar Curso" : "Nuevo Curso")
-        </h6>
-    </div>
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
 
-    <div class="card-body">
+    <form method="post" id="cursoForm" asp-route-id="@Model.Curso.ID_Curso">
 
-        <!-- EL FIX MÁS IMPORTANTE: enviar correctamente el ID -->
-        <form method="post" asp-route-id="@Model.Curso.ID_Curso">
+        <!-- Campo oculto CRÍTICO para preservar el ID en ediciones -->
+        <input type="hidden" asp-for="Curso.ID_Curso" />
 
-            <!-- Segundo FIX: enviar ID en el POST -->
-            @if (Model.EsEdicion)
-            {
-                <input type="hidden" asp-for="Curso.ID_Curso" />
-            }
+        <!-- Nombre del Curso -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Nombre del Curso</label>
+            <input asp-for="Curso.Nombre"
+                   class="form-control shadow-sm"
+                   required
+                   placeholder="Ej: Matemáticas Avanzadas" />
+            <span asp-validation-for="Curso.Nombre" class="text-danger"></span>
+        </div>
 
-            <!-- Nombre -->
-            <div class="mb-3">
-                <label class="form-label">Nombre del curso</label>
-                <input asp-for="Curso.Nombre" class="form-control" />
-                <span asp-validation-for="Curso.Nombre" class="text-danger"></span>
-            </div>
+        <!-- Nivel -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Nivel (1 - 12)</label>
+            <input asp-for="Curso.Nivel"
+                   type="number"
+                   class="form-control shadow-sm"
+                   required
+                   min="1"
+                   max="12"
+                   placeholder="Ingrese el nivel del curso" />
+            <span asp-validation-for="Curso.Nivel" class="text-danger"></span>
+            <small class="form-text text-muted">
+                Ingrese un nivel entre 1 y 12
+            </small>
+        </div>
 
-            <!-- Nivel -->
-            <div class="mb-3">
-                <label class="form-label">Nivel (1 - 12)</label>
-                <input asp-for="Curso.Nivel" type="number" class="form-control" min="1" max="12" />
-                <span asp-validation-for="Curso.Nivel" class="text-danger"></span>
-            </div>
+        <!-- Carrera -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Carrera</label>
+            <select asp-for="Curso.ID_Carrera"
+                    class="form-control shadow-sm"
+                    required
+                    asp-items="Model.Carreras">
+                <option value="">-- Seleccionar Carrera --</option>
+            </select>
+            <span asp-validation-for="Curso.ID_Carrera" class="text-danger"></span>
+        </div>
 
-            <!-- Carrera -->
-            <div class="mb-3">
-                <label class="form-label">Carrera</label>
-                <select asp-for="Curso.ID_Carrera" class="form-select" asp-items="Model.Carreras">
-                    <option value="">Seleccione una carrera</option>
-                </select>
-                <span asp-validation-for="Curso.ID_Carrera" class="text-danger"></span>
-            </div>
+        <!-- Botones -->
+        <div class="mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-success" onclick="confirmSave()">
+                <i class="fas fa-save"></i> Guardar
+            </button>
 
-            <!-- BOTONES -->
-            <div class="d-flex justify-content-between">
-                <a asp-page="/Cursos/Index" class="btn btn-secondary">Volver</a>
+            <a asp-page="./Index" class="btn btn-secondary">
+                Cancelar
+            </a>
+        </div>
 
-                <button type="submit" class="btn btn-primary">
-                    @(Model.EsEdicion ? "Guardar Cambios" : "Crear Curso")
-                </button>
-            </div>
-
-        </form>
-
-    </div>
+    </form>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         // Validación de nombre (solo letras y espacios)
@@ -72,5 +84,59 @@
                 if (!regex.test(this.value))
                     this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ ]+/g, '');
             });
+
+        function confirmSave() {
+            let form = document.getElementById("cursoForm");
+
+            // Validación HTML5
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Por favor complete todos los campos obligatorios'
+                });
+                return;
+            }
+
+            // Validación adicional del nivel (1-12)
+            let nivel = parseInt(document.querySelector("input[name='Curso.Nivel']").value);
+            if (nivel < 1 || nivel > 12) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Nivel inválido',
+                    text: 'El nivel debe estar entre 1 y 12'
+                });
+                return;
+            }
+
+            // Confirmación de guardado
+            Swal.fire({
+                title: '¿Guardar curso?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
     </script>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <script>
+            Swal.fire({
+                icon: "success",
+                title: "Éxito",
+                text: "@Model.SuccessMessage",
+                timer: 1800,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = "/Cursos/Index";
+            });
+        </script>
+    }
 }

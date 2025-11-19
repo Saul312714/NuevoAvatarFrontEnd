@@ -5,9 +5,9 @@
         public int ID_Modulo { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
+        public int Orden { get; set; }
 
         public string Ruta { get; set; } = string.Empty;
-
         public string Icono { get; set; } = "fas fa-folder";
     }
 }

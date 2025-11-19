@@ -4,12 +4,15 @@ using NuevoAvatarFront.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // ===============================
 // RAZOR PAGES
 // ===============================
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
 
+// Cliente HTTP para UsuariosRoles
+builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(client =>
 // ===============================
 // SESIONES
 // ===============================
@@ -21,6 +24,13 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Registrar el cliente de Roles
+builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["UsuariosRolesApi:BaseUrl"]
+        ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
+    client.BaseAddress = new Uri(baseUrl);
+});
 // ===============================
 // AUTO-MAPPER
 // ===============================
@@ -38,6 +48,13 @@ string bitacoraBase = builder.Configuration["BitacoraApi:BaseUrl"]
 string ofertaAcademicaBase = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
     ?? throw new Exception("❌ OfertaAcademicaApi:BaseUrl no configurado");
 
+// Registrar otros clientes HTTP para autenticación y bitácora
+builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["UsuariosRolesApi:BaseUrl"]
+        ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
+    client.BaseAddress = new Uri(baseUrl);
+});
 // --- Usuarios & Roles ---
 builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c =>
     c.BaseAddress = new Uri(usuariosRolesBase));
@@ -56,12 +73,20 @@ builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c =>
 builder.Services.AddHttpClient<IInstitucionApiClient, InstitucionApiClient>(c =>
     c.BaseAddress = new Uri(ofertaAcademicaBase));
 
+builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["BitacoraApi:BaseUrl"]
+        ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
+    client.BaseAddress = new Uri(baseUrl);
+});
 builder.Services.AddHttpClient<IProfesorApiClient, ProfesorApiClient>(c =>
     c.BaseAddress = new Uri(ofertaAcademicaBase));
 
 builder.Services.AddHttpClient<ICarreraApiClient, CarreraApiClient>(c =>
     c.BaseAddress = new Uri(ofertaAcademicaBase));
 
+// Agregar HttpContextAccessor y TokenHelper
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<ICursoApiClient, CursoApiClient>(c =>
     c.BaseAddress = new Uri(ofertaAcademicaBase));
 
@@ -78,7 +103,10 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
+
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseRouting();

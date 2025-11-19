@@ -1,0 +1,89 @@
+﻿@page "{id?}"
+@model NuevoAvatarFront.Pages.Parametros.UpsertModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar Parámetro" : "Nuevo Parámetro";
+}
+
+<div class="card shadow p-4">
+
+    <h3 class="text-primary mb-4">
+        @(Model.EsEdicion ? "Editar Parámetro" : "Crear Nuevo Parámetro")
+    </h3>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <form method="post" id="parametroForm">
+
+        @if (Model.EsEdicion)
+        {
+            <input type="hidden" asp-for="Parametro.ID_Parametro" />
+        }
+
+        <!-- ID -->
+        <div class="mb-3">
+            <label class="fw-bold">ID del Parámetro</label>
+
+            @if (Model.EsEdicion)
+            {
+                <input asp-for="Parametro.ID_Parametro" class="form-control" readonly />
+            }
+            else
+            {
+                <input asp-for="Parametro.ID_Parametro" class="form-control" required />
+            }
+        </div>
+
+        <!-- VALOR -->
+        <div class="mb-3">
+            <label class="fw-bold">Valor</label>
+            <textarea asp-for="Parametro.Valor" class="form-control shadow-sm"
+                      rows="4"></textarea>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-success" onclick="confirmSave()">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+
+            <a asp-page="./Index" class="btn btn-secondary">Cancelar</a>
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function confirmSave() {
+
+            let form = document.getElementById("parametroForm");
+
+            // validar HTML5
+            if (!form.checkValidity()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Completa todos los campos obligatorios'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '¿Guardar parámetro?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

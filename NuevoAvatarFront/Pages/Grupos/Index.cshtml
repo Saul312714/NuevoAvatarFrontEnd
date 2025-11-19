@@ -1,0 +1,114 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Grupos.IndexModel
+@{
+    ViewData["Title"] = "Administración de Grupos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Grupos por Curso / Período</h1>
+    <a asp-page="Upsert" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Grupo
+    </a>
+</div>
+
+<!-- FILTROS -->
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label class="fw-bold text-gray-800">Curso</label>
+        <select asp-for="CursoFiltro" class="form-control shadow-sm">
+            <option value="">-- Todos --</option>
+            @foreach (var c in Model.Cursos)
+            {
+                <option value="@c.ID_Curso">@c.Nombre</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="fw-bold text-gray-800">Período</label>
+        <select asp-for="PeriodoFiltro" class="form-control shadow-sm">
+            <option value="">-- Todos --</option>
+            @foreach (var p in Model.Periodos)
+            {
+                <option value="@p.ID_Periodo">@p.Nombre</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary shadow me-2">
+            <i class="fas fa-filter"></i> Aplicar filtros
+        </button>
+        <a asp-page="./Index" class="btn btn-secondary shadow">Limpiar</a>
+    </div>
+</form>
+
+<div class="card shadow">
+    <div class="card-body">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Grupo</th>
+                    <th>Curso</th>
+                    <th>Profesor</th>
+                    <th>Período</th>
+                    <th>Horario</th>
+                    <th style="width:150px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var g in Model.Grupos)
+                {
+                    <tr>
+                        <td>@g.Numero</td>
+                        <td>@g.Curso</td>
+                        <td>@g.Profesor</td>
+                        <td>@g.Periodo</td>
+                        <td>@g.Horario</td>
+                        <td>
+                            <a asp-page="Upsert" asp-route-id="@g.ID_Grupo" class="btn btn-sm btn-warning">
+                                Editar
+                            </a>
+
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@g.ID_Grupo" class="d-inline">
+                                <button type="button"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="confirmDelete(event)">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function confirmDelete(event) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: '¿Eliminar grupo?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let form = event.target.closest("form");
+                    form.submit();
+                }
+            });
+        }
+    </script>
+
+
+}

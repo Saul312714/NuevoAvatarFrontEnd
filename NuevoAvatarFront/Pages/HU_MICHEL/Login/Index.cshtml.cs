@@ -81,7 +81,7 @@ namespace NuevoAvatarFront.Pages.HU_MICHEL.Login
 
             await _bitacoraApi.RegistrarAsync(login.UsuarioID, "Inicio de sesión exitoso");
 
-            return RedirectToPage("/Ejemplo/Tables");
+            return RedirectToPage("/Dashboard/Index");
         }
     }
 }

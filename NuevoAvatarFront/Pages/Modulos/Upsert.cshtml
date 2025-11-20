@@ -10,53 +10,51 @@
     </div>
 
     <div class="card-body">
+
         <form method="post" class="row g-3">
+
+            <!--ID OCULTO NECESARIO PARA EDITAR -->
+            <input type="hidden" asp-for="Modulo.ID_Modulo" />
 
             <!-- NOMBRE -->
             <div class="col-md-6">
                 <label class="form-label">Nombre</label>
-
                 <input asp-for="Modulo.Nombre"
                        class="form-control"
                        required
                        pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
                        title="Solo se permiten letras y espacios" />
-
-                <span class="text-danger" asp-validation-for="Modulo.Nombre"></span>
+                <span asp-validation-for="Modulo.Nombre" class="text-danger"></span>
             </div>
 
             <!-- URL -->
             <div class="col-md-6">
                 <label class="form-label">Url</label>
                 <input asp-for="Modulo.Url" class="form-control" required />
-                <span class="text-danger" asp-validation-for="Modulo.Url"></span>
+                <span asp-validation-for="Modulo.Url" class="text-danger"></span>
             </div>
 
             <!-- ORDEN -->
             <div class="col-md-3">
                 <label class="form-label">Orden</label>
-
                 <input asp-for="Modulo.Orden"
                        type="number"
                        min="1"
                        class="form-control"
                        required />
-
-                <span class="text-danger" asp-validation-for="Modulo.Orden"></span>
+                <span asp-validation-for="Modulo.Orden" class="text-danger"></span>
             </div>
 
             <!-- ICONO -->
             <div class="col-md-4">
                 <label class="form-label">Icono (opcional)</label>
                 <input asp-for="Modulo.Icono" class="form-control" />
-                <span class="text-danger" asp-validation-for="Modulo.Icono"></span>
             </div>
 
-            <!-- RUTA (opcional, por si en futuro usas submenús o breadcrumb) -->
+            <!-- RUTA -->
             <div class="col-md-4">
                 <label class="form-label">Ruta (opcional)</label>
                 <input asp-for="Modulo.Ruta" class="form-control" />
-                <span class="text-danger" asp-validation-for="Modulo.Ruta"></span>
             </div>
 
             <!-- BOTONES -->
@@ -65,12 +63,8 @@
                 <a asp-page="/Modulos/Index" class="btn btn-secondary">Cancelar</a>
             </div>
 
-            <div class="col-md-3">
-                <label class="form-label">Activo</label><br />
-                <input asp-for="Modulo.Activo" type="checkbox" class="form-check-input" />
-            </div>
-
         </form>
+
     </div>
 </div>
 

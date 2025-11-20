@@ -44,7 +44,7 @@
                         <th>URL</th>
                         <th>Orden</th>
                         <th>Estado</th>
-                        <th style="width:180px;">Acciones</th>
+                        <th style="width:200px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,29 +70,12 @@
 
                             <!-- ACCIONES -->
                             <td>
+                                <!-- EDITAR -->
                                 <a asp-page="/Modulos/Upsert"
                                    asp-route-id="@m.ID_Modulo"
                                    class="btn btn-sm btn-warning">
                                     Editar
                                 </a>
-
-                                @if (m.Activo)
-                                {
-                                    <!-- DESACTIVAR -->
-                                    <a asp-page="/Modulos/Delete"
-                                       asp-route-id="@m.ID_Modulo"
-                                       class="btn btn-sm btn-danger">
-                                        Desactivar
-                                    </a>
-                                }
-                                else
-                                {
-                                    <!-- ACTIVAR -->
-                                    <form method="post" asp-page-handler="Activar" class="d-inline">
-                                        <input type="hidden" name="idModulo" value="@m.ID_Modulo" />
-                                        <button class="btn btn-sm btn-success">Activar</button>
-                                    </form>
-                                }
                             </td>
                         </tr>
                     }

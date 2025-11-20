@@ -19,9 +19,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ============================================
 // BASE URLS
-// ============================================
 var baseUsuariosRoles = builder.Configuration["UsuariosRolesApi:BaseUrl"]
     ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
 
@@ -31,9 +29,7 @@ var baseBitacora = builder.Configuration["BitacoraApi:BaseUrl"]
 var baseOferta = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
     ?? throw new InvalidOperationException("OfertaAcademicaApi:BaseUrl no configurado");
 
-// ============================================
 // HTTP CLIENTS – USUARIOS & ROLES
-// ============================================
 builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c =>
 {
     c.BaseAddress = new Uri(baseUsuariosRoles);
@@ -59,17 +55,13 @@ builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(c =>
     c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
-// ============================================
 // HTTP CLIENTS – BITÁCORA
-// ============================================
 builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c =>
 {
     c.BaseAddress = new Uri(baseBitacora);
 });
 
-// ============================================
 // HTTP CLIENTS – OFERTA ACADÉMICA
-// ============================================
 builder.Services.AddHttpClient<IInstitucionApiClient, InstitucionApiClient>(c =>
 {
     c.BaseAddress = new Uri(baseOferta);

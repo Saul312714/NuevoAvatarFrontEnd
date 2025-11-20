@@ -1,15 +1,20 @@
 using Microsoft.AspNetCore.CookiePolicy;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Middleware;
 using System.Net.Http.Headers;
 using NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --------------------- Razor Pages ---------------------
+// =========================================================
+// RAZOR PAGES
+// =========================================================
 builder.Services.AddRazorPages();
 
-// --------------------- Sesiones ---------------------
+// =========================================================
+// SESIÓN
+// =========================================================
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -18,54 +23,54 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
-
-// --------------------- Token Helper ---------------------
 builder.Services.AddScoped<TokenHelper>();
 
-
 // =========================================================
-//                CLIENTES PROPIOS 
+// CLIENTES PROPIOS (OFERTA / MATRÍCULA / PREMATRÍCULA)
 // =========================================================
 
-// API OFERTA
+// API OFERTA (named client)
 builder.Services.AddHttpClient("OfertaClient", (sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
     client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
-// API MATRÍCULA
+// API MATRÍCULA (named client)
 builder.Services.AddHttpClient("MatriculaClient", (sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     var baseUrl = cfg["Apis:Matricula"] ?? "http://localhost:5193";
     client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
-// API PROFESORES
+// API PROFESORES (typed client)
 builder.Services.AddHttpClient<ProfesorClient>((sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
     client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
-// API PERIODOS
+// API PERÍODOS (typed client)
 builder.Services.AddHttpClient<PeriodoClient>((sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
     client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
-// Tus servicios
+// Servicios de tu módulo de prematrícula
 builder.Services.AddScoped<IPreMatriculaService, PreMatriculaService>();
 builder.Services.AddScoped<IEstudianteService, EstudianteService>();
 builder.Services.AddScoped<ICarreraService, CarreraService>();
@@ -75,46 +80,56 @@ builder.Services.AddScoped<IMatriculaFrontService, MatriculaFrontService>();
 builder.Services.AddScoped<IGrupoService, GrupoService>();
 
 // =========================================================
-//                CLIENTES DE DEVELOP (SEGURIDAD)
+// CLIENTES DE SEGURIDAD (USUARIOS / ROLES / BITÁCORA)
 // =========================================================
+var baseUsuariosRoles = builder.Configuration["UsuariosRolesApi:BaseUrl"]
+    ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
 
-// UsuariosRoles API
-builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(client =>
+var baseBitacora = builder.Configuration["BitacoraApi:BaseUrl"]
+    ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
+
+// Usuarios
+builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c =>
 {
-    var baseUrl = builder.Configuration["UsuariosRolesApi:BaseUrl"]
-        ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
-    client.BaseAddress = new Uri(baseUrl);
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
-// Roles API
-builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(client =>
+// Roles
+builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(c =>
 {
-    var baseUrl = builder.Configuration["UsuariosRolesApi:BaseUrl"]
-        ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
-    client.BaseAddress = new Uri(baseUrl);
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
-// Auth API
-builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(client =>
+// Auth
+builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(c =>
 {
-    var baseUrl = builder.Configuration["UsuariosRolesApi:BaseUrl"]
-        ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
-    client.BaseAddress = new Uri(baseUrl);
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
-// Bitácora API
-builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(client =>
+// Bitácora
+builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c =>
 {
-    var baseUrl = builder.Configuration["BitacoraApi:BaseUrl"]
-        ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
-    client.BaseAddress = new Uri(baseUrl);
+    c.BaseAddress = new Uri(baseBitacora);
 });
 
+// Módulos
+builder.Services.AddHttpClient<IModuloApiClient, ModuloApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
+});
 
+// Rol-Módulo
+builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
+});
+
+// =========================================================
+// BUILD APP
+// =========================================================
 var app = builder.Build();
 
 // ================== MIDDLEWARE ==================
-
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -133,10 +148,14 @@ app.UseCookiePolicy(new CookiePolicyOptions
 });
 
 app.UseRouting();
+
 app.UseSession();
+app.UseSessionAuth();
 app.UseAuthorization();
 
-// Logout
+// ============================================
+// LOGOUT
+// ============================================
 app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraApi) =>
 {
     var idUsuario = context.Session.GetInt32("UsuarioID") ?? 0;
@@ -147,17 +166,20 @@ app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraAp
     }
     catch
     {
-        Console.WriteLine("No se pudo registrar el logout en bitácora.");
+        Console.WriteLine("No se pudo registrar la bitácora.");
     }
 
     context.Session.Clear();
+
     foreach (var cookie in context.Request.Cookies.Keys)
         context.Response.Cookies.Delete(cookie);
 
     context.Response.Redirect("/HU_MICHEL/Login/Index?logout=1");
 });
 
-// Redirect root
+// ============================================
+// DEFAULT ROUTE → LOGIN
+// ============================================
 app.MapGet("/", context =>
 {
     context.Response.Redirect("/HU_MICHEL/Login/Index");
@@ -167,4 +189,5 @@ app.MapGet("/", context =>
 app.MapRazorPages();
 
 app.Run();
+
 

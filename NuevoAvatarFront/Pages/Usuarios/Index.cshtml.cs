@@ -8,18 +8,21 @@ namespace NuevoAvatarFront.Pages.Usuarios
     public class IndexModel : PageModel
     {
         private readonly IUsuarioApiClient _usuarioApi;
-        private readonly IBitacoraApiClient _bitacoraApi;
+        private readonly IHttpContextAccessor _context;
 
-        public IndexModel(IUsuarioApiClient usuarioApi, IBitacoraApiClient bitacoraApi)
+        public IndexModel(IUsuarioApiClient usuarioApi, IHttpContextAccessor context)
         {
             _usuarioApi = usuarioApi;
-            _bitacoraApi = bitacoraApi;
+            _context = context;
         }
 
         public List<UsuarioDto> Usuarios { get; set; } = new();
-        public int Page { get; set; } = 1; // Página actual
-        public int TotalPages { get; set; } // Total de páginas
-        public int PageSize { get; set; } = 10; // Número de usuarios por página
+
+        public string ErrorMessage { get; set; } = string.Empty;
+        public string SuccessMessage { get; set; } = string.Empty;
+
+        public int Pagina { get; set; } = 1;
+        public int TotalPaginas { get; set; } = 1;
 
         [BindProperty(SupportsGet = true)]
         public string? Filtro { get; set; }
@@ -27,27 +30,43 @@ namespace NuevoAvatarFront.Pages.Usuarios
         [BindProperty(SupportsGet = true)]
         public string? Rol { get; set; }
 
-        public async Task OnGetAsync(int page = 1)
+        public async Task<IActionResult> OnGetAsync(int page = 1)
         {
-            var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
+            Pagina = page;
 
-            // Paginación: establecer tamaño de página
-            var pageSize = PageSize;
-            Usuarios = await _usuarioApi.GetAllAsync(Filtro, Rol, page, pageSize);
+            var idUsuarioAccion = _context.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
 
-            // Obtener el total de usuarios para calcular el número de páginas
-            var totalUsuarios = await _usuarioApi.GetAllAsync(Filtro, Rol); // Llamada a la API para obtener todos los usuarios
-            TotalPages = (int)Math.Ceiling((double)totalUsuarios.Count / pageSize); // Calcular el total de páginas
+            var result = await _usuarioApi.GetAllAsync(Filtro, Rol, Pagina, 10);
 
-            // Registrar consulta en bitácora
-            await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Consulta de usuarios (filtro: {Filtro}, rol: {Rol}, página: {page})");
+            if (!result.ok)
+            {
+                ErrorMessage = result.Message ?? "Error cargando usuarios.";
+                return Page();
+            }
+
+            Usuarios = result.Data ?? new List<UsuarioDto>();
+
+            // El backend ya controla el tamaño, pero generamos paginación client-side:
+            TotalPaginas = Usuarios.Count < 10 ? Pagina : Pagina + 1;
+
+            return Page();
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
-            var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
-            await _usuarioApi.DeleteAsync(id, idUsuarioAccion);
-            await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Eliminación de usuario {id}");
+            var idUsuarioAccion = _context.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
+
+            var result = await _usuarioApi.DeleteAsync(id, idUsuarioAccion);
+
+            if (!result.ok)
+            {
+                TempData["ErrorMessage"] = result.Message;
+            }
+            else
+            {
+                TempData["SuccessMessage"] = "Usuario eliminado correctamente.";
+            }
+
             return RedirectToPage();
         }
     }

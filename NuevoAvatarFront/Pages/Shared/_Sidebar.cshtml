@@ -2,7 +2,6 @@
 @inject IHttpContextAccessor Http
 @inject IModuloApiClient ModuloApi
 @inject IRolModuloApiClient RolModuloApi
-  @inject IHttpContextAccessor HttpContextAccessor
 
 @{
     var rolId = Http.HttpContext?.Session.GetInt32("RolID") ?? 0;
@@ -11,7 +10,10 @@
     var permisos = await RolModuloApi.GetByRolAsync(rolId);
     var modulos = await ModuloApi.GetAllAsync();
 
-    // Filtrar módulos visibles según permisos
+    // Página actual para marcar menú activo
+    var currentUrl = Http.HttpContext?.Request.Path.Value ?? "";
+
+    // Filtrar módulos visibles
     var visibles = modulos
         .Where(m => permisos.Any(p => p.ID_Modulo == m.ID_Modulo && p.PuedeVer))
         .OrderBy(m => m.Orden)
@@ -25,51 +27,37 @@
         <img src="/images/logo.png" width="40" height="40" class="me-2" />
     </a>
 
-    <hr class="sidebar-divider my-0">
+    <hr class="sidebar-divider my-0" />
 
-    <!-- Menú dinámico por rol -->
-    @if (rol == "Administrador")
+    <!-- LISTA DE MÓDULOS -->
+    @if (!visibles.Any())
     {
         <li class="nav-item mt-4 text-center text-warning">
             <span>No tienes módulos asignados</span>
-        </li>
-        */
-        <!--  Instituciones -->
-        <li class="nav-item">
-            <a class="nav-link" href="/Instituciones/Index">
-                <i class="fas fa-university"></i>
-                <span>Instituciones</span>
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="/Carreras/Index">
-                <i class="fas fa-university"></i>
-                <span>Carreras</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/Cursos/Index">
-                <i class="fas fa-university"></i>
-                <span>Cursos</span>
-            </a>
         </li>
     }
     else
     {
         @foreach (var m in visibles)
         {
-            <li class="nav-item">
+            // Determinar si el módulo está activo
+            bool isActive = currentUrl.StartsWith(m.Url, StringComparison.OrdinalIgnoreCase);
+
+            <li class="nav-item @(isActive ? "active" : "")">
+
                 <a class="nav-link" href="@m.Url">
+                    <i class="@m.Icono me-2"></i>
+
                     <span>@m.Nombre</span>
                 </a>
+
             </li>
         }
     }
 
     <hr class="sidebar-divider d-none d-md-block" />
 
-    <!-- BOTÓN QUE HACE FUNCIONAR EL TOGGLE -->
+    <!-- BOTÓN TOGGLE -->
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>
     </div>

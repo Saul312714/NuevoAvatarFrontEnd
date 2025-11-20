@@ -70,6 +70,12 @@
                                     Editar
                                 </a>
 
+                                <a asp-page="/Roles/Permisos"
+                                   asp-route-idRol="@rol.ID_Rol"
+                                   asp-route-nombreRol="@rol.Nombre"
+                                   class="btn btn-info btn-sm">
+                                    <i class="fas fa-key"></i> Permisos
+                                </a>
                                 <form method="post"
                                       asp-page-handler="Delete"
                                       asp-route-id="@rol.ID_Rol"

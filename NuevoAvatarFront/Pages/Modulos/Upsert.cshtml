@@ -1,0 +1,79 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Modulos.UpsertModel
+@{
+    Layout = "_Layout";
+}
+
+<div class="card shadow">
+    <div class="card-header">
+        <h4 class="m-0">@((Model.IsEdit) ? "Editar Módulo" : "Nuevo Módulo")</h4>
+    </div>
+
+    <div class="card-body">
+        <form method="post" class="row g-3">
+
+            <!-- NOMBRE -->
+            <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+
+                <input asp-for="Modulo.Nombre"
+                       class="form-control"
+                       required
+                       pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+"
+                       title="Solo se permiten letras y espacios" />
+
+                <span class="text-danger" asp-validation-for="Modulo.Nombre"></span>
+            </div>
+
+            <!-- URL -->
+            <div class="col-md-6">
+                <label class="form-label">Url</label>
+                <input asp-for="Modulo.Url" class="form-control" required />
+                <span class="text-danger" asp-validation-for="Modulo.Url"></span>
+            </div>
+
+            <!-- ORDEN -->
+            <div class="col-md-3">
+                <label class="form-label">Orden</label>
+
+                <input asp-for="Modulo.Orden"
+                       type="number"
+                       min="1"
+                       class="form-control"
+                       required />
+
+                <span class="text-danger" asp-validation-for="Modulo.Orden"></span>
+            </div>
+
+            <!-- ICONO -->
+            <div class="col-md-4">
+                <label class="form-label">Icono (opcional)</label>
+                <input asp-for="Modulo.Icono" class="form-control" />
+                <span class="text-danger" asp-validation-for="Modulo.Icono"></span>
+            </div>
+
+            <!-- RUTA (opcional, por si en futuro usas submenús o breadcrumb) -->
+            <div class="col-md-4">
+                <label class="form-label">Ruta (opcional)</label>
+                <input asp-for="Modulo.Ruta" class="form-control" />
+                <span class="text-danger" asp-validation-for="Modulo.Ruta"></span>
+            </div>
+
+            <!-- BOTONES -->
+            <div class="col-md-12 mt-3">
+                <button class="btn btn-primary">Guardar</button>
+                <a asp-page="/Modulos/Index" class="btn btn-secondary">Cancelar</a>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Activo</label><br />
+                <input asp-for="Modulo.Activo" type="checkbox" class="form-check-input" />
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

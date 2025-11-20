@@ -1,9 +1,11 @@
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.CookiePolicy;
 using NuevoAvatarFront.Helpers;
-using NuevoAvatarFront.Middleware;
-using System.Net.Http.Headers;
 using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Middleware;
 using NuevoAvatarFront.Services;
+using NuevoAvatarFront.Services.Dashboard;
+using NuevoAvatarFront.Pages.Expedientes; // 👈 para IMockDirecciones / MockDirecciones
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +72,9 @@ builder.Services.AddHttpClient<PeriodoClient>((sp, client) =>
         new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
+// 👇 servicio de Dashboard (IDashboardService -> DashboardService)
+builder.Services.AddHttpClient<IDashboardService, DashboardService>();
+
 // Servicios de tu módulo de prematrícula
 builder.Services.AddScoped<IPreMatriculaService, PreMatriculaService>();
 builder.Services.AddScoped<IEstudianteService, EstudianteService>();
@@ -79,6 +84,9 @@ builder.Services.AddScoped<IPeriodoService, PeriodoService>();
 builder.Services.AddScoped<IMatriculaFrontService, MatriculaFrontService>();
 builder.Services.AddScoped<IGrupoService, GrupoService>();
 
+// 👇 MOCKS de Expedientes (venían en Develop)
+builder.Services.AddSingleton<IMockDirecciones, MockDirecciones>();
+
 // =========================================================
 // CLIENTES DE SEGURIDAD (USUARIOS / ROLES / BITÁCORA)
 // =========================================================
@@ -87,6 +95,13 @@ var baseUsuariosRoles = builder.Configuration["UsuariosRolesApi:BaseUrl"]
 
 var baseBitacora = builder.Configuration["BitacoraApi:BaseUrl"]
     ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
+
+// 🔹 también traemos las bases de Oferta y Matrícula como en Develop
+var baseOfertaAcademica = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
+    ?? throw new InvalidOperationException("OfertaAcademicaApi:BaseUrl no configurado");
+
+var baseMatricula = builder.Configuration["MatriculaApi:BaseUrl"]
+    ?? throw new InvalidOperationException("MatriculaApi:BaseUrl no configurado");
 
 // Usuarios
 builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c =>
@@ -122,6 +137,24 @@ builder.Services.AddHttpClient<IModuloApiClient, ModuloApiClient>(c =>
 builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(c =>
 {
     c.BaseAddress = new Uri(baseUsuariosRoles);
+});
+
+// 🔹 Parámetros (venía en Develop)
+builder.Services.AddHttpClient<IParametroApiClient, ParametroApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
+});
+
+// 🔹 Grupos API (admin de grupos, no el IGrupoService que ya tienes)
+builder.Services.AddHttpClient<IGrupoApiClient, GrupoApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseOfertaAcademica);
+});
+
+// 🔹 Expedientes API
+builder.Services.AddHttpClient<IExpedienteApiClient, ExpedienteApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseMatricula);
 });
 
 // =========================================================
@@ -189,5 +222,3 @@ app.MapGet("/", context =>
 app.MapRazorPages();
 
 app.Run();
-
-

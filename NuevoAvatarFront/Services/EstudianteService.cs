@@ -32,7 +32,6 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                
                 await AttachBearerAsync(_httpClient);
 
                 var idUsuario = _httpContextAccessor.HttpContext?
@@ -45,6 +44,12 @@ namespace NuevoAvatarFront.Services
                 }
 
                 var response = await _httpClient.GetAsync($"/expediente?idUsuario={idUsuario}");
+
+                await EnsureSuccessOrThrowAsync(
+                    response,
+                    _logger,
+                    "No fue posible obtener el listado de estudiantes."
+                );
 
                 if (response.IsSuccessStatusCode)
                 {

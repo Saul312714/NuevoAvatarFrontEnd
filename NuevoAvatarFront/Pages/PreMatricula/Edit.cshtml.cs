@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;         
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -13,7 +15,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         private readonly ILogger<EditModel> _logger;
         private readonly TokenHelper _tokenHelper;
 
-        // Servicios adicionales que usas en CreateModel
         private readonly IEstudianteService _estudiante;
         private readonly ICarreraService _carrera;
         private readonly ICursoService _curso;
@@ -52,15 +53,13 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         public List<SelectListItem> Cursos { get; set; } = new();
         public List<SelectListItem> PeriodosFuturos { get; set; } = new();
 
-        // GET: cargamos la prematrícula y los dropdowns
         public async Task<IActionResult> OnGetAsync(int id)
         {
             if (HttpContext.Session.GetString("AccessToken") == null)
-                return RedirectToPage("/HU_MICHEL/Login/Index"); // Redirige si no hay token
+                return RedirectToPage("/HU_MICHEL/Login/Index");
 
             try
             {
-                // Obtener la prematrícula
                 var existente = await _prematricula.GetByIdAsync(id);
                 if (existente is null)
                 {
@@ -70,10 +69,15 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
                 PreMatricula = existente;
 
-                // Cargar los datos para los dropdowns
                 await CargarDatosDropdowns();
 
                 return Page();
+            }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al cargar la prematrícula {Id}", id);
+                MensajeError = apiEx.Message;
+                return RedirectToPage("./Index");
             }
             catch (Exception ex)
             {
@@ -83,7 +87,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             }
         }
 
-        // POST: guardar cambios
         public async Task<IActionResult> OnPostAsync(int id)
         {
             if (!ModelState.IsValid)
@@ -96,16 +99,25 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             {
                 PreMatricula.ID_Prematricula = id;
 
-                // Llamar al servicio para actualizar la prematrícula
                 await _prematricula.UpdateAsync(id, PreMatricula);
                 MensajeExito = "Prematrícula actualizada correctamente.";
                 return RedirectToPage("./Index");
+            }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al actualizar prematrícula {Id}", id);
+
+                var mensajeError = apiEx.Message;
+                ModelState.AddModelError(string.Empty, mensajeError);
+                MensajeError = mensajeError;
+
+                await CargarDatosDropdowns();
+                return Page();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al actualizar prematrícula");
 
-                // Manejo de errores relacionados con los periodos futuros
                 var mensajeError = ex.Message;
                 if (ex.Message.Contains("periodos FUTUROS", StringComparison.OrdinalIgnoreCase))
                 {
@@ -115,20 +127,15 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                 ModelState.AddModelError(string.Empty, mensajeError);
                 MensajeError = mensajeError;
 
-                // Recargar los dropdowns
                 await CargarDatosDropdowns();
                 return Page();
             }
         }
 
-        // ==========================
-        //  Cargar combos reutilizado
-        // ==========================
         private async Task CargarDatosDropdowns()
         {
             try
             {
-                // Cargar estudiantes
                 var estudiantes = await _estudiante.GetAllAsync();
                 Estudiantes = estudiantes
                     .OrderBy(e => e.Nombre)
@@ -139,7 +146,7 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     })
                     .ToList();
 
-                // Cargar carreras
+            
                 var carreras = await _carrera.GetAllAsync();
                 Carreras = carreras
                     .OrderBy(c => c.Nombre)
@@ -150,8 +157,8 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     })
                     .ToList();
 
-                // Cargar cursos (solo de nivel 1)
-                var cursos = await _curso.GetNivel1Async();  // Suponiendo que hay un método para obtener cursos de nivel 1
+                
+                var cursos = await _curso.GetNivel1Async();
                 Cursos = cursos
                     .OrderBy(c => c.Nombre)
                     .Select(c => new SelectListItem
@@ -161,7 +168,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     })
                     .ToList();
 
-                // Cargar periodos futuros
                 var periodos = await _periodo.GetPeriodosFuturosAsync();
                 PeriodosFuturos = periodos
                     .OrderBy(p => p.Anno)
@@ -173,6 +179,11 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     })
                     .ToList();
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al cargar datos para dropdowns en edición");
+                MensajeError = apiEx.Message;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar datos para dropdowns en edición");
@@ -180,4 +191,3 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         }
     }
 }
-

@@ -1,8 +1,11 @@
-﻿namespace NuevoAvatarFront.Models
+﻿using System.Text.Json.Serialization;
+
+namespace NuevoAvatarFront.Models
 {
     public class GrupoDto
     {
         public int ID_Grupo { get; set; }
+        [JsonPropertyName("Numero_Grupo")] 
         public int Numero_Grupo { get; set; }
         public int ID_Curso { get; set; }
         public int ID_Profesor { get; set; }

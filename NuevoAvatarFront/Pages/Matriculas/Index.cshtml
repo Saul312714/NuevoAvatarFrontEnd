@@ -5,18 +5,20 @@
 }
 
 <div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col">
-            <h2>
-                <i class="bi bi-clipboard-check"></i> Gestión de Matrículas
-            </h2>
-        </div>
+
+    <!-- HEADER TIPO GRUPOS -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-gray-800">
+            <i class="bi bi-clipboard-check"></i> Gestión de Matrículas
+        </h1>
+        @* Aquí podrías poner un botón extra si quisieras, lo dejo vacío para no inventar flujo nuevo *@
+        <div></div>
     </div>
 
     @* Mensajes *@
     @if (!string.IsNullOrEmpty(Model.MensajeExito))
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-check-circle"></i> @Model.MensajeExito
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -24,7 +26,7 @@
 
     @if (!string.IsNullOrEmpty(Model.MensajeError))
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-exclamation-triangle"></i> @Model.MensajeError
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -33,9 +35,9 @@
     <!-- ============================
          BLOQUE 1: NUEVA MATRÍCULA
          ============================ -->
-    <div class="card mb-4">
+    <div class="card shadow mb-4">
         <div class="card-header">
-            <h5 class="mb-0">
+            <h5 class="mb-0 text-gray-800">
                 <i class="bi bi-magic"></i> Nueva Matrícula (flujo guiado)
             </h5>
         </div>
@@ -46,11 +48,11 @@
                 <div class="row g-3">
                     <!-- Estudiante -->
                     <div class="col-md-4">
-                        <label asp-for="NuevaMatricula.ID_Estudiante" class="form-label">
-                            <span class="fw-semibold">1. Estudiante *</span>
+                        <label asp-for="NuevaMatricula.ID_Estudiante" class="form-label fw-bold text-gray-800">
+                            1. Estudiante *
                         </label>
                         <select asp-for="NuevaMatricula.ID_Estudiante"
-                                class="form-select"
+                                class="form-control shadow-sm"
                                 asp-items="Model.Estudiantes">
                             <option value="">-- Seleccione un estudiante --</option>
                         </select>
@@ -59,11 +61,11 @@
 
                     <!-- Curso -->
                     <div class="col-md-4">
-                        <label asp-for="NuevaMatricula.ID_Curso" class="form-label">
-                            <span class="fw-semibold">2. Curso *</span>
+                        <label asp-for="NuevaMatricula.ID_Curso" class="form-label fw-bold text-gray-800">
+                            2. Curso *
                         </label>
                         <select asp-for="NuevaMatricula.ID_Curso"
-                                class="form-select"
+                                class="form-control shadow-sm"
                                 asp-items="Model.Cursos">
                             <option value="">-- Seleccione un curso --</option>
                         </select>
@@ -72,41 +74,31 @@
 
                     <!-- Periodo -->
                     <div class="col-md-4">
-                        <label asp-for="NuevaMatricula.ID_Periodo" class="form-label">
-                            <span class="fw-semibold">3. Periodo (activo) *</span>
+                        <label asp-for="NuevaMatricula.ID_Periodo" class="form-label fw-bold text-gray-800">
+                            3. Período (activo) *
                         </label>
                         <select asp-for="NuevaMatricula.ID_Periodo"
-                                class="form-select"
+                                class="form-control shadow-sm"
                                 asp-items="Model.PeriodosActivos">
                             <option value="">-- Seleccione un periodo --</option>
                         </select>
                         <span asp-validation-for="NuevaMatricula.ID_Periodo" class="text-danger"></span>
                         <div class="form-text">
-                            La API valida que el periodo esté ACTIVO.
+                            La API valida que el período esté ACTIVO.
                         </div>
                     </div>
                 </div>
 
                 <div class="row g-3 mt-3">
-                    <!-- Grupo (antes numérico) -->
+                    <!-- Grupo (combo) -->
                     <div class="col-md-4">
-                        <label asp-for="NuevaMatricula.ID_Grupo" class="form-label">
-                            <span class="fw-semibold">4. Grupo *</span>
+                        <label asp-for="NuevaMatricula.ID_Grupo" class="form-label fw-bold text-gray-800">
+                            4. Grupo *
                         </label>
-
-                        @* ANTES: input numérico
-                        <input asp-for="NuevaMatricula.ID_Grupo"
-                               type="number"
-                               class="form-control"
-                               min="1" />
-                        <div class="form-text">
-                            Ingrese el ID del grupo. (Cuando tengas el API de grupos lo podemos cambiar a combo).
-                        </div>
-                        *@
 
                         <!-- NUEVO: combo de grupos -->
                         <select asp-for="NuevaMatricula.ID_Grupo"
-                                class="form-select"
+                                class="form-control shadow-sm"
                                 asp-items="Model.Grupos">
                             <option value="">-- Seleccione un grupo --</option>
                         </select>
@@ -119,8 +111,8 @@
 
                 <hr class="my-4" />
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="submit" class="btn btn-primary">
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success shadow">
                         <i class="bi bi-save"></i> Confirmar Matrícula
                     </button>
                 </div>
@@ -131,9 +123,9 @@
     <!-- ============================
          BLOQUE 2: LISTADO / CSV
          ============================ -->
-    <div class="card">
+    <div class="card shadow">
         <div class="card-header">
-            <h5 class="mb-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 d-flex justify-content-between align-items-center text-gray-800">
                 <span>
                     <i class="bi bi-table"></i> Estudiantes Matriculados por Curso / Grupo
                 </span>
@@ -147,39 +139,34 @@
             </h5>
         </div>
         <div class="card-body">
-            <!-- Filtros -->
-            @* IMPORTANTE: ahora el form apunta explícitamente a esta página *@
-            <form method="get" asp-page="./Index" class="mb-3">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Curso</label>
-                        <select asp-for="FiltroCurso" class="form-select" asp-items="Model.Cursos">
-                            <option value="">-- Seleccione curso --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Grupo</label>
+            <!-- Filtros (estilo similar a Grupos) -->
+            <form method="get" asp-page="./Index" class="row g-3 mb-4 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-gray-800">Curso</label>
+                    <select asp-for="FiltroCurso" class="form-control shadow-sm" asp-items="Model.Cursos">
+                        <option value="">-- Seleccione curso --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-gray-800">Grupo</label>
 
-                        @* ANTES: filtro numérico
-                        <input asp-for="FiltroGrupo" type="number" class="form-control" min="1" />
-                        *@
+                    <!-- combo de grupos para el filtro -->
+                    <select asp-for="FiltroGrupo" class="form-control shadow-sm" asp-items="Model.Grupos">
+                        <option value="">-- Seleccione grupo --</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary shadow me-2 flex-fill">
+                        <i class="bi bi-search"></i> Buscar matriculados
+                    </button>
 
-                        <!-- NUEVO: combo de grupos para el filtro -->
-                        <select asp-for="FiltroGrupo" class="form-select" asp-items="Model.Grupos">
-                            <option value="">-- Seleccione grupo --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary mt-4 flex-fill">
-                            <i class="bi bi-search"></i> Buscar matriculados
-                        </button>
-
-                        <!-- BOTÓN AJUSTADO PARA LLAMAR AL HANDLER OnGetExportCsvAsync -->
-                       <button type="submit" class="btn btn-outline-secondary mt-4 flex-fill" formaction="/Matriculas/Index?handler=ExportCsv" formmethod="get">
-    <i class="bi bi-download"></i> Exportar CSV
-</button>
-
-                    </div>
+                    <!-- BOTÓN PARA LLAMAR AL HANDLER OnGetExportCsvAsync -->
+                    <button type="submit"
+                            class="btn btn-outline-secondary shadow flex-fill"
+                            formaction="/Matriculas/Index?handler=ExportCsv"
+                            formmethod="get">
+                        <i class="bi bi-download"></i> Exportar CSV
+                    </button>
                 </div>
             </form>
 
@@ -187,8 +174,8 @@
             @if (Model.Matriculados.Any())
             {
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+                    <table class="table table-bordered table-hover">
+                        <thead class="thead-dark">
                             <tr>
                                 <th>ID Estudiante</th>
                                 <th>Identificación</th>
@@ -247,5 +234,3 @@
         }, 5000);
     </script>
 }
-
-

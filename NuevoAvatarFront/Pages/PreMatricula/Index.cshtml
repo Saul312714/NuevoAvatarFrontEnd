@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    @* Mensajes de éxito o error *@
+
     @if (!string.IsNullOrEmpty(Model.MensajeExito))
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -35,7 +35,7 @@
         </div>
     }
 
-    @* Panel de filtros *@
+ 
     <div class="card mb-3">
         <div class="card-header">
             <h5 class="mb-0">
@@ -68,7 +68,7 @@
                             <i class="bi bi-search"></i> Buscar
                         </button>
 
-                        @* Botón para limpiar filtros: llama al handler OnGetLimpiarFiltrosAsync *@
+
                         <a asp-page="./Index"
                            asp-page-handler="LimpiarFiltros"
                            class="btn btn-secondary ms-2">
@@ -80,7 +80,7 @@
         </div>
     </div>
 
-    @* Tabla de prematrículas *@
+
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0">
@@ -101,7 +101,7 @@
                                 <th>ID Curso</th>
                                 <th>ID Periodo</th>
                                 <th>Observaciones</th>
-                                <th class="text-center" style="width: 180px;">Acciones</th>
+                                <th class="text-end" style="width: 220px;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -118,8 +118,8 @@
                                         {
                                             <span title="@item.Observaciones">
                                                 @(item.Observaciones.Length > 50
-                                                    ? item.Observaciones.Substring(0, 50) + "..."
-                                                    : item.Observaciones)
+                                                                                    ? item.Observaciones.Substring(0, 50) + "..."
+                                                                                    : item.Observaciones)
                                             </span>
                                         }
                                         else
@@ -127,25 +127,23 @@
                                             <span class="text-muted fst-italic">Sin observaciones</span>
                                         }
                                     </td>
-                                    <td class="text-center">
-                                        <div class="btn-group" role="group">
-                                            <a asp-page="Details" asp-route-id="@item.ID_Prematricula"
-                                               class="btn btn-sm btn-info" title="Ver detalles">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a asp-page="Edit" asp-route-id="@item.ID_Prematricula"
-                                               class="btn btn-sm btn-warning" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
+                                    <td class="text-end">
+                                        <a asp-page="Edit"
+                                           asp-route-id="@item.ID_Prematricula"
+                                           class="btn btn-warning btn-sm me-1">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
 
-                                            @* ✅ Nuevo: usar página Delete en lugar de modal *@
-                                            <a asp-page="Delete"
-                                               asp-route-id="@item.ID_Prematricula"
-                                               class="btn btn-sm btn-danger"
-                                               title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        </div>
+                                        <form method="post"
+                                              asp-page-handler="Delete"
+                                              asp-route-id="@item.ID_Prematricula"
+                                              class="d-inline">
+                                            <button type="button"
+                                                    class="btn btn-danger btn-sm"
+                                                    onclick="confirmDelete(event)">
+                                                <i class="bi bi-trash"></i> Eliminar
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             }
@@ -164,38 +162,28 @@
     </div>
 </div>
 
-@* Modal de confirmación para eliminar *@
-<div class="modal fade" id="modalEliminar" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                ¿Está seguro que desea eliminar esta prematrícula? Esta acción no se puede deshacer.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form method="post" asp-page-handler="Delete" id="formEliminar">
-                    <input type="hidden" name="id" id="idEliminar" />
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        function confirmarEliminacion(id) {
-            document.getElementById('idEliminar').value = id;
-            const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
-            modal.show();
+        function confirmDelete(event) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: '¿Eliminar prematrícula?',
+                text: 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let form = event.target.closest("form");
+                    form.submit();
+                }
+            });
         }
 
         // Auto-cerrar alertas después de 5 segundos
@@ -208,4 +196,5 @@
         }, 5000);
     </script>
 }
+
 

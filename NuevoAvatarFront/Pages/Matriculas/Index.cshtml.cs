@@ -1,8 +1,10 @@
-﻿using System.Text;
-using System.Linq;
+﻿using System.Linq;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -58,7 +60,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
 
         public async Task<IActionResult> OnGetAsync()
         {
-            // 🔥 VALIDAR SESIÓN
             if (HttpContext.Session.GetString("AccessToken") == null)
                 return RedirectToPage("/HU_MICHEL/Login/Index");
 
@@ -74,6 +75,12 @@ namespace NuevoAvatarFront.Pages.Matriculas
 
                 return Page();
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al cargar la pantalla de matrículas");
+                MensajeError = apiEx.Message;
+                return Page();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar la pantalla de matrículas");
@@ -84,7 +91,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
 
         public async Task<IActionResult> OnPostMatricularAsync()
         {
-            // 🔥 VALIDAR SESIÓN
             if (HttpContext.Session.GetString("AccessToken") == null)
                 return RedirectToPage("/HU_MICHEL/Login/Index");
 
@@ -106,11 +112,32 @@ namespace NuevoAvatarFront.Pages.Matriculas
                     FiltroGrupo = NuevaMatricula.ID_Grupo
                 });
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al crear matrícula");
+
+                MensajeError = apiEx.Message;
+
+                if (apiEx.Errors != null)
+                {
+                    foreach (var err in apiEx.Errors.Where(e => !string.IsNullOrWhiteSpace(e)))
+                    {
+                        ModelState.AddModelError(string.Empty, err);
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, apiEx.Message);
+                }
+
+                await CargarCombosAsync();
+                return Page();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear matrícula");
 
-                MensajeError = ex.Message;
+                MensajeError = "Ocurrió un error al registrar la matrícula. Intente nuevamente.";
                 ModelState.AddModelError(string.Empty, ex.Message);
 
                 await CargarCombosAsync();
@@ -120,7 +147,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
 
         public async Task<IActionResult> OnGetExportCsvAsync()
         {
-            // 🔥 VALIDAR SESIÓN
             if (HttpContext.Session.GetString("AccessToken") == null)
                 return RedirectToPage("/HU_MICHEL/Login/Index");
 
@@ -142,7 +168,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
                 }
 
                 var sb = new StringBuilder();
-
                 sb.AppendLine("ID_Estudiante;Identificacion;Nombre;Email;ID_Curso;ID_Grupo;ID_Periodo");
 
                 foreach (var m in data)
@@ -156,6 +181,12 @@ namespace NuevoAvatarFront.Pages.Matriculas
 
                 return File(bytes, "text/csv", fileName);
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al exportar CSV de matrículas");
+                MensajeError = apiEx.Message;
+                return RedirectToPage(new { FiltroCurso, FiltroGrupo });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al exportar CSV de matrículas");
@@ -168,7 +199,6 @@ namespace NuevoAvatarFront.Pages.Matriculas
         {
             try
             {
-                // 🔥 SI NO HAY TOKEN, NO INTENTAR CARGAR NADA
                 if (HttpContext.Session.GetString("AccessToken") == null)
                     return;
 
@@ -221,3 +251,4 @@ namespace NuevoAvatarFront.Pages.Matriculas
         }
     }
 }
+

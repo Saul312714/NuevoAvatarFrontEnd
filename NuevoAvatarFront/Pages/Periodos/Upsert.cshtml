@@ -5,52 +5,75 @@
     Layout = "_Layout";
 }
 
-<div class="card shadow">
-    <div class="card-header py-3 d-flex align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold text-primary">@ViewData["Title"]</h6>
-        <a asp-page="./Index" class="btn btn-light">Volver</a>
+<div class="card shadow p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-primary mb-0">
+            @(Model.Periodo.ID_Periodo > 0 ? "Editar Periodo" : "Crear Nuevo Periodo")
+        </h3>
+
+        <a asp-page="./Index" class="btn btn-light">
+            Volver
+        </a>
     </div>
 
-    <div class="card-body">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    @* Resumen de validaciones del backend *@
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
+    <div class="card-body p-0">
+        <form method="post" asp-page-handler="Save" id="periodoForm">
+            <!-- Campo oculto para el ID (edición) -->
             <input type="hidden" asp-for="Periodo.ID_Periodo" />
 
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">Año</label>
-                    <input asp-for="Periodo.Anno" type="number" min="2000" max="2100" class="form-control" />
+                    <label class="form-label fw-bold">Año</label>
+                    <input asp-for="Periodo.Anno"
+                           type="number"
+                           min="2000"
+                           max="2100"
+                           class="form-control shadow-sm" />
                     <small class="text-muted">Rango permitido: 2000–2100</small>
                     <span asp-validation-for="Periodo.Anno" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Número</label>
-                    <input asp-for="Periodo.Numero" type="number" min="1" max="4" class="form-control" />
+                    <label class="form-label fw-bold">Número</label>
+                    <input asp-for="Periodo.Numero"
+                           type="number"
+                           min="1"
+                           max="4"
+                           class="form-control shadow-sm" />
                     <small class="text-muted">Valores válidos: 1, 2, 3 o 4</small>
                     <span asp-validation-for="Periodo.Numero" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Fecha de inicio</label>
-                    <input asp-for="Periodo.Fecha_Inicio" type="date" class="form-control" />
+                    <label class="form-label fw-bold">Fecha de inicio</label>
+                    <input asp-for="Periodo.Fecha_Inicio"
+                           type="date"
+                           class="form-control shadow-sm" />
                     <span asp-validation-for="Periodo.Fecha_Inicio" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Fecha de fin</label>
-                    <input asp-for="Periodo.Fecha_Fin" type="date" class="form-control" />
+                    <label class="form-label fw-bold">Fecha de fin</label>
+                    <input asp-for="Periodo.Fecha_Fin"
+                           type="date"
+                           class="form-control shadow-sm" />
                     <small class="text-muted">Debe ser ≥ a la fecha de inicio</small>
                     <span asp-validation-for="Periodo.Fecha_Fin" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="mt-4 d-flex gap-2">
-                <button type="submit" asp-page-handler="Save" class="btn btn-primary">
+                <!-- Igual que en Grupos: botón que dispara SweetAlert -->
+                <button type="button" class="btn btn-success" onclick="confirmSavePeriodo()">
                     <i class="fas fa-save"></i> Guardar
                 </button>
-                <a asp-page="./Index" class="btn btn-secondary">Cancelar</a>
+
+                <a asp-page="./Index" class="btn btn-secondary">
+                    Cancelar
+                </a>
             </div>
         </form>
     </div>
@@ -58,16 +81,66 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        // Validación simple fin >= inicio (opcional)
-        document.querySelector('form')?.addEventListener('submit', function (e) {
-          const ini = new Date(document.querySelector('[name="Periodo.Fecha_Inicio"]').value);
-          const fin = new Date(document.querySelector('[name="Periodo.Fecha_Fin"]').value);
-          if (isFinite(ini) && isFinite(fin) && fin < ini) {
-            e.preventDefault();
-            alert('La fecha de fin debe ser mayor o igual a la fecha de inicio.');
-          }
+        function confirmSavePeriodo() {
+            const form = document.getElementById("periodoForm");
+
+            // Validación HTML5 normal
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Por favor complete todos los campos obligatorios'
+                });
+                return;
+            }
+
+            // Validación extra: fin >= inicio (la misma lógica que ya tenías)
+            const iniInput = form.querySelector('[name="Periodo.Fecha_Inicio"]');
+            const finInput = form.querySelector('[name="Periodo.Fecha_Fin"]');
+
+            const ini = new Date(iniInput.value);
+            const fin = new Date(finInput.value);
+
+            if (isFinite(ini) && isFinite(fin) && fin < ini) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fechas inválidas',
+                    text: 'La fecha de fin debe ser mayor o igual a la fecha de inicio.'
+                });
+                return;
+            }
+
+            // Confirmación SweetAlert, igual estilo que en Grupos
+            Swal.fire({
+                title: '¿Guardar periodo?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+
+        // (Extra) si alguien envía el form con Enter, mantenemos la validación de fechas
+        document.querySelector('#periodoForm')?.addEventListener('submit', function (e) {
+            const ini = new Date(this.querySelector('[name="Periodo.Fecha_Inicio"]').value);
+            const fin = new Date(this.querySelector('[name="Periodo.Fecha_Fin"]').value);
+
+            if (isFinite(ini) && isFinite(fin) && fin < ini) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fechas inválidas',
+                    text: 'La fecha de fin debe ser mayor o igual a la fecha de inicio.'
+                });
+            }
         });
     </script>
 }
-

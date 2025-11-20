@@ -38,6 +38,12 @@ namespace NuevoAvatarFront.Services
 
                 using var resp = await _http.GetAsync("/carrera");
 
+                await EnsureSuccessOrThrowAsync(
+                    resp,
+                    _logger,
+                    "No fue posible obtener el listado de carreras."
+                );
+
                 if (!resp.IsSuccessStatusCode)
                 {
                     var error = await resp.Content.ReadAsStringAsync();
@@ -62,13 +68,18 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                
                 await AttachBearerAsync(_http);
 
                 using var resp = await _http.GetAsync($"/carrera/{id}");
 
                 if (resp.StatusCode == HttpStatusCode.NotFound)
                     return null;
+
+                await EnsureSuccessOrThrowAsync(
+                    resp,
+                    _logger,
+                    "Error al obtener la carrera."
+                );
 
                 if (!resp.IsSuccessStatusCode)
                 {
@@ -90,3 +101,4 @@ namespace NuevoAvatarFront.Services
         }
     }
 }
+

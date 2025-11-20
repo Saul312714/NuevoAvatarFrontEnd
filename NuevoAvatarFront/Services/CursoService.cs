@@ -34,10 +34,15 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                
                 await AttachBearerAsync(_http);
 
                 var resp = await _http.GetAsync("/curso");
+
+                await EnsureSuccessOrThrowAsync(
+                    resp,
+                    _logger,
+                    "No fue posible obtener la lista de cursos de nivel 1."
+                );
 
                 if (!resp.IsSuccessStatusCode)
                 {
@@ -51,7 +56,6 @@ namespace NuevoAvatarFront.Services
                 var data = await resp.Content.ReadFromJsonAsync<List<CursoDTO>>()
                            ?? new List<CursoDTO>();
 
-                
                 return data
                     .Where(c => c.Nivel == 1)
                     .OrderBy(c => c.Nombre)
@@ -68,10 +72,15 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                
                 await AttachBearerAsync(_http);
 
                 var resp = await _http.GetAsync("/curso");
+
+                await EnsureSuccessOrThrowAsync(
+                    resp,
+                    _logger,
+                    "No fue posible obtener los cursos de nivel 1 por carrera."
+                );
 
                 if (!resp.IsSuccessStatusCode)
                 {
@@ -103,10 +112,15 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                
                 await AttachBearerAsync(_http);
 
                 var resp = await _http.GetAsync("/curso");
+
+                await EnsureSuccessOrThrowAsync(
+                    resp,
+                    _logger,
+                    "No fue posible obtener todos los cursos."
+                );
 
                 if (!resp.IsSuccessStatusCode)
                 {

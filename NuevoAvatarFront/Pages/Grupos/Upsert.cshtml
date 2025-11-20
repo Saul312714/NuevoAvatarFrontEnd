@@ -1,0 +1,127 @@
+﻿@page "{id?}"
+@model NuevoAvatarFront.Pages.Grupos.UpsertModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar Grupo" : "Nuevo Grupo";
+}
+
+<div class="card shadow p-4">
+    <h3 class="text-primary mb-4">
+        @(Model.EsEdicion ? "Editar Grupo" : "Crear Nuevo Grupo")
+    </h3>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <form method="post" id="grupoForm">
+
+        <!-- Campo oculto CRÍTICO para preservar el ID en ediciones -->
+        <input type="hidden" asp-for="Grupo.ID_Grupo" />
+
+        <!-- Número de Grupo -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Número de Grupo</label>
+            <input asp-for="Grupo.Numero"
+                   type="number"
+                   class="form-control shadow-sm"
+                   required
+                   min="1"
+                   placeholder="Ej: 1, 2, 3..." />
+        </div>
+
+        <!-- Curso -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Curso</label>
+            <select asp-for="Grupo.ID_Curso" class="form-control shadow-sm" required>
+                <option value="">-- Seleccionar Curso --</option>
+                @foreach (var c in Model.Cursos)
+                {
+                    <option value="@c.ID_Curso">@c.Nombre</option>
+                }
+            </select>
+        </div>
+
+        <!-- Profesor -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Profesor</label>
+            <select asp-for="Grupo.ID_Profesor" class="form-control shadow-sm" required>
+                <option value="">-- Seleccionar Profesor --</option>
+                @foreach (var p in Model.Profesores)
+                {
+                    <option value="@p.ID_Profesor">@p.Nombre</option>
+                }
+            </select>
+        </div>
+
+        <!-- Período -->
+        <div class="form-group mb-3">
+            <label class="fw-bold text-gray-800">Período</label>
+            <select asp-for="Grupo.ID_Periodo" class="form-control shadow-sm" required>
+                <option value="">-- Seleccionar Período --</option>
+                @foreach (var per in Model.Periodos)
+                {
+                    <option value="@per.ID_Periodo">@per.Nombre</option>
+                }
+            </select>
+        </div>
+
+        <!-- Horario -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Horario</label>
+            <input asp-for="Grupo.Horario"
+                   class="form-control shadow-sm"
+                   required
+                   placeholder="Ej: 08:00-10:00 o Lunes 8-10, Miércoles 14-16" />
+            <small class="form-text text-muted">
+                Puede ingresar el horario en el formato que prefiera
+            </small>
+        </div>
+
+        <!-- Botones -->
+        <div class="mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-success" onclick="confirmSave()">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+
+            <a asp-page="./Index" class="btn btn-secondary">
+                Cancelar
+            </a>
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function confirmSave() {
+            let form = document.getElementById("grupoForm");
+
+            // Validación HTML5
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Por favor complete todos los campos obligatorios'
+                });
+                return;
+            }
+
+            // Confirmación de guardado
+            Swal.fire({
+                title: '¿Guardar grupo?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

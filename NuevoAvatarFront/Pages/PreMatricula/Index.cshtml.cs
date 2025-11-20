@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;  
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -12,7 +14,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         private readonly ILogger<IndexModel> _logger;
         private readonly TokenHelper _tokenHelper;
 
-        // Para servicios adicionales que necesites para los filtros
         public IndexModel(
             IPreMatriculaService prematricula,
             ILogger<IndexModel> logger,
@@ -45,7 +46,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
         public async Task<IActionResult> OnGetAsync()
         {
-            // Validar si el usuario tiene un token de sesión válido
             var token = await _tokenHelper.EnsureValidAccessTokenAsync();
             if (token == null) return RedirectToPage("/HU_MICHEL/Login/Index");
 
@@ -62,17 +62,22 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
                 return Page();
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al cargar las prematrículas");
+                MensajeError = apiEx.Message; 
+                return Page();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar las prematrículas");
-                MensajeError = "Error al cargar las prematrículas: " + ex.Message;
+                MensajeError = "Error al cargar las prematrículas. Intente nuevamente más tarde.";
                 return Page();
             }
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
-            // Validar si el usuario tiene un token de sesión válido
             var token = await _tokenHelper.EnsureValidAccessTokenAsync();
             if (token == null) return RedirectToPage("/HU_MICHEL/Login/Index");
 
@@ -89,10 +94,15 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     MensajeError = "No se encontró la prematrícula a eliminar";
                 }
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al eliminar prematrícula {Id}", id);
+                MensajeError = apiEx.Message;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al eliminar prematrícula {id}");
-                MensajeError = "Error al eliminar la prematrícula: " + ex.Message;
+                MensajeError = "Error al eliminar la prematrícula. Intente nuevamente más tarde.";
             }
 
             return RedirectToPage();
@@ -100,7 +110,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
         public async Task<IActionResult> OnGetLimpiarFiltrosAsync()
         {
-            // Validar si el usuario tiene un token de sesión válido
             var token = await _tokenHelper.EnsureValidAccessTokenAsync();
             if (token == null) return RedirectToPage("/HU_MICHEL/Login/Index");
 

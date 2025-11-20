@@ -1,0 +1,14 @@
+[
+  {
+    "Identificacion": "123456789",
+    "Tipo": "Estudiante",
+    "Nombre": "Juan P�rez Gonz�lez",
+    "Email": "juan.perez@cuc.ac.cr",
+    "FechaNacimiento": "2002-04-15",
+    "Telefono": "8888-8888",
+    "Provincia": "San Jos�",
+    "Canton": "Central",
+    "Distrito": "Catedral",
+    "OtrasSennas": "200m norte de la iglesia"
+  }
+]

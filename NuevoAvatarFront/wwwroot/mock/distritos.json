@@ -1,0 +1,493 @@
+[
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "01",
+    "nombre": "Carmen"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "02",
+    "nombre": "Merced"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "03",
+    "nombre": "Hospital"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "04",
+    "nombre": "Catedral"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "05",
+    "nombre": "Zapote"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "06",
+    "nombre": "San Francisco de Dos Ríos"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "07",
+    "nombre": "La Uruca"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "08",
+    "nombre": "Mata Redonda"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "09",
+    "nombre": "Pavas"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "10",
+    "nombre": "Hatillo"
+  },
+  {
+    "provincia": "01",
+    "canton": "01",
+    "codigo": "11",
+    "nombre": "San Sebastián"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "02",
+    "codigo": "01",
+    "nombre": "Escazú Centro"
+  },
+  {
+    "provincia": "01",
+    "canton": "02",
+    "codigo": "02",
+    "nombre": "San Rafael"
+  },
+  {
+    "provincia": "01",
+    "canton": "02",
+    "codigo": "03",
+    "nombre": "San Antonio"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "01",
+    "nombre": "Desamparados"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "02",
+    "nombre": "San Miguel"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "03",
+    "nombre": "San Juan de Dios"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "04",
+    "nombre": "San Rafael Arriba"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "05",
+    "nombre": "San Antonio"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "06",
+    "nombre": "Frailes"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "07",
+    "nombre": "Patarrá"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "08",
+    "nombre": "San Cristóbal"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "09",
+    "nombre": "Rosario"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "10",
+    "nombre": "Damas"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "11",
+    "nombre": "San Rafael Abajo"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "12",
+    "nombre": "Gravilias"
+  },
+  {
+    "provincia": "01",
+    "canton": "03",
+    "codigo": "13",
+    "nombre": "Los Guido"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "01",
+    "nombre": "Santiago"
+  },
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "02",
+    "nombre": "Mercedes Sur"
+  },
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "03",
+    "nombre": "Barbacoas"
+  },
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "04",
+    "nombre": "Grifo Alto"
+  },
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "05",
+    "nombre": "San Rafael"
+  },
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "06",
+    "nombre": "Candelaria"
+  },
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "07",
+    "nombre": "Desamparaditos"
+  },
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "08",
+    "nombre": "San Antonio"
+  },
+  {
+    "provincia": "01",
+    "canton": "04",
+    "codigo": "09",
+    "nombre": "Chires"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "05",
+    "codigo": "01",
+    "nombre": "San Marcos"
+  },
+  {
+    "provincia": "01",
+    "canton": "05",
+    "codigo": "02",
+    "nombre": "San Lorenzo"
+  },
+  {
+    "provincia": "01",
+    "canton": "05",
+    "codigo": "03",
+    "nombre": "San Carlos"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "06",
+    "codigo": "01",
+    "nombre": "Aserrí"
+  },
+  {
+    "provincia": "01",
+    "canton": "06",
+    "codigo": "02",
+    "nombre": "Tarbaca"
+  },
+  {
+    "provincia": "01",
+    "canton": "06",
+    "codigo": "03",
+    "nombre": "Vuelta de Jorco"
+  },
+  {
+    "provincia": "01",
+    "canton": "06",
+    "codigo": "04",
+    "nombre": "San Gabriel"
+  },
+  {
+    "provincia": "01",
+    "canton": "06",
+    "codigo": "05",
+    "nombre": "Legua"
+  },
+  {
+    "provincia": "01",
+    "canton": "06",
+    "codigo": "06",
+    "nombre": "Monterrey"
+  },
+  {
+    "provincia": "01",
+    "canton": "06",
+    "codigo": "07",
+    "nombre": "Salitrillos"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "07",
+    "codigo": "01",
+    "nombre": "Colón"
+  },
+  {
+    "provincia": "01",
+    "canton": "07",
+    "codigo": "02",
+    "nombre": "Guayabo"
+  },
+  {
+    "provincia": "01",
+    "canton": "07",
+    "codigo": "03",
+    "nombre": "Tabarcia"
+  },
+  {
+    "provincia": "01",
+    "canton": "07",
+    "codigo": "04",
+    "nombre": "Piedras Negras"
+  },
+  {
+    "provincia": "01",
+    "canton": "07",
+    "codigo": "05",
+    "nombre": "Picagres"
+  },
+  {
+    "provincia": "01",
+    "canton": "07",
+    "codigo": "06",
+    "nombre": "Jaris"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "08",
+    "codigo": "01",
+    "nombre": "Guadalupe"
+  },
+  {
+    "provincia": "01",
+    "canton": "08",
+    "codigo": "02",
+    "nombre": "San Francisco"
+  },
+  {
+    "provincia": "01",
+    "canton": "08",
+    "codigo": "03",
+    "nombre": "Calle Blancos"
+  },
+  {
+    "provincia": "01",
+    "canton": "08",
+    "codigo": "04",
+    "nombre": "Mata de Plátano"
+  },
+  {
+    "provincia": "01",
+    "canton": "08",
+    "codigo": "05",
+    "nombre": "Ipís"
+  },
+  {
+    "provincia": "01",
+    "canton": "08",
+    "codigo": "06",
+    "nombre": "Rancho Redondo"
+  },
+  {
+    "provincia": "01",
+    "canton": "08",
+    "codigo": "07",
+    "nombre": "Purral"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "09",
+    "codigo": "01",
+    "nombre": "Santa Ana"
+  },
+  {
+    "provincia": "01",
+    "canton": "09",
+    "codigo": "02",
+    "nombre": "Salitral"
+  },
+  {
+    "provincia": "01",
+    "canton": "09",
+    "codigo": "03",
+    "nombre": "Pozos"
+  },
+  {
+    "provincia": "01",
+    "canton": "09",
+    "codigo": "04",
+    "nombre": "Uruca"
+  },
+  {
+    "provincia": "01",
+    "canton": "09",
+    "codigo": "05",
+    "nombre": "Piedades"
+  },
+  {
+    "provincia": "01",
+    "canton": "09",
+    "codigo": "06",
+    "nombre": "Brasil"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "10",
+    "codigo": "01",
+    "nombre": "Alajuelita"
+  },
+  {
+    "provincia": "01",
+    "canton": "10",
+    "codigo": "02",
+    "nombre": "San Josecito"
+  },
+  {
+    "provincia": "01",
+    "canton": "10",
+    "codigo": "03",
+    "nombre": "San Antonio"
+  },
+  {
+    "provincia": "01",
+    "canton": "10",
+    "codigo": "04",
+    "nombre": "Concepción"
+  },
+  {
+    "provincia": "01",
+    "canton": "10",
+    "codigo": "05",
+    "nombre": "San Felipe"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "11",
+    "codigo": "01",
+    "nombre": "San Isidro"
+  },
+  {
+    "provincia": "01",
+    "canton": "11",
+    "codigo": "02",
+    "nombre": "San Rafael"
+  },
+  {
+    "provincia": "01",
+    "canton": "11",
+    "codigo": "03",
+    "nombre": "Dulce Nombre de Jesús"
+  },
+  {
+    "provincia": "01",
+    "canton": "11",
+    "codigo": "04",
+    "nombre": "Patalillo"
+  },
+  {
+    "provincia": "01",
+    "canton": "11",
+    "codigo": "05",
+    "nombre": "Cascajal"
+  },
+
+  {
+    "provincia": "01",
+    "canton": "12",
+    "codigo": "01",
+    "nombre": "San Ignacio"
+  },
+  {
+    "provincia": "01",
+    "canton": "12",
+    "codigo": "02",
+    "nombre": "Guaitil"
+  },
+  {
+    "provincia": "01",
+    "canton": "12",
+    "codigo": "03",
+    "nombre": "Palmichal"
+  },
+  {
+    "provincia": "01",
+    "canton": "12",
+    "codigo": "04",
+    "nombre": "Cangrejal"
+  },
+  {
+    "provincia": "01",
+    "canton": "12",
+    "codigo": "05",
+    "nombre": "Sabanillas"
+  }
+]

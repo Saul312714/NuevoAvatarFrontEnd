@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -21,7 +23,6 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
         public PreMatriculaDTO? PreMatricula { get; set; }
 
-        
         public async Task<IActionResult> OnGetAsync(int id)
         {
             if (HttpContext.Session.GetString("AccessToken") == null)
@@ -38,6 +39,12 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
 
                 return Page();
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al obtener detalles de la prematrícula {Id}", id);
+                TempData["MensajeError"] = apiEx.Message;
+                return RedirectToPage("./Index");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener detalles de la prematrícula {id}");
@@ -47,3 +54,4 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         }
     }
 }
+

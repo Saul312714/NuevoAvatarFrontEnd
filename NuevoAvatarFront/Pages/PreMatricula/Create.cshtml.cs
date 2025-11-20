@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;        
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -46,15 +48,21 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         public List<SelectListItem> Cursos { get; set; } = new();
         public List<SelectListItem> PeriodosFuturos { get; set; } = new();
 
-        // 🔥 Validación de sesión antes de cargar la página
+        
         public async Task<IActionResult> OnGetAsync()
         {
             if (HttpContext.Session.GetString("AccessToken") == null)
-                return RedirectToPage("/HU_MICHEL/Login/Index"); // Redirige si no hay token
+                return RedirectToPage("/HU_MICHEL/Login/Index"); 
 
             try
             {
                 await CargarDatosDropdowns();
+                return Page();
+            }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al cargar datos para crear prematrícula");
+                MensajeError = apiEx.Message;
                 return Page();
             }
             catch (Exception ex)
@@ -65,11 +73,10 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
             }
         }
 
-        // 🔥 Validación de sesión antes de guardar
         public async Task<IActionResult> OnPostAsync()
         {
             if (HttpContext.Session.GetString("AccessToken") == null)
-                return RedirectToPage("/HU_MICHEL/Login/Index"); // Redirige si no hay token
+                return RedirectToPage("/HU_MICHEL/Login/Index"); 
 
             if (!ModelState.IsValid)
             {
@@ -83,17 +90,30 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                 TempData["MensajeExito"] = "Prematrícula creada exitosamente";
                 return RedirectToPage("./Index");
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al crear prematrícula");
+
+                var mensajeError = apiEx.Message;
+                MensajeError = mensajeError;
+                ModelState.AddModelError(string.Empty, mensajeError);
+
+                await CargarDatosDropdowns();
+                return Page();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear prematrícula");
 
                 var mensajeError = ex.Message;
-                if (ex.Message.Contains("periodos FUTUROS"))
+                if (ex.Message.Contains("periodos FUTUROS", StringComparison.OrdinalIgnoreCase))
                 {
                     mensajeError = "Error: Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)";
                 }
 
+                MensajeError = mensajeError;
                 ModelState.AddModelError(string.Empty, mensajeError);
+
                 await CargarDatosDropdowns();
                 return Page();
             }
@@ -187,6 +207,11 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     };
                 }
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al cargar datos para dropdowns (Create Prematrícula)");
+                MensajeError = apiEx.Message;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar datos para dropdowns");
@@ -194,4 +219,3 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         }
     }
 }
-

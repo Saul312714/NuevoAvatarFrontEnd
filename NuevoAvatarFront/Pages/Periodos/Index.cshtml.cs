@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -11,11 +13,13 @@ namespace NuevoAvatarFront.Pages.Periodos
     {
         private readonly PeriodoClient _api;
         private readonly TokenHelper _tokenHelper;
+        private readonly ILogger<IndexModel> _logger; 
 
-        public IndexModel(PeriodoClient api, TokenHelper tokenHelper)
+        public IndexModel(PeriodoClient api, TokenHelper tokenHelper, ILogger<IndexModel> logger)
         {
             _api = api;
             _tokenHelper = tokenHelper;
+            _logger = logger;                          
         }
 
         public List<PeriodoDto> Periodos { get; private set; } = new();
@@ -29,22 +33,20 @@ namespace NuevoAvatarFront.Pages.Periodos
         public IEnumerable<SelectListItem> SortOptions { get; private set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> SizeOptions { get; private set; } = Enumerable.Empty<SelectListItem>();
 
-        // 🔥 Se asegura de que haya token antes de continuar
-        public async Task OnGet()
+        public async Task<IActionResult> OnGet()         
         {
-            // Verificar si hay token válido antes de continuar
             if (HttpContext.Session.GetString("AccessToken") == null)
-                RedirectToPage("/HU_MICHEL/Login/Index");
+                return RedirectToPage("/HU_MICHEL/Login/Index");
 
             page = page <= 0 ? 1 : page;
             size = size <= 0 ? 10 : size;
 
             SortOptions = new[]
             {
-                new SelectListItem("Inicio", "inicio", sort == "inicio"),
-                new SelectListItem("Fin", "fin", sort == "fin"),
-                new SelectListItem("Año", "anio", sort == "anio"),
-                new SelectListItem("Número", "numero", sort == "numero"),
+                new SelectListItem("Inicio",  "inicio",  sort == "inicio"),
+                new SelectListItem("Fin",     "fin",     sort == "fin"),
+                new SelectListItem("Año",     "anio",    sort == "anio"),
+                new SelectListItem("Número",  "numero",  sort == "numero"),
             };
             SizeOptions = new[]
             {
@@ -53,31 +55,54 @@ namespace NuevoAvatarFront.Pages.Periodos
                 new SelectListItem("50", "50", size == 50),
             };
 
-            IEnumerable<PeriodoDto> datos = await _api.GetAllAsync();
-
-            if (!string.IsNullOrWhiteSpace(q))
+            try
             {
-                var t = q.Trim().ToLower();
-                datos = datos.Where(p =>
-                    p.Anno.ToString().Contains(t) ||
-                    p.Numero.ToString().Contains(t) ||
-                    p.Fecha_Inicio.ToString("yyyy-MM-dd").Contains(t) ||
-                    p.Fecha_Fin.ToString("yyyy-MM-dd").Contains(t));
+                IEnumerable<PeriodoDto> datos = await _api.GetAllAsync();
+
+                if (!string.IsNullOrWhiteSpace(q))
+                {
+                    var t = q.Trim().ToLower();
+                    datos = datos.Where(p =>
+                        p.Anno.ToString().Contains(t) ||
+                        p.Numero.ToString().Contains(t) ||
+                        p.Fecha_Inicio.ToString("yyyy-MM-dd").Contains(t) ||
+                        p.Fecha_Fin.ToString("yyyy-MM-dd").Contains(t));
+                }
+
+                datos = sort switch
+                {
+                    "fin" => datos.OrderBy(p => p.Fecha_Fin),
+                    "anio" => datos.OrderBy(p => p.Anno),
+                    "numero" => datos.OrderBy(p => p.Numero),
+                    _ => datos.OrderBy(p => p.Fecha_Inicio),
+                };
+
+                Total = datos.Count();
+                Periodos = datos
+                    .Skip((page - 1) * size)
+                    .Take(size)
+                    .ToList();
+
+                return Page();
             }
-
-            datos = sort switch
+            catch (ApiException apiEx)
             {
-                "fin" => datos.OrderBy(p => p.Fecha_Fin),
-                "anio" => datos.OrderBy(p => p.Anno),
-                "numero" => datos.OrderBy(p => p.Numero),
-                _ => datos.OrderBy(p => p.Fecha_Inicio),
-            };
+                _logger.LogWarning(apiEx, "Error de API al obtener períodos");
+                TempData["error"] = apiEx.Message;
 
-            Total = datos.Count();
-            Periodos = datos
-                .Skip((page - 1) * size)
-                .Take(size)
-                .ToList();
+                Periodos = new();
+                Total = 0;
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al obtener períodos");
+                TempData["error"] = "Error al cargar los períodos. Intente nuevamente más tarde.";
+
+                Periodos = new();
+                Total = 0;
+                return Page();
+            }
         }
 
         public string EstadoDe(PeriodoDto p)

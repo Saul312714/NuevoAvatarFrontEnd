@@ -1,0 +1,366 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Panel de Bienvenida";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Bienvenido, @Model.NombreUsuario</h1>
+    <span class="badge badge-info badge-pill">@Model.RolUsuario</span>
+</div>
+
+<!-- ========================================== -->
+<!-- WIDGETS PARA ADMINISTRADOR -->
+<!-- ========================================== -->
+@if (Model.RolUsuario.Contains("Administrador") || Model.RolUsuario.Contains("Admin"))
+{
+    <div class="row">
+        <!-- Usuarios -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Usuarios
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.TotalUsuarios
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carreras -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                        Carreras
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.TotalCarreras
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cursos -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                        Cursos
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.TotalCursos
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Períodos Activos -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                        Períodos Activos
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.TotalPeriodosActivos
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Facturas Pendientes -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                        Facturas Pendientes
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.TotalFacturasPendientes
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ========================================== -->
+<!-- WIDGETS PARA ESTUDIANTE -->
+<!-- ========================================== -->
+@if (Model.RolUsuario.Contains("Estudiante"))
+{
+    <div class="row">
+        <!-- Mis Matrículas -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Mis Matrículas
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.MisMatriculas
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cursos Actuales -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                        Cursos Actuales
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.MisCursosActuales
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saldo Pendiente -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                        Saldo Pendiente
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        ₡@Model.MiSaldoPendiente.ToString("N0")
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mi Carrera -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                        Mi Carrera
+                    </div>
+                    <div class="h6 mb-0 font-weight-bold text-gray-800">
+                        @Model.MiCarrera
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accesos Rápidos para Estudiante -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Accesos Rápidos</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="/Matriculas/Index" class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-book"></i> Mis Matrículas
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/Pagos/Index" class="btn btn-outline-success btn-block">
+                                <i class="fas fa-dollar-sign"></i> Mis Pagos
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/Expedientes/Upsert" class="btn btn-outline-info btn-block">
+                                <i class="fas fa-user"></i> Mi Expediente
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/Notificaciones/Index" class="btn btn-outline-warning btn-block">
+                                <i class="fas fa-bell"></i> Notificaciones
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ========================================== -->
+<!-- WIDGETS PARA PROFESOR -->
+<!-- ========================================== -->
+@if (Model.RolUsuario.Contains("Profesor"))
+{
+    <div class="row">
+        <!-- Mis Grupos -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Mis Grupos
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.MisGrupos
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cursos que Imparto -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                        Cursos que Imparto
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        @Model.CursosQueImparto
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Período Actual -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                        Período Actual
+                    </div>
+                    <div class="h6 mb-0 font-weight-bold text-gray-800">
+                        2025-1
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accesos Rápidos para Profesor -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Accesos Rápidos</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="/Grupos/Index" class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-users"></i> Mis Grupos
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/Notas/Index" class="btn btn-outline-success btn-block">
+                                <i class="fas fa-clipboard-list"></i> Cargar Notas
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/Desglose/Index" class="btn btn-outline-info btn-block">
+                                <i class="fas fa-chart-bar"></i> Desglose de Notas
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ========================================== -->
+<!-- NOTIFICACIONES Y BITÁCORAS (PARA TODOS) -->
+<!-- ========================================== -->
+<div class="row">
+    <!-- Notificaciones recientes -->
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Notificaciones recientes</h6>
+                <span class="badge badge-primary">@Model.Notificaciones.Count</span>
+            </div>
+
+            <div class="card-body">
+                @if (Model.Notificaciones?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Destino</th>
+                                    <th>Asunto</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var n in Model.Notificaciones)
+                                {
+                                    <tr>
+                                        <td>@n.Email_Destino</td>
+                                        <td>@n.Asunto</td>
+                                        <td>@n.FechaEnvio.ToString("dd/MM HH:mm")</td>
+                                        <td><span class="badge badge-success badge-sm">@n.Estado</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No hay notificaciones recientes.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas bitácoras -->
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Últimas bitácoras</h6>
+                <span class="badge badge-primary">@Model.Bitacoras.Count</span>
+            </div>
+
+            <div class="card-body">
+                @if (Model.Bitacoras?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var b in Model.Bitacoras)
+                                {
+                                    <tr>
+                                        <td>@b.ID_Usuario</td>
+                                        <td>@b.Accion</td>
+                                        <td>@b.Fecha.ToString("dd/MM HH:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Sin registros recientes.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botones de ayuda y perfil -->
+<div class="text-center mb-4">
+    <a href="#" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-question-circle"></i> Ayuda
+    </a>
+    <a href="#" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-user"></i> Mi Perfil
+    </a>
+</div>

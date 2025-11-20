@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;          
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Services;
 
@@ -31,11 +33,10 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         [TempData]
         public string? MensajeExito { get; set; }
 
-        // 🔥 Validación de sesión antes de cargar la página
         public async Task<IActionResult> OnGetAsync(int id)
         {
             if (HttpContext.Session.GetString("AccessToken") == null)
-                return RedirectToPage("/HU_MICHEL/Login/Index"); // Redirige si no hay token
+                return RedirectToPage("/HU_MICHEL/Login/Index"); 
 
             try
             {
@@ -49,6 +50,12 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                 PreMatricula = existente;
                 return Page();
             }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al cargar la prematrícula para eliminar");
+                MensajeError = apiEx.Message;
+                return RedirectToPage("./Index");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar la prematrícula para eliminar");
@@ -60,7 +67,7 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
         public async Task<IActionResult> OnPostAsync(int id)
         {
             if (HttpContext.Session.GetString("AccessToken") == null)
-                return RedirectToPage("/HU_MICHEL/Login/Index"); 
+                return RedirectToPage("/HU_MICHEL/Login/Index");
 
             try
             {
@@ -75,6 +82,12 @@ namespace NuevoAvatarFront.Pages.PreMatriculas
                     MensajeError = "No se encontró la prematrícula a eliminar.";
                 }
 
+                return RedirectToPage("./Index");
+            }
+            catch (ApiException apiEx)
+            {
+                _logger.LogWarning(apiEx, "Error de API al eliminar prematrícula {Id}", id);
+                MensajeError = apiEx.Message;
                 return RedirectToPage("./Index");
             }
             catch (Exception ex)

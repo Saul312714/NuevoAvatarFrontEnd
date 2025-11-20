@@ -1,9 +1,11 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json; 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using NuevoAvatarFront.Infra;
-using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Models;
 
 namespace NuevoAvatarFront.Services
 {
@@ -13,11 +15,6 @@ namespace NuevoAvatarFront.Services
         Task<List<MatriculadoDto>> GetMatriculadosPorCursoGrupoAsync(int idCurso, int idGrupo);
     }
 
-    /// <summary>
-    /// Cliente de la API PV_NA_Matricula para la HU de matrícula:
-    /// - POST /matricula?idUsuario=...
-    /// - GET  /matricula/curso/{idCurso}/grupo/{idGrupo}?idUsuario=...
-    /// </summary>
     public class MatriculaFrontService : ApiClientBase, IMatriculaFrontService
     {
         private readonly HttpClient _http;
@@ -36,7 +33,6 @@ namespace NuevoAvatarFront.Services
 
         private int ObtenerIdUsuario()
         {
-            // 🔥 Ahora obtenemos el UsuarioID REAL desde la sesión del login
             var id = _httpContextAccessor.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
 
             if (id == 0)
@@ -51,25 +47,85 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                // 🔥 Adjunta AccessToken válido
                 await AttachBearerAsync(_http);
 
                 var idUsuario = ObtenerIdUsuario();
 
-                var response = await _http.PostAsJsonAsync($"/matricula?idUsuario={idUsuario}", dto);
+                var response = await _http.PostAsJsonAsync(
+                    $"/matricula?idUsuario={idUsuario}",
+                    dto
+                );
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Tu endpoint devuelve un objeto Matricula
                     var creada = await response.Content.ReadFromJsonAsync<Matricula>();
                     return creada?.ID_Matricula ?? 0;
                 }
 
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al crear matrícula. Status: {Status}. Body: {Body}",
-                    response.StatusCode, error);
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning(
+                    "Error al crear matrícula. Status: {Status}. Body: {Body}",
+                    response.StatusCode, body
+                );
 
-                throw new Exception($"Error al crear matrícula: {error}");
+                string mensajeUsuario =
+                    "No fue posible registrar la matrícula. Verifique los datos e inténtelo de nuevo.";
+
+                List<string>? errors = null;
+
+                if (!string.IsNullOrWhiteSpace(body))
+                {
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(body);
+                        var root = doc.RootElement;
+                        string? msg = null;
+
+                        if (root.ValueKind == JsonValueKind.Object)
+                        {
+                            if (root.TryGetProperty("message", out var m))
+                                msg = m.GetString();
+                            else if (root.TryGetProperty("Message", out var m2))
+                                msg = m2.GetString();
+                            else if (root.TryGetProperty("error", out var e))
+                                msg = e.GetString();
+                            else if (root.TryGetProperty("Error", out var e2))
+                                msg = e2.GetString();
+                        }
+                        else if (root.ValueKind == JsonValueKind.String)
+                        {
+                            msg = root.GetString();
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(msg))
+                        {
+                            mensajeUsuario = msg!;
+                        }
+
+                        errors = new List<string> { mensajeUsuario };
+                    }
+                    catch
+                    {
+                        var plain = body.Length > 500
+                            ? body.Substring(0, 500) + "..."
+                            : body;
+
+                        if (!string.IsNullOrWhiteSpace(plain))
+                            mensajeUsuario = plain;
+
+                        errors = new List<string> { mensajeUsuario };
+                    }
+                }
+
+                throw new ApiException(
+                    mensajeUsuario,
+                    response.StatusCode,
+                    errors
+                );
+            }
+            catch (ApiException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -82,7 +138,6 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                
                 await AttachBearerAsync(_http);
 
                 var idUsuario = ObtenerIdUsuario();
@@ -93,23 +148,21 @@ namespace NuevoAvatarFront.Services
 
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    
                     return new List<MatriculadoDto>();
                 }
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogError(
-                        "Error al obtener matriculados. Status: {Status}. Body: {Body}",
-                        response.StatusCode, error
-                    );
-
-                    throw new Exception($"Error al consultar matriculados: {error}");
-                }
+                await EnsureSuccessOrThrowAsync(
+                    response,
+                    _logger,
+                    "No fue posible obtener los estudiantes matriculados para ese curso y grupo."
+                );
 
                 var lista = await response.Content.ReadFromJsonAsync<List<MatriculadoDto>>();
                 return lista ?? new List<MatriculadoDto>();
+            }
+            catch (ApiException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

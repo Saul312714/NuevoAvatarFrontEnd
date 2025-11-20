@@ -1,8 +1,10 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;                         
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 
 namespace NuevoAvatarFront.Services
@@ -33,14 +35,26 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-               
                 await AttachBearerAsync(_http);
 
                 var response = await _http.GetAsync("/grupo");
 
+                await EnsureSuccessOrThrowAsync(
+                    response,
+                    _logger,
+                    "No fue posible obtener el listado de grupos."
+                );
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = await response.Content.ReadFromJsonAsync<List<GrupoDto>>();
+                    var opciones = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+
+                    var data = await response.Content
+                        .ReadFromJsonAsync<List<GrupoDto>>(opciones);
+
                     return data ?? new List<GrupoDto>();
                 }
 
@@ -52,6 +66,10 @@ namespace NuevoAvatarFront.Services
 
                 return new List<GrupoDto>();
             }
+            catch (ApiException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error no controlado al obtener grupos");
@@ -61,13 +79,25 @@ namespace NuevoAvatarFront.Services
 
         public async Task<List<GrupoDto>> GetByCursoAsync(int idCurso)
         {
-           
-            var todos = await GetAllAsync();
+            try
+            {
+                var todos = await GetAllAsync();
 
-            return todos
-                .Where(g => g.ID_Curso == idCurso)
-                .OrderBy(g => g.Numero_Grupo)
-                .ToList();
+                return todos
+                    .Where(g => g.ID_Curso == idCurso)
+                    .OrderBy(g => g.Numero_Grupo)
+                    .ToList();
+            }
+            catch (ApiException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al filtrar grupos por curso {CursoId}", idCurso);
+                throw;
+            }
         }
     }
 }
+

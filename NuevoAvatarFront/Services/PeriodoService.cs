@@ -2,9 +2,10 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using NuevoAvatarFront.Infra;
-using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Models;
 
 namespace NuevoAvatarFront.Services
 {
@@ -33,10 +34,15 @@ namespace NuevoAvatarFront.Services
         {
             try
             {
-                // 🔥 Adjunta token real (con refresh automático)
                 await AttachBearerAsync(_http);
 
                 var resp = await _http.GetAsync("/periodo");
+
+                await EnsureSuccessOrThrowAsync(
+                    resp,
+                    _logger,
+                    "No fue posible obtener la lista de períodos. Intente nuevamente más tarde."
+                );
 
                 if (!resp.IsSuccessStatusCode)
                 {
@@ -58,19 +64,21 @@ namespace NuevoAvatarFront.Services
 
                 var hoy = DateTime.Today;
 
-                // 🔎 Mantengo tu mismo filtro ORIGINAL
                 return lista
                     .Where(p => p.Fecha_Inicio.Date > hoy)
                     .OrderBy(p => p.Anno)
                     .ThenBy(p => p.Numero)
                     .ToList();
             }
+            catch (ApiException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Excepción al obtener periodos futuros");
-                return new List<PeriodoDto>();
+                throw;
             }
         }
     }
 }
-

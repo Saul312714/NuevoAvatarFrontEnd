@@ -1,0 +1,418 @@
+[
+  {
+    "provincia": "01",
+    "codigo": "01",
+    "nombre": "San José"
+  },
+  {
+    "provincia": "01",
+    "codigo": "02",
+    "nombre": "Escazú"
+  },
+  {
+    "provincia": "01",
+    "codigo": "03",
+    "nombre": "Desamparados"
+  },
+  {
+    "provincia": "01",
+    "codigo": "04",
+    "nombre": "Puriscal"
+  },
+  {
+    "provincia": "01",
+    "codigo": "05",
+    "nombre": "Tarrazú"
+  },
+  {
+    "provincia": "01",
+    "codigo": "06",
+    "nombre": "Aserrí"
+  },
+  {
+    "provincia": "01",
+    "codigo": "07",
+    "nombre": "Mora"
+  },
+  {
+    "provincia": "01",
+    "codigo": "08",
+    "nombre": "Goicoechea"
+  },
+  {
+    "provincia": "01",
+    "codigo": "09",
+    "nombre": "Santa Ana"
+  },
+  {
+    "provincia": "01",
+    "codigo": "10",
+    "nombre": "Alajuelita"
+  },
+  {
+    "provincia": "01",
+    "codigo": "11",
+    "nombre": "Vázquez de Coronado"
+  },
+  {
+    "provincia": "01",
+    "codigo": "12",
+    "nombre": "Acosta"
+  },
+  {
+    "provincia": "01",
+    "codigo": "13",
+    "nombre": "Tibás"
+  },
+  {
+    "provincia": "01",
+    "codigo": "14",
+    "nombre": "Moravia"
+  },
+  {
+    "provincia": "01",
+    "codigo": "15",
+    "nombre": "Montes de Oca"
+  },
+  {
+    "provincia": "01",
+    "codigo": "16",
+    "nombre": "Turrubares"
+  },
+  {
+    "provincia": "01",
+    "codigo": "17",
+    "nombre": "Dota"
+  },
+  {
+    "provincia": "01",
+    "codigo": "18",
+    "nombre": "Curridabat"
+  },
+  {
+    "provincia": "01",
+    "codigo": "19",
+    "nombre": "Pérez Zeledón"
+  },
+  {
+    "provincia": "01",
+    "codigo": "20",
+    "nombre": "León Cortés"
+  },
+
+  {
+    "provincia": "02",
+    "codigo": "01",
+    "nombre": "Alajuela"
+  },
+  {
+    "provincia": "02",
+    "codigo": "02",
+    "nombre": "San Ramón"
+  },
+  {
+    "provincia": "02",
+    "codigo": "03",
+    "nombre": "Grecia"
+  },
+  {
+    "provincia": "02",
+    "codigo": "04",
+    "nombre": "San Mateo"
+  },
+  {
+    "provincia": "02",
+    "codigo": "05",
+    "nombre": "Atenas"
+  },
+  {
+    "provincia": "02",
+    "codigo": "06",
+    "nombre": "Naranjo"
+  },
+  {
+    "provincia": "02",
+    "codigo": "07",
+    "nombre": "Palmares"
+  },
+  {
+    "provincia": "02",
+    "codigo": "08",
+    "nombre": "Poás"
+  },
+  {
+    "provincia": "02",
+    "codigo": "09",
+    "nombre": "Orotina"
+  },
+  {
+    "provincia": "02",
+    "codigo": "10",
+    "nombre": "San Carlos"
+  },
+  {
+    "provincia": "02",
+    "codigo": "11",
+    "nombre": "Zarcero"
+  },
+  {
+    "provincia": "02",
+    "codigo": "12",
+    "nombre": "Sarchí"
+  },
+  {
+    "provincia": "02",
+    "codigo": "13",
+    "nombre": "Upala"
+  },
+  {
+    "provincia": "02",
+    "codigo": "14",
+    "nombre": "Los Chiles"
+  },
+  {
+    "provincia": "02",
+    "codigo": "15",
+    "nombre": "Guatuso"
+  },
+  {
+    "provincia": "02",
+    "codigo": "16",
+    "nombre": "Río Cuarto"
+  },
+
+  {
+    "provincia": "03",
+    "codigo": "01",
+    "nombre": "Cartago"
+  },
+  {
+    "provincia": "03",
+    "codigo": "02",
+    "nombre": "Paraíso"
+  },
+  {
+    "provincia": "03",
+    "codigo": "03",
+    "nombre": "La Unión"
+  },
+  {
+    "provincia": "03",
+    "codigo": "04",
+    "nombre": "Jiménez"
+  },
+  {
+    "provincia": "03",
+    "codigo": "05",
+    "nombre": "Turrialba"
+  },
+  {
+    "provincia": "03",
+    "codigo": "06",
+    "nombre": "Alvarado"
+  },
+  {
+    "provincia": "03",
+    "codigo": "07",
+    "nombre": "Oreamuno"
+  },
+  {
+    "provincia": "03",
+    "codigo": "08",
+    "nombre": "El Guarco"
+  },
+
+  {
+    "provincia": "04",
+    "codigo": "01",
+    "nombre": "Heredia"
+  },
+  {
+    "provincia": "04",
+    "codigo": "02",
+    "nombre": "Barva"
+  },
+  {
+    "provincia": "04",
+    "codigo": "03",
+    "nombre": "Santo Domingo"
+  },
+  {
+    "provincia": "04",
+    "codigo": "04",
+    "nombre": "Santa Bárbara"
+  },
+  {
+    "provincia": "04",
+    "codigo": "05",
+    "nombre": "San Rafael"
+  },
+  {
+    "provincia": "04",
+    "codigo": "06",
+    "nombre": "San Isidro"
+  },
+  {
+    "provincia": "04",
+    "codigo": "07",
+    "nombre": "Belén"
+  },
+  {
+    "provincia": "04",
+    "codigo": "08",
+    "nombre": "Flores"
+  },
+  {
+    "provincia": "04",
+    "codigo": "09",
+    "nombre": "San Pablo"
+  },
+  {
+    "provincia": "04",
+    "codigo": "10",
+    "nombre": "Sarapiquí"
+  },
+
+  {
+    "provincia": "05",
+    "codigo": "01",
+    "nombre": "Liberia"
+  },
+  {
+    "provincia": "05",
+    "codigo": "02",
+    "nombre": "Nicoya"
+  },
+  {
+    "provincia": "05",
+    "codigo": "03",
+    "nombre": "Santa Cruz"
+  },
+  {
+    "provincia": "05",
+    "codigo": "04",
+    "nombre": "Bagaces"
+  },
+  {
+    "provincia": "05",
+    "codigo": "05",
+    "nombre": "Carrillo"
+  },
+  {
+    "provincia": "05",
+    "codigo": "06",
+    "nombre": "Cañas"
+  },
+  {
+    "provincia": "05",
+    "codigo": "07",
+    "nombre": "Abangares"
+  },
+  {
+    "provincia": "05",
+    "codigo": "08",
+    "nombre": "Tilarán"
+  },
+  {
+    "provincia": "05",
+    "codigo": "09",
+    "nombre": "Nandayure"
+  },
+  {
+    "provincia": "05",
+    "codigo": "10",
+    "nombre": "La Cruz"
+  },
+  {
+    "provincia": "05",
+    "codigo": "11",
+    "nombre": "Hojancha"
+  },
+
+  {
+    "provincia": "06",
+    "codigo": "01",
+    "nombre": "Puntarenas"
+  },
+  {
+    "provincia": "06",
+    "codigo": "02",
+    "nombre": "Esparza"
+  },
+  {
+    "provincia": "06",
+    "codigo": "03",
+    "nombre": "Buenos Aires"
+  },
+  {
+    "provincia": "06",
+    "codigo": "04",
+    "nombre": "Montes de Oro"
+  },
+  {
+    "provincia": "06",
+    "codigo": "05",
+    "nombre": "Osa"
+  },
+  {
+    "provincia": "06",
+    "codigo": "06",
+    "nombre": "Quepos"
+  },
+  {
+    "provincia": "06",
+    "codigo": "07",
+    "nombre": "Golfito"
+  },
+  {
+    "provincia": "06",
+    "codigo": "08",
+    "nombre": "Coto Brus"
+  },
+  {
+    "provincia": "06",
+    "codigo": "09",
+    "nombre": "Parrita"
+  },
+  {
+    "provincia": "06",
+    "codigo": "10",
+    "nombre": "Corredores"
+  },
+  {
+    "provincia": "06",
+    "codigo": "11",
+    "nombre": "Garabito"
+  },
+
+  {
+    "provincia": "07",
+    "codigo": "01",
+    "nombre": "Limón"
+  },
+  {
+    "provincia": "07",
+    "codigo": "02",
+    "nombre": "Pococí"
+  },
+  {
+    "provincia": "07",
+    "codigo": "03",
+    "nombre": "Siquirres"
+  },
+  {
+    "provincia": "07",
+    "codigo": "04",
+    "nombre": "Talamanca"
+  },
+  {
+    "provincia": "07",
+    "codigo": "05",
+    "nombre": "Matina"
+  },
+  {
+    "provincia": "07",
+    "codigo": "06",
+    "nombre": "Guácimo"
+  }
+]

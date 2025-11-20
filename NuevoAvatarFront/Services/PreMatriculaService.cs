@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Models;
 
 namespace NuevoAvatarFront.Services
@@ -130,13 +131,25 @@ namespace NuevoAvatarFront.Services
                 _logger.LogError(
                     $"Error al crear prematrícula. Status: {response.StatusCode}, Error: {errorContent}");
 
-                if (errorContent.Contains("periodos FUTUROS"))
+                string message = errorContent;
+                if (errorContent.Contains("periodos FUTUROS", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new Exception(
-                        "Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)");
+                    message = "Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)";
                 }
 
-                throw new Exception($"Error al crear la prematrícula: {errorContent}");
+                IEnumerable<string>? errors = string.IsNullOrWhiteSpace(errorContent)
+                    ? null
+                    : new[] { errorContent };
+
+                throw new ApiException(
+                    message,
+                    response.StatusCode,
+                    errors
+                );
+            }
+            catch (ApiException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -172,13 +185,25 @@ namespace NuevoAvatarFront.Services
                 _logger.LogError(
                     $"Error al actualizar prematrícula {id}. Status: {response.StatusCode}, Error: {errorContent}");
 
-                if (errorContent.Contains("periodos FUTUROS"))
+                string message = errorContent;
+                if (errorContent.Contains("periodos FUTUROS", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new Exception(
-                        "Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)");
+                    message = "Solo se pueden prematricular periodos futuros (fecha de inicio posterior a la actual)";
                 }
 
-                throw new Exception($"Error al actualizar la prematrícula: {errorContent}");
+                IEnumerable<string>? errors = string.IsNullOrWhiteSpace(errorContent)
+                    ? null
+                    : new[] { errorContent };
+
+                throw new ApiException(
+                    message,
+                    response.StatusCode,
+                    errors
+                );
+            }
+            catch (ApiException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -197,17 +222,35 @@ namespace NuevoAvatarFront.Services
                 var response =
                     await _httpClient.DeleteAsync($"/prematricula/{id}?idUsuario={idUsuario}");
 
-                if (response.IsSuccessStatusCode)
-                    return true;
-
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                     return false;
+
+                await EnsureSuccessOrThrowAsync(
+                    response,
+                    _logger,
+                    "No fue posible eliminar la prematrícula. Intente nuevamente más tarde."
+                );
+
+                if (response.IsSuccessStatusCode)
+                    return true;
 
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError(
                     $"Error al eliminar prematrícula {id}. Status: {response.StatusCode}, Error: {errorContent}");
 
-                throw new Exception($"Error al eliminar la prematrícula: {errorContent}");
+                IEnumerable<string>? errors = string.IsNullOrWhiteSpace(errorContent)
+                    ? null
+                    : new[] { errorContent };
+
+                throw new ApiException(
+                    $"Error al eliminar la prematrícula: {errorContent}",
+                    response.StatusCode,
+                    errors
+                );
+            }
+            catch (ApiException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -217,4 +260,3 @@ namespace NuevoAvatarFront.Services
         }
     }
 }
-

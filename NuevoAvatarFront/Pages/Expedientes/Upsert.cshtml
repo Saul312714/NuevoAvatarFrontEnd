@@ -1,0 +1,226 @@
+﻿@page "{id?}"
+@model NuevoAvatarFront.Pages.Expedientes.UpsertModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar Expediente" : "Nuevo Expediente";
+}
+
+<div class="card shadow p-4">
+
+    <h3 class="text-primary mb-4">
+        @(Model.EsEdicion ? "Editar Expediente" : "Crear Nuevo Expediente")
+    </h3>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <form method="post" id="expedienteForm">
+
+        <!-- Campo oculto para preservar ID en edición -->
+        <input type="hidden" asp-for="Expediente.ID_Estudiante" />
+
+        <!-- IDENTIFICACIÓN -->
+        <div class="mb-3">
+            <label class="fw-bold">Identificación</label>
+
+            @if (Model.EsEdicion)
+            {
+                <input asp-for="Expediente.Identificacion" class="form-control" readonly />
+            }
+            else
+            {
+                <input asp-for="Expediente.Identificacion" class="form-control" required />
+            }
+        </div>
+
+        <!-- TIPO -->
+        <div class="mb-3">
+            <label class="fw-bold">Tipo de Identificación</label>
+            <select asp-for="Expediente.Tipo_Identificacion" class="form-control shadow-sm" required>
+                <option value="">Seleccione...</option>
+                <option value="Nacional">Nacional</option>
+                <option value="Dimex">DIMEX</option>
+                <option value="Pasaporte">Pasaporte</option>
+            </select>
+        </div>
+
+        <!-- NOMBRE -->
+        <div class="mb-3">
+            <label class="fw-bold">Nombre Completo</label>
+            <input asp-for="Expediente.Nombre" class="form-control shadow-sm" required />
+        </div>
+
+        <!-- EMAIL -->
+        <div class="mb-3">
+            <label class="fw-bold">Email</label>
+            <input asp-for="Expediente.Email"
+                   type="email"
+                   class="form-control shadow-sm"
+                   placeholder="usuario@cuc.cr" required />
+        </div>
+
+        <!-- FECHA NACIMIENTO -->
+        <div class="mb-3">
+            <label class="fw-bold">Fecha de Nacimiento</label>
+            <input asp-for="Expediente.Fecha_Nacimiento" type="date" class="form-control shadow-sm" required />
+        </div>
+
+        <!-- TELÉFONO -->
+        <div class="mb-3">
+            <label class="fw-bold">Teléfono</label>
+            <input asp-for="Expediente.Telefono" class="form-control shadow-sm" />
+        </div>
+
+        <!-- DIRECCIÓN -->
+        <div class="row">
+
+            <!-- PROVINCIA -->
+            <div class="col-md-4 mb-3">
+                <label class="fw-bold">Provincia</label>
+                <select asp-for="Provincia" id="provinciaSelect" class="form-control shadow-sm" required>
+                    <option value="">Seleccione...</option>
+                    @foreach (var p in Model.Provincias)
+                    {
+                        <option value="@p.Codigo">@p.Nombre</option>
+                    }
+                </select>
+            </div>
+
+            <!-- CANTON -->
+            <div class="col-md-4 mb-3">
+                <label class="fw-bold">Cantón</label>
+                <select asp-for="Canton" id="cantonSelect" class="form-control shadow-sm" required>
+                    <option value="">Seleccione...</option>
+                </select>
+            </div>
+
+            <!-- DISTRITO -->
+            <div class="col-md-4 mb-3">
+                <label class="fw-bold">Distrito</label>
+                <select asp-for="Distrito" id="distritoSelect" class="form-control shadow-sm" required>
+                    <option value="">Seleccione...</option>
+                </select>
+            </div>
+
+        </div>
+
+        <!-- OTRAS SEÑAS -->
+        <div class="mb-3">
+            <label class="fw-bold">Otras señas</label>
+            <textarea asp-for="OtrasSenas" class="form-control shadow-sm" rows="3" placeholder="Información adicional de la dirección"></textarea>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-success" onclick="confirmSave()">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+
+            <a asp-page="./Index" class="btn btn-secondary">Cancelar</a>
+        </div>
+
+    </form>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+
+        const cantones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Cantones));
+        const distritos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Distritos));
+
+        // Valores iniciales para edición
+        const provinciaInicial = '@Model.Provincia';
+        const cantonInicial = '@Model.Canton';
+        const distritoInicial = '@Model.Distrito';
+
+        // ===========================
+        // CONFIRMAR GUARDADO
+        // ===========================
+        function confirmSave() {
+
+            let form = document.getElementById("expedienteForm");
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Por favor completa todos los campos obligatorios.'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '¿Guardar expediente?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+
+        // ===========================
+        // CASCADA provincia → cantón
+        // ===========================
+        document.getElementById("provinciaSelect")?.addEventListener("change", function () {
+            const prov = this.value;
+            const cantSel = document.getElementById("cantonSelect");
+            const distSel = document.getElementById("distritoSelect");
+
+            cantSel.innerHTML = "<option value=''>Seleccione...</option>";
+            distSel.innerHTML = "<option value=''>Seleccione...</option>";
+
+            cantones
+                .filter(c => c.provincia === prov)
+                .forEach(c => cantSel.innerHTML += `<option value="${c.codigo}">${c.nombre}</option>`);
+        });
+
+        // ===========================
+        // CASCADA cantón → distrito
+        // ===========================
+        document.getElementById("cantonSelect")?.addEventListener("change", function () {
+            const cant = this.value;
+            const distSel = document.getElementById("distritoSelect");
+
+            distSel.innerHTML = "<option value=''>Seleccione...</option>";
+
+            distritos
+                .filter(d => d.canton === cant)
+                .forEach(d => distSel.innerHTML += `<option value="${d.codigo}">${d.nombre}</option>`);
+        });
+
+        // ===========================
+        // CARGAR VALORES INICIALES EN EDICIÓN
+        // ===========================
+        window.addEventListener('DOMContentLoaded', function() {
+            if (provinciaInicial) {
+                const provSelect = document.getElementById("provinciaSelect");
+                provSelect.value = provinciaInicial;
+                provSelect.dispatchEvent(new Event('change'));
+
+                setTimeout(() => {
+                    if (cantonInicial) {
+                        const cantSelect = document.getElementById("cantonSelect");
+                        cantSelect.value = cantonInicial;
+                        cantSelect.dispatchEvent(new Event('change'));
+
+                        setTimeout(() => {
+                            if (distritoInicial) {
+                                document.getElementById("distritoSelect").value = distritoInicial;
+                            }
+                        }, 100);
+                    }
+                }, 100);
+            }
+        });
+
+    </script>
+}

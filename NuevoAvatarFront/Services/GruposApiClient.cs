@@ -16,6 +16,10 @@ namespace NuevoAvatarFront.Services
             _config = config;
         }
 
+        private string BaseUrl =>
+            _config["OfertaAcademicaApi:BaseUrl"]
+                ?? throw new InvalidOperationException("OfertaAcademicaApi:BaseUrl no configurado");
+
         private void AddToken(string token)
         {
             _http.DefaultRequestHeaders.Authorization =
@@ -23,22 +27,26 @@ namespace NuevoAvatarFront.Services
         }
 
 
+
         public async Task<List<GrupoDto>> GetAllAsync(string token)
         {
             AddToken(token);
 
-            return await _http.GetFromJsonAsync<List<GrupoDto>>(
-                $"{_config["ApiOfertaAcademica"]}/grupo")
+            return await _http.GetFromJsonAsync<List<GrupoDto>>($"{BaseUrl}/grupo")
                 ?? new List<GrupoDto>();
         }
+
+
 
         public async Task<GrupoDto?> GetByIdAsync(int id, int userId, string token)
         {
             AddToken(token);
 
             return await _http.GetFromJsonAsync<GrupoDto>(
-                $"{_config["ApiOfertaAcademica"]}/grupo/{id}?idUsuarioAccion={userId}");
+                $"{BaseUrl}/grupo/{id}?idUsuarioAccion={userId}");
         }
+
+
 
         public async Task<(bool ok, string? error)> CreateAsync(GrupoDto dto, int userId, string token)
         {
@@ -50,18 +58,20 @@ namespace NuevoAvatarFront.Services
                 ID_Curso = dto.ID_Curso,
                 ID_Profesor = dto.ID_Profesor,
                 Horario = dto.Horario,
-                ID_Periodo = dto.ID_Periodo,
-                idUsuarioAccion = userId
+                ID_Periodo = dto.ID_Periodo
             };
 
             var response = await _http.PostAsJsonAsync(
-                $"{_config["ApiOfertaAcademica"]}/grupo", body);
+                $"{BaseUrl}/grupo?idUsuarioAccion={userId}",
+                body
+            );
 
             if (response.IsSuccessStatusCode)
                 return (true, null);
 
             return (false, await response.Content.ReadAsStringAsync());
         }
+
 
         public async Task<(bool ok, string? error)> UpdateAsync(GrupoDto dto, int userId, string token)
         {
@@ -77,21 +87,25 @@ namespace NuevoAvatarFront.Services
             };
 
             var response = await _http.PutAsJsonAsync(
-                $"{_config["ApiOfertaAcademica"]}/grupo/{dto.ID_Grupo}?idUsuarioAccion={userId}",
-                body);
+                $"{BaseUrl}/grupo/{dto.ID_Grupo}?idUsuarioAccion={userId}",
+                body
+            );
 
             if (response.IsSuccessStatusCode)
                 return (true, null);
 
             return (false, await response.Content.ReadAsStringAsync());
         }
+
+
 
         public async Task<(bool ok, string? error)> DeleteAsync(int id, int userId, string token)
         {
             AddToken(token);
 
             var response = await _http.DeleteAsync(
-                $"{_config["ApiOfertaAcademica"]}/grupo/{id}?idUsuarioAccion={userId}");
+                $"{BaseUrl}/grupo/{id}?idUsuarioAccion={userId}"
+            );
 
             if (response.IsSuccessStatusCode)
                 return (true, null);
@@ -100,25 +114,34 @@ namespace NuevoAvatarFront.Services
         }
 
 
+    
         public async Task<List<CursoDto>> GetCursosAsync(string token)
         {
             AddToken(token);
-            return await _http.GetFromJsonAsync<List<CursoDto>>(
-                $"{_config["ApiOfertaAcademica"]}/curso") ?? new();
+
+            return await _http.GetFromJsonAsync<List<CursoDto>>($"{BaseUrl}/curso")
+                ?? new List<CursoDto>();
         }
+
+
 
         public async Task<List<ProfesorDto>> GetProfesoresAsync(string token)
         {
             AddToken(token);
-            return await _http.GetFromJsonAsync<List<ProfesorDto>>(
-                $"{_config["ApiOfertaAcademica"]}/profesor") ?? new();
+
+            return await _http.GetFromJsonAsync<List<ProfesorDto>>($"{BaseUrl}/profesor")
+                ?? new List<ProfesorDto>();
         }
 
+
+    
         public async Task<List<PeriodoDto>> GetPeriodosAsync(int userId, string token)
         {
             AddToken(token);
+
             return await _http.GetFromJsonAsync<List<PeriodoDto>>(
-                $"{_config["ApiOfertaAcademica"]}/periodo?idUsuarioAccion={userId}") ?? new();
+                $"{BaseUrl}/periodo?idUsuarioAccion={userId}"
+            ) ?? new List<PeriodoDto>();
         }
     }
 }

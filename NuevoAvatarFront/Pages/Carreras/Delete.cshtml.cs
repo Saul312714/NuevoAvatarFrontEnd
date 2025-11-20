@@ -74,9 +74,8 @@ namespace NuevoAvatarFront.Pages.Carreras
             }
         }
 
-        // 
+       
         // POST
-        // 
         public async Task<IActionResult> OnPostAsync()
         {
             try

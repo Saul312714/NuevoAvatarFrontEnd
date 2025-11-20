@@ -1,123 +1,173 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
-using static NuevoAvatarFront.Pages.Grupos.IndexModel;
+using NuevoAvatarFront.Entities;
+using NuevoAvatarFront.Services;
 
 namespace NuevoAvatarFront.Pages.Grupos
 {
     public class UpsertModel : PageModel
     {
-        private readonly HttpClient _http;
-        private readonly IConfiguration _config;
+        private readonly IGrupoApiClient _grupoApi;
 
-        public UpsertModel(IHttpClientFactory factory, IConfiguration config)
+        public UpsertModel(IGrupoApiClient grupoApi)
         {
-            _http = factory.CreateClient();
-            _config = config;
+            _grupoApi = grupoApi;
         }
 
         [BindProperty]
         public GrupoDto Grupo { get; set; } = new();
-        public string? ErrorMessage { get; set; }
-        public bool EsEdicion => Grupo.ID_Grupo > 0;
+
         public List<CursoDto> Cursos { get; set; } = new();
         public List<ProfesorDto> Profesores { get; set; } = new();
         public List<PeriodoDto> Periodos { get; set; } = new();
 
-        // Método GET
+        public string? ErrorMessage { get; set; }
+        public bool EsEdicion => Grupo.ID_Grupo > 0;
+
+
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            var token = HttpContext.Session.GetString("AccessToken");
-            var userId = HttpContext.Session.GetInt32("UsuarioID");
-
-            if (string.IsNullOrWhiteSpace(token) || userId == null)
-                return Redirect("/HU_MICHEL/Login");
-
-            await CargarSelects(token);
-
-            if (id.HasValue)
+            try
             {
-                _http.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
+                var token = HttpContext.Session.GetString("AccessToken");
+                var userId = HttpContext.Session.GetInt32("UsuarioID");
 
-                var url = $"{_config["ApiOfertaAcademica"]}/grupo/{id}?idUsuarioAccion={userId}";
-                var json = await _http.GetStringAsync(url);
+                if (token is null || userId is null)
+                    return Redirect("/HU_MICHEL/Login");
 
-                Grupo = JsonSerializer.Deserialize<GrupoDto>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new GrupoDto();
+                await CargarSelects(token, userId.Value);
+
+                if (id.HasValue)
+                {
+                    var dto = await _grupoApi.GetByIdAsync(id.Value, userId.Value, token);
+                    if (dto is null)
+                    {
+                        ErrorMessage = "El grupo solicitado no existe.";
+                        return Page();
+                    }
+
+                    Grupo = dto;
+                }
+
+                return Page();
             }
+            catch
+            {
+                ErrorMessage = "Ocurrió un error al cargar la información.";
+                return Page();
+            }
+        }
 
+        public async Task<IActionResult> OnPostAsync()
+        {
+            try
+            {
+                var token = HttpContext.Session.GetString("AccessToken");
+                var userId = HttpContext.Session.GetInt32("UsuarioID");
+
+                if (token is null || userId is null)
+                    return Redirect("/HU_MICHEL/Login");
+
+
+                // Número del grupo
+                if (Grupo.Numero <= 0)
+                {
+                    ErrorMessage = "Debe ingresar un número de grupo válido (mayor a 0).";
+                    return await DevolverConSelects(token, userId.Value);
+                }
+
+                // Curso
+                if (Grupo.ID_Curso <= 0)
+                {
+                    ErrorMessage = "Debe seleccionar un curso.";
+                    return await DevolverConSelects(token, userId.Value);
+                }
+
+                // Profesor
+                if (Grupo.ID_Profesor <= 0)
+                {
+                    ErrorMessage = "Debe seleccionar un profesor.";
+                    return await DevolverConSelects(token, userId.Value);
+                }
+
+                // Periodo
+                if (Grupo.ID_Periodo <= 0)
+                {
+                    ErrorMessage = "Debe seleccionar un período.";
+                    return await DevolverConSelects(token, userId.Value);
+                }
+
+                // Horario
+                if (string.IsNullOrWhiteSpace(Grupo.Horario))
+                {
+                    ErrorMessage = "Debe especificar un horario.";
+                    return await DevolverConSelects(token, userId.Value);
+                }
+
+                if (Grupo.Horario.Length > 100)
+                {
+                    ErrorMessage = "El horario no puede exceder los 100 caracteres.";
+                    return await DevolverConSelects(token, userId.Value);
+                }
+
+                (bool ok, string? error) response;
+
+                if (!EsEdicion)
+                    response = await _grupoApi.CreateAsync(Grupo, userId.Value, token);
+                else
+                    response = await _grupoApi.UpdateAsync(Grupo, userId.Value, token);
+
+
+                if (!response.ok)
+                {
+                    ErrorMessage = ProcesarError(response.error);
+                    return await DevolverConSelects(token, userId.Value);
+                }
+
+                return RedirectToPage("./Index");
+            }
+            catch
+            {
+                ErrorMessage = "Ocurrió un error inesperado al guardar el grupo.";
+                return Page();
+            }
+        }
+
+
+
+        private async Task<IActionResult> DevolverConSelects(string token, int userId)
+        {
+            await CargarSelects(token, userId);
             return Page();
         }
 
-        // Método POST
-        public async Task<IActionResult> OnPostAsync()
+        private string ProcesarError(string? error)
         {
-            var token = HttpContext.Session.GetString("AccessToken");
-            var userId = HttpContext.Session.GetInt32("UsuarioID");
+            if (string.IsNullOrWhiteSpace(error))
+                return "Ocurrió un error al procesar la solicitud.";
 
-            if (string.IsNullOrWhiteSpace(token) || userId == null)
-                return Redirect("/HU_MICHEL/Login");
+            string lower = error.ToLower();
 
-            _http.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+            if (lower.Contains("existe") && lower.Contains("grupo"))
+                return "Ya existe un grupo con este número o combinación.";
 
-            HttpResponseMessage response;
+            if (lower.Contains("profesor") && lower.Contains("horario"))
+                return "Este profesor ya tiene un grupo asignado en ese horario.";
 
-            if (EsEdicion)
-            {
-                // PUT - Edición (con ID en la URL)
-                response = await _http.PutAsJsonAsync(
-                    $"{_config["ApiOfertaAcademica"]}/grupo/{Grupo.ID_Grupo}?idUsuarioAccion={userId}",
-                    new
-                    {
-                        Numero_Grupo = Grupo.Numero,
-                        ID_Curso = Grupo.ID_Curso,
-                        ID_Profesor = Grupo.ID_Profesor,
-                        Horario = Grupo.Horario,
-                        ID_Periodo = Grupo.ID_Periodo
-                    }
-                );
-            }
-            else
-            {
-                // POST - Creación
-                response = await _http.PostAsJsonAsync(
-                    $"{_config["ApiOfertaAcademica"]}/grupo",
-                    new
-                    {
-                        Numero_Grupo = Grupo.Numero,
-                        ID_Curso = Grupo.ID_Curso,
-                        ID_Profesor = Grupo.ID_Profesor,
-                        Horario = Grupo.Horario,
-                        ID_Periodo = Grupo.ID_Periodo,
-                        idUsuarioAccion = userId
-                    }
-                );
-            }
+            if (lower.Contains("periodo"))
+                return "El período seleccionado no es válido.";
 
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                ErrorMessage = $"No se pudo guardar el grupo. Error: {response.StatusCode} - {errorContent}";
-                await CargarSelects(token);
-                return Page();
-            }
+            if (error.Length > 200)
+                return "El servidor devolvió un error inesperado.";
 
-            return RedirectToPage("./Index");
+            return error; // mensaje legible
         }
 
-        // Método para cargar los selectores (cursos, profesores, períodos)
-        private async Task CargarSelects(string token)
+        private async Task CargarSelects(string token, int userId)
         {
-            _http.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            Cursos = await _http.GetFromJsonAsync<List<CursoDto>>($"{_config["ApiOfertaAcademica"]}/curso") ?? new();
-            Profesores = await _http.GetFromJsonAsync<List<ProfesorDto>>($"{_config["ApiOfertaAcademica"]}/profesor") ?? new();
-            Periodos = await _http.GetFromJsonAsync<List<PeriodoDto>>($"{_config["ApiOfertaAcademica"]}/periodo") ?? new();
+            Cursos = await _grupoApi.GetCursosAsync(token);
+            Profesores = await _grupoApi.GetProfesoresAsync(token);
+            Periodos = await _grupoApi.GetPeriodosAsync(userId, token);
         }
     }
 }

@@ -1,41 +1,36 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using NuevoAvatarFront.Entities;
+using NuevoAvatarFront.Services;
 
 namespace NuevoAvatarFront.Pages.Expedientes
 {
     public class UpsertModel : PageModel
     {
-        private readonly HttpClient _http;
-        private readonly IConfiguration _config;
+        private readonly IExpedienteApiClient _expedienteApi;
+        private readonly IMockDirecciones _direcciones;
 
-        public UpsertModel(IHttpClientFactory factory, IConfiguration config)
+        public UpsertModel(IExpedienteApiClient expedienteApi, IMockDirecciones direcciones)
         {
-            _http = factory.CreateClient();
-            _config = config;
+            _expedienteApi = expedienteApi;
+            _direcciones = direcciones;
         }
-
-        public string? ErrorMessage { get; set; }
 
         [BindProperty]
         public ExpedienteDto Expediente { get; set; } = new();
 
-        // Estas propiedades son enlazadas desde el formulario
-        [BindProperty] public string Provincia { get; set; } = "";
-        [BindProperty] public string Canton { get; set; } = "";
-        [BindProperty] public string Distrito { get; set; } = "";
-        [BindProperty] public string OtrasSenas { get; set; } = "";
+        // Selects dinámicos
+        [BindProperty] public string ProvinciaSeleccionada { get; set; } = "";
+        [BindProperty] public string CantonSeleccionado { get; set; } = "";
+        [BindProperty] public string DistritoSeleccionado { get; set; } = "";
 
+        public List<string> Provincias { get; set; } = new();
+        public List<string> Cantones { get; set; } = new();
+        public List<string> Distritos { get; set; } = new();
+
+        public string? ErrorMessage { get; set; }
         public bool EsEdicion => Expediente.ID_Estudiante > 0;
 
-        public List<ProvinciaDto> Provincias { get; set; } = new();
-        public List<CantonDto> Cantones { get; set; } = new();
-        public List<DistritoDto> Distritos { get; set; } = new();
-
-        // ============================================================
-        // GET
-        // ============================================================
         public async Task<IActionResult> OnGetAsync(int? id)
         {
             CargarCatalogos();
@@ -43,47 +38,37 @@ namespace NuevoAvatarFront.Pages.Expedientes
             var token = HttpContext.Session.GetString("AccessToken");
             var userId = HttpContext.Session.GetInt32("UsuarioID");
 
-            if (string.IsNullOrWhiteSpace(token) || userId == null)
+            if (token is null || userId is null)
                 return Redirect("/HU_MICHEL/Login");
 
-            _http.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            if (id.HasValue && id.Value > 0)
+            if (id.HasValue)
             {
-                var url = $"{_config["ApiMatricula"]}/expediente/{id}?idUsuario={userId}";
-                var dto = await _http.GetFromJsonAsync<ExpedienteDto>(url);
+                var dto = await _expedienteApi.GetByIdAsync(id.Value, userId.Value, token);
 
-                if (dto != null)
+                if (dto is null)
                 {
-                    Expediente = dto;
+                    ErrorMessage = "El expediente solicitado no existe.";
+                    return Page();
+                }
 
-                    // Descomponer dirección si es válida
-                    if (!string.IsNullOrWhiteSpace(dto.Direccion))
-                    {
-                        var partes = dto.Direccion.Split(" - ");
-                        if (partes.Length >= 3)
-                        {
-                            Provincia = partes[0];
-                            Canton = partes[1];
-                            Distrito = partes[2];
+                Expediente = dto;
 
-                            // Si hay más partes, son otras señas
-                            if (partes.Length > 3)
-                            {
-                                OtrasSenas = string.Join(" - ", partes.Skip(3));
-                            }
-                        }
-                    }
+                // decodificar dirección
+                var partes = dto.Direccion?.Split(" - ");
+                if (partes?.Length >= 3)
+                {
+                    ProvinciaSeleccionada = partes[0];
+                    CantonSeleccionado = partes[1];
+                    DistritoSeleccionado = partes[2];
+
+                    Cantones = _direcciones.ObtenerCantones(ProvinciaSeleccionada);
+                    Distritos = _direcciones.ObtenerDistritos(ProvinciaSeleccionada, CantonSeleccionado);
                 }
             }
 
             return Page();
         }
 
-        // ============================================================
-        // POST
-        // ============================================================
         public async Task<IActionResult> OnPostAsync()
         {
             CargarCatalogos();
@@ -91,102 +76,74 @@ namespace NuevoAvatarFront.Pages.Expedientes
             var token = HttpContext.Session.GetString("AccessToken");
             var userId = HttpContext.Session.GetInt32("UsuarioID");
 
-            if (string.IsNullOrWhiteSpace(token) || userId == null)
+            if (token is null || userId is null)
                 return Redirect("/HU_MICHEL/Login");
 
-            _http.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+            // VALIDACIONES ============================
+            if (string.IsNullOrWhiteSpace(Expediente.Identificacion))
+                return Error("La identificación es obligatoria.");
 
-            // Validación dominio correo
-            if (!Expediente.Email.EndsWith("@cuc.cr") &&
-                !Expediente.Email.EndsWith("@cuc.ac.cr"))
-            {
-                ErrorMessage = "El email debe pertenecer al dominio cuc.cr o cuc.ac.cr.";
-                return Page();
-            }
+            if (string.IsNullOrWhiteSpace(Expediente.Tipo_Identificacion))
+                return Error("Debe seleccionar un tipo de identificación.");
 
-            // Construcción de dirección total
-            if (!string.IsNullOrWhiteSpace(OtrasSenas))
-            {
-                Expediente.Direccion = $"{Provincia} - {Canton} - {Distrito} - {OtrasSenas}";
-            }
-            else
-            {
-                Expediente.Direccion = $"{Provincia} - {Canton} - {Distrito}";
-            }
+            if (string.IsNullOrWhiteSpace(Expediente.Nombre))
+                return Error("El nombre completo es obligatorio.");
 
-            HttpResponseMessage response;
+            if (string.IsNullOrWhiteSpace(Expediente.Telefono))
+                return Error("El teléfono es obligatorio.");
 
-            if (!EsEdicion)
+            if (!Expediente.Telefono.All(char.IsDigit) || Expediente.Telefono.Length < 8)
+                return Error("El teléfono debe tener al menos 8 dígitos.");
+
+            if (Expediente.Fecha_Nacimiento == default)
+                return Error("Debe seleccionar una fecha de nacimiento válida.");
+
+            // Validación edad mínima
+            var edad = DateTime.Today.Year - Expediente.Fecha_Nacimiento.Year;
+            if (Expediente.Fecha_Nacimiento.Date > DateTime.Today.AddYears(-edad)) edad--;
+
+            if (edad < 15)
+                return Error("El estudiante debe tener al menos 15 años.");
+
+            if (!(Expediente.Email.EndsWith("@cuc.cr") || Expediente.Email.EndsWith("@cuc.ac.cr")))
+                return Error("El email debe pertenecer al dominio cuc.cr o cuc.ac.cr.");
+
+            if (string.IsNullOrWhiteSpace(ProvinciaSeleccionada) ||
+                string.IsNullOrWhiteSpace(CantonSeleccionado) ||
+                string.IsNullOrWhiteSpace(DistritoSeleccionado))
             {
-                // Crear
-                response = await _http.PostAsJsonAsync(
-                    $"{_config["ApiMatricula"]}/expediente?idUsuario={userId}",
-                    Expediente
-                );
-            }
-            else
-            {
-                // Editar - ID en la URL
-                response = await _http.PutAsJsonAsync(
-                    $"{_config["ApiMatricula"]}/expediente/{Expediente.ID_Estudiante}?idUsuario={userId}",
-                    Expediente
-                );
+                return Error("Debe seleccionar Provincia, Cantón y Distrito.");
             }
 
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                ErrorMessage = $"Error al guardar: {response.StatusCode} - {errorContent}";
-                return Page();
-            }
+            // Construir dirección final
+            Expediente.Direccion = $"{ProvinciaSeleccionada} - {CantonSeleccionado} - {DistritoSeleccionado}";
+
+            // GUARDAR ============================
+            var response = EsEdicion
+                ? await _expedienteApi.UpdateAsync(Expediente, userId.Value, token)
+                : await _expedienteApi.CreateAsync(Expediente, userId.Value, token);
+
+            if (!response.ok)
+                return Error(response.error ?? "No se pudo guardar el expediente.");
 
             return RedirectToPage("./Index");
         }
 
-        // ============================================================
-        // Cargar catálogos
-        // ============================================================
+        private IActionResult Error(string mensaje)
+        {
+            ErrorMessage = mensaje;
+            return Page();
+        }
+
         private void CargarCatalogos()
         {
-            Provincias = MockDirecciones.Provincias.Take(7).ToList();
-            Cantones = MockDirecciones.Cantones.Take(100).ToList();
-            Distritos = MockDirecciones.Distritos.Take(100).ToList();
-        }
+            Provincias = _direcciones.ObtenerProvincias();
 
-        // ============================================================
-        // DTOs
-        // ============================================================
-        public class ExpedienteDto
-        {
-            public int ID_Estudiante { get; set; }
-            public string Identificacion { get; set; } = "";
-            public string Tipo_Identificacion { get; set; } = "";
-            public string Nombre { get; set; } = "";
-            public string Email { get; set; } = "";
-            public DateTime Fecha_Nacimiento { get; set; }
-            public string Direccion { get; set; } = "";
-            public string Telefono { get; set; } = "";
-        }
+            if (!string.IsNullOrWhiteSpace(ProvinciaSeleccionada))
+                Cantones = _direcciones.ObtenerCantones(ProvinciaSeleccionada);
 
-        public class ProvinciaDto
-        {
-            public string Codigo { get; set; } = "";
-            public string Nombre { get; set; } = "";
-        }
-
-        public class CantonDto
-        {
-            public string provincia { get; set; } = "";
-            public string codigo { get; set; } = "";
-            public string nombre { get; set; } = "";
-        }
-
-        public class DistritoDto
-        {
-            public string canton { get; set; } = "";
-            public string codigo { get; set; } = "";
-            public string nombre { get; set; } = "";
+            if (!string.IsNullOrWhiteSpace(CantonSeleccionado))
+                Distritos = _direcciones.ObtenerDistritos(ProvinciaSeleccionada, CantonSeleccionado);
         }
     }
 }

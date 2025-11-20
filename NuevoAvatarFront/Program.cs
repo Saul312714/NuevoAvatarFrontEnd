@@ -2,6 +2,8 @@
 using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Middleware;
 using NuevoAvatarFront.Services;
+using NuevoAvatarFront.Services.Dashboard;
+using NuevoAvatarFront.Pages.Expedientes;
 
 var builder = WebApplication.CreateBuilder(args);
 

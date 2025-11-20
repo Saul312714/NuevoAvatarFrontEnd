@@ -5,16 +5,15 @@
 }
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Bienvenido, @Model.NombreUsuario</h1>
-    <span class="badge badge-info badge-pill">@Model.RolUsuario</span>
+    <h1 class="h3 mb-0 text-gray-800">Bienvenido, @Model.Data.NombreUsuario</h1>
+    <span class="badge badge-info badge-pill">@Model.Data.RolUsuario</span>
 </div>
 
-<!-- ========================================== -->
-<!-- WIDGETS PARA ADMINISTRADOR -->
-<!-- ========================================== -->
-@if (Model.RolUsuario.Contains("Administrador") || Model.RolUsuario.Contains("Admin"))
+
+@if (Model.Data.RolUsuario.Contains("Administrador") || Model.Data.RolUsuario.Contains("Admin"))
 {
     <div class="row">
+
         <!-- Usuarios -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
@@ -23,7 +22,7 @@
                         Usuarios
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.TotalUsuarios
+                        @Model.Data.TotalUsuarios
                     </div>
                 </div>
             </div>
@@ -37,7 +36,7 @@
                         Carreras
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.TotalCarreras
+                        @Model.Data.TotalCarreras
                     </div>
                 </div>
             </div>
@@ -51,7 +50,7 @@
                         Cursos
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.TotalCursos
+                        @Model.Data.TotalCursos
                     </div>
                 </div>
             </div>
@@ -65,7 +64,7 @@
                         Períodos Activos
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.TotalPeriodosActivos
+                        @Model.Data.TotalPeriodosActivos
                     </div>
                 </div>
             </div>
@@ -79,7 +78,7 @@
                         Facturas Pendientes
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.TotalFacturasPendientes
+                        @Model.Data.TotalFacturasPendientes
                     </div>
                 </div>
             </div>
@@ -87,13 +86,11 @@
     </div>
 }
 
-<!-- ========================================== -->
-<!-- WIDGETS PARA ESTUDIANTE -->
-<!-- ========================================== -->
-@if (Model.RolUsuario.Contains("Estudiante"))
+
+@if (Model.Data.RolUsuario.Contains("Estudiante"))
 {
     <div class="row">
-        <!-- Mis Matrículas -->
+
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
@@ -101,13 +98,12 @@
                         Mis Matrículas
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.MisMatriculas
+                        @Model.Data.MisMatriculas
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Cursos Actuales -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
@@ -115,13 +111,12 @@
                         Cursos Actuales
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.MisCursosActuales
+                        @Model.Data.MisCursosActuales
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Saldo Pendiente -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-warning shadow h-100 py-2">
                 <div class="card-body">
@@ -129,13 +124,12 @@
                         Saldo Pendiente
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        ₡@Model.MiSaldoPendiente.ToString("N0")
+                        ₡@Model.Data.MiSaldoPendiente.ToString("N0")
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Mi Carrera -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
@@ -143,56 +137,20 @@
                         Mi Carrera
                     </div>
                     <div class="h6 mb-0 font-weight-bold text-gray-800">
-                        @Model.MiCarrera
+                        @Model.Data.MiCarrera
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Accesos Rápidos para Estudiante -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Accesos Rápidos</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <a href="/Matriculas/Index" class="btn btn-outline-primary btn-block">
-                                <i class="fas fa-book"></i> Mis Matrículas
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="/Pagos/Index" class="btn btn-outline-success btn-block">
-                                <i class="fas fa-dollar-sign"></i> Mis Pagos
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="/Expedientes/Upsert" class="btn btn-outline-info btn-block">
-                                <i class="fas fa-user"></i> Mi Expediente
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="/Notificaciones/Index" class="btn btn-outline-warning btn-block">
-                                <i class="fas fa-bell"></i> Notificaciones
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 }
 
-<!-- ========================================== -->
-<!-- WIDGETS PARA PROFESOR -->
-<!-- ========================================== -->
-@if (Model.RolUsuario.Contains("Profesor"))
+
+@if (Model.Data.RolUsuario.Contains("Profesor"))
 {
     <div class="row">
-        <!-- Mis Grupos -->
+
         <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
@@ -200,13 +158,12 @@
                         Mis Grupos
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.MisGrupos
+                        @Model.Data.MisGrupos
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Cursos que Imparto -->
         <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
@@ -214,13 +171,12 @@
                         Cursos que Imparto
                     </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        @Model.CursosQueImparto
+                        @Model.Data.CursosQueImparto
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Período Actual -->
         <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
@@ -233,53 +189,23 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Accesos Rápidos para Profesor -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Accesos Rápidos</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <a href="/Grupos/Index" class="btn btn-outline-primary btn-block">
-                                <i class="fas fa-users"></i> Mis Grupos
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a href="/Notas/Index" class="btn btn-outline-success btn-block">
-                                <i class="fas fa-clipboard-list"></i> Cargar Notas
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a href="/Desglose/Index" class="btn btn-outline-info btn-block">
-                                <i class="fas fa-chart-bar"></i> Desglose de Notas
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 }
 
-<!-- ========================================== -->
-<!-- NOTIFICACIONES Y BITÁCORAS (PARA TODOS) -->
-<!-- ========================================== -->
 <div class="row">
-    <!-- Notificaciones recientes -->
+
+    <!-- NOTIFICACIONES -->
     <div class="col-lg-6">
         <div class="card shadow mb-4">
+
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Notificaciones recientes</h6>
-                <span class="badge badge-primary">@Model.Notificaciones.Count</span>
+                <span class="badge badge-primary">@Model.Data.Notificaciones.Count</span>
             </div>
 
             <div class="card-body">
-                @if (Model.Notificaciones?.Any() == true)
+                @if (Model.Data.Notificaciones.Any())
                 {
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm">
@@ -292,13 +218,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var n in Model.Notificaciones)
+                                @foreach (var n in Model.Data.Notificaciones)
                                 {
                                     <tr>
                                         <td>@n.Email_Destino</td>
                                         <td>@n.Asunto</td>
                                         <td>@n.FechaEnvio.ToString("dd/MM HH:mm")</td>
-                                        <td><span class="badge badge-success badge-sm">@n.Estado</span></td>
+                                        <td><span class="badge badge-success">@n.Estado</span></td>
                                     </tr>
                                 }
                             </tbody>
@@ -310,57 +236,148 @@
                     <p class="text-muted">No hay notificaciones recientes.</p>
                 }
             </div>
+
         </div>
     </div>
 
-    <!-- Últimas bitácoras -->
-    <div class="col-lg-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 font-weight-bold text-primary">Últimas bitácoras</h6>
-                <span class="badge badge-primary">@Model.Bitacoras.Count</span>
-            </div>
+    <!-- BITÁCORAS (solo admin) -->
+    @if (Model.Data.RolUsuario.Contains("Admin"))
+    {
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
 
-            <div class="card-body">
-                @if (Model.Bitacoras?.Any() == true)
-                {
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Acción</th>
-                                    <th>Fecha</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var b in Model.Bitacoras)
-                                {
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Últimas bitácoras</h6>
+                    <span class="badge badge-primary">@Model.Data.Bitacoras.Count</span>
+                </div>
+
+                <div class="card-body">
+                    @if (Model.Data.Bitacoras.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="thead-light">
                                     <tr>
-                                        <td>@b.ID_Usuario</td>
-                                        <td>@b.Accion</td>
-                                        <td>@b.Fecha.ToString("dd/MM HH:mm")</td>
+                                        <th>Usuario</th>
+                                        <th>Acción</th>
+                                        <th>Fecha</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <p class="text-muted">Sin registros recientes.</p>
-                }
+                                </thead>
+                                <tbody>
+                                    @foreach (var b in Model.Data.Bitacoras)
+                                    {
+                                        <tr>
+                                            <td>@Model.Data.UsuariosLookup[b.ID_Usuario]</td>
+                                            <td>@b.Accion</td>
+                                            <td>@b.Fecha.ToString("dd/MM HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Sin registros recientes.</p>
+                    }
+                </div>
+
             </div>
         </div>
-    </div>
+    }
 </div>
 
-<!-- Botones de ayuda y perfil -->
+
+
 <div class="text-center mb-4">
-    <a href="#" class="btn btn-outline-primary btn-sm">
+    <a href="#" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modalAyuda">
         <i class="fas fa-question-circle"></i> Ayuda
     </a>
+
     <a href="#" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-user"></i> Mi Perfil
     </a>
 </div>
+
+
+
+<div class="modal fade" id="modalAyuda" tabindex="-1" role="dialog" aria-labelledby="modalAyudaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalAyudaLabel">
+                    <i class="fas fa-life-ring"></i> Centro de Ayuda & Soporte
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <!-- FAQ -->
+                <h5 class="font-weight-bold text-primary mb-3">
+                    <i class="fas fa-question-circle"></i> Preguntas Frecuentes (FAQ)
+                </h5>
+
+                <ul class="list-group mb-4">
+
+                    <li class="list-group-item">
+                        <strong>¿Cómo actualizo mi expediente?</strong><br />
+                        Desde el menú lateral: <em>Académico → Expedientes → Editar</em>.
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>¿Qué hago si mis datos personales son incorrectos?</strong><br />
+                        Debés contactar a soporte para solicitar una actualización.
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>No puedo acceder al sistema</strong><br />
+                        Verificá tu correo y contraseña o escribí a soporte técnico.
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>No veo mis cursos</strong><br />
+                        Solo se muestran cursos activos en el periodo vigente.
+                    </li>
+
+                </ul>
+
+                <hr />
+
+                <!-- CONTACTO -->
+                <h5 class="font-weight-bold text-primary mb-3">
+                    <i class="fas fa-headset"></i> Información de Contacto
+                </h5>
+
+                <p class="mb-1">
+                    <strong>Email:</strong> soporte@cuc.ac.cr
+                </p>
+
+                <p class="mb-1">
+                    <strong>Teléfono:</strong> +506 8888-8888
+                </p>
+
+                <p>
+                    <strong>Horario:</strong> Lunes a Viernes, 8:00am – 5:00pm
+                </p>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+

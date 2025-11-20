@@ -1,153 +1,91 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using NuevoAvatarFront.Entities;
+using NuevoAvatarFront.Services;
 
 namespace NuevoAvatarFront.Pages.Expedientes
 {
     public class IndexModel : PageModel
     {
-        private readonly HttpClient _http;
-        private readonly IConfiguration _config;
+        private readonly IExpedienteApiClient _expedienteApi;
+        private readonly IMockDirecciones _mock;
 
-        public IndexModel(IHttpClientFactory factory, IConfiguration config)
+        public IndexModel(IExpedienteApiClient expedienteApi, IMockDirecciones mock)
         {
-            _http = factory.CreateClient();
-            _config = config;
+            _expedienteApi = expedienteApi;
+            _mock = mock;
         }
 
-        public List<ExpedienteViewDto> Expedientes { get; set; } = new();
+        public List<ExpedienteViewDto> Lista { get; set; } = new();
 
-        [BindProperty(SupportsGet = true)]
-        public string? FiltroIdentificacion { get; set; }
 
-        [BindProperty(SupportsGet = true)]
-        public string? FiltroNombre { get; set; }
+        public async Task<IActionResult> OnGetAsync()
+        {
+            try
+            {
+                var token = HttpContext.Session.GetString("AccessToken");
+                var userId = HttpContext.Session.GetInt32("UsuarioID");
 
-        // ============================================================
-        // GET
-        // ============================================================
-        public async Task OnGetAsync()
+                if (token is null || userId is null)
+                    return Redirect("/HU_MICHEL/Login");
+
+                var expedientes = await _expedienteApi.GetAllAsync(userId.Value, token);
+
+                Lista = expedientes.Select(e => ConvertirAViewDto(e)).ToList();
+
+                return Page();
+            }
+            catch
+            {
+                Lista = new();
+                return Page();
+            }
+        }
+
+        public async Task<IActionResult> OnGetEliminarAsync(int id)
         {
             var token = HttpContext.Session.GetString("AccessToken");
             var userId = HttpContext.Session.GetInt32("UsuarioID");
 
-            if (string.IsNullOrWhiteSpace(token) || userId == null)
-            {
-                Response.Redirect("/HU_MICHEL/Login");
-                return;
-            }
-
-            _http.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-
-            var url = $"{_config["ApiMatricula"]}/expediente?idUsuario={userId}";
-            var lista = await _http.GetFromJsonAsync<List<ExpedienteDto>>(url) ?? new();
-
-            // ===================================================================
-            // SEPARACIÓN DE DIRECCIÓN: "provincia - canton - distrito"
-            // ===================================================================
-            var listaView = new List<ExpedienteViewDto>();
-
-            foreach (var e in lista)
-            {
-                string provincia = "";
-                string canton = "";
-                string distrito = "";
-
-                if (!string.IsNullOrWhiteSpace(e.Direccion))
-                {
-                    var partes = e.Direccion.Split(" - ");
-                    if (partes.Length == 3)
-                    {
-                        provincia = partes[0];
-                        canton = partes[1];
-                        distrito = partes[2];
-                    }
-                }
-
-                listaView.Add(new ExpedienteViewDto
-                {
-                    ID_Estudiante = e.ID_Estudiante,
-                    Identificacion = e.Identificacion,
-                    Tipo_Identificacion = e.Tipo_Identificacion,
-                    Nombre = e.Nombre,
-                    Email = e.Email,
-                    Telefono = e.Telefono,
-                    Fecha_Nacimiento = e.Fecha_Nacimiento,
-
-                    Provincia = provincia,
-                    Canton = canton,
-                    Distrito = distrito
-                });
-            }
-
-            // FILTROS
-            if (!string.IsNullOrWhiteSpace(FiltroIdentificacion))
-                listaView = listaView
-                    .Where(e => e.Identificacion.Contains(FiltroIdentificacion))
-                    .ToList();
-
-            if (!string.IsNullOrWhiteSpace(FiltroNombre))
-                listaView = listaView
-                    .Where(e => e.Nombre.Contains(FiltroNombre, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-            Expedientes = listaView;
-        }
-
-        // ============================================================
-        // DELETE
-        // ============================================================
-        public async Task<IActionResult> OnPostDeleteAsync(int id)
-        {
-            var token = HttpContext.Session.GetString("AccessToken");
-            var userId = HttpContext.Session.GetInt32("UsuarioID");
-
-            if (string.IsNullOrWhiteSpace(token) || userId == null)
+            if (token is null || userId is null)
                 return Redirect("/HU_MICHEL/Login");
 
-            _http.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+            await _expedienteApi.DeleteAsync(id, userId.Value, token);
 
-            await _http.DeleteAsync(
-                $"{_config["ApiMatricula"]}/expediente/{id}?idUsuario={userId}");
-
-            return RedirectToPage(new { FiltroIdentificacion, FiltroNombre });
+            // Volver al listado
+            return RedirectToPage();
         }
 
-
-        // ============================================================
-        // DTOs
-        // ============================================================
-
-        // DTO recibido desde la API
-        public class ExpedienteDto
+        private ExpedienteViewDto ConvertirAViewDto(ExpedienteDto e)
         {
-            public int ID_Estudiante { get; set; }
-            public string Identificacion { get; set; } = "";
-            public string Tipo_Identificacion { get; set; } = "";
-            public string Nombre { get; set; } = "";
-            public string Email { get; set; } = "";
-            public DateTime Fecha_Nacimiento { get; set; }
-            public string Telefono { get; set; } = "";
-            public string Direccion { get; set; } = "";  // "provincia - canton - distrito"
-        }
+            string provincia = "";
+            string canton = "";
+            string distrito = "";
 
-        // DTO para mostrar en pantalla
-        public class ExpedienteViewDto
-        {
-            public int ID_Estudiante { get; set; }
-            public string Identificacion { get; set; } = "";
-            public string Tipo_Identificacion { get; set; } = "";
-            public string Nombre { get; set; } = "";
-            public string Email { get; set; } = "";
-            public DateTime Fecha_Nacimiento { get; set; }
-            public string Telefono { get; set; } = "";
+            // Dirección viene así: "Provincia - Cantón - Distrito" (más opcionalmente otras señas)
+            if (!string.IsNullOrWhiteSpace(e.Direccion))
+            {
+                var partes = e.Direccion.Split(" - ");
 
-            public string Provincia { get; set; } = "";
-            public string Canton { get; set; } = "";
-            public string Distrito { get; set; } = "";
+                if (partes.Length >= 3)
+                {
+                    provincia = partes[0];
+                    canton = partes[1];
+                    distrito = partes[2];
+                }
+            }
+
+            return new ExpedienteViewDto
+            {
+                ID_Estudiante = e.ID_Estudiante,
+                Identificacion = e.Identificacion,
+                Tipo_Identificacion = e.Tipo_Identificacion,
+                Nombre = e.Nombre,
+                Email = e.Email,
+                Provincia = provincia,
+                Canton = canton,
+                Distrito = distrito
+            };
         }
     }
 }

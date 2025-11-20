@@ -1,0 +1,85 @@
+﻿@page "{id?}"
+@model NuevoAvatarFront.Pages.Instituciones.UpsertModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar Institución" : "Crear Institución";
+    Layout = "_Layout";
+}
+<div class="card shadow mb-4">
+    <!-- HEADER -->
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">
+            @(Model.EsEdicion ? "Editar Institución" : "Crear Nueva Institución")
+        </h6>
+        <a asp-page="/Instituciones/Index" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="post" id="institucionForm" class="row g-3">
+            <!-- MENSAJES DEL BACKEND (errores de servicio) -->
+            @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+            {
+                <div class="alert alert-@Model.StatusType">
+                    @Model.StatusMessage
+                </div>
+            }
+            <!-- ID -->
+            <div class="col-md-4">
+                <label asp-for="Institucion.ID_Institucion" class="form-label"></label>
+                <input asp-for="Institucion.ID_Institucion"
+                       class="form-control"
+                       readonly="@(Model.EsEdicion)" />
+                <span asp-validation-for="Institucion.ID_Institucion" class="text-danger"></span>
+            </div>
+            <!-- Nombre -->
+            <div class="col-md-8">
+                <label asp-for="Institucion.Nombre" class="form-label"></label>
+                <input asp-for="Institucion.Nombre"
+                       class="form-control"
+                       placeholder="Nombre de la institución..." />
+                <span asp-validation-for="Institucion.Nombre" class="text-danger"></span>
+            </div>
+            <!-- BOTONES -->
+            <div class="col-12 mt-3 d-flex justify-content-end">
+                <button type="button" class="btn btn-primary" onclick="confirmSave()">
+                    <i class="fas fa-save"></i>
+                    @(Model.EsEdicion ? "Guardar Cambios" : "Crear Institución")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function confirmSave() {
+            let form = document.getElementById("institucionForm");
+
+            // Validación HTML5
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Por favor complete todos los campos obligatorios'
+                });
+                return;
+            }
+
+            // Confirmación de guardado
+            Swal.fire({
+                title: '¿Guardar institución?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

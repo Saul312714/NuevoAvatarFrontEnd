@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // RAZOR PAGES
 // =========================================================
 builder.Services.AddRazorPages();
+builder.Services.AddHttpContextAccessor();
 
 // =========================================================
 // SESIÓN
@@ -124,7 +125,7 @@ builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(c =>
 // Bitácora
 builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c =>
 {
-    c.BaseAddress = new Uri(baseBitacora);
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
 // Módulos
@@ -184,11 +185,11 @@ app.UseRouting();
 
 app.UseSession();
 app.UseSessionAuth();
+
 app.UseAuthorization();
 
-// ============================================
+
 // LOGOUT
-// ============================================
 app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraApi) =>
 {
     var idUsuario = context.Session.GetInt32("UsuarioID") ?? 0;
@@ -199,9 +200,10 @@ app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraAp
     }
     catch
     {
-        Console.WriteLine("No se pudo registrar la bitácora.");
+        Console.WriteLine("⚠ No se pudo registrar el logout en bitácora.");
     }
 
+    // Limpiar sesión y cookies
     context.Session.Clear();
 
     foreach (var cookie in context.Request.Cookies.Keys)
@@ -210,15 +212,15 @@ app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraAp
     context.Response.Redirect("/HU_MICHEL/Login/Index?logout=1");
 });
 
-// ============================================
-// DEFAULT ROUTE → LOGIN
-// ============================================
+
+// HOME → LOGIN
 app.MapGet("/", context =>
 {
     context.Response.Redirect("/HU_MICHEL/Login/Index");
     return Task.CompletedTask;
 });
 
+// RAZOR PAGES
 app.MapRazorPages();
 
 app.Run();

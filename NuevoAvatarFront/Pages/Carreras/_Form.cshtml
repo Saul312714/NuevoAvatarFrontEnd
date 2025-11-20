@@ -1,0 +1,63 @@
+﻿@using NuevoAvatarFront.DTOs
+@model CarreraCreateUpdateDto
+
+<div class="mb-3">
+    <label class="form-label">Nombre</label>
+    <input asp-for="Nombre" class="form-control" />
+    <span asp-validation-for="Nombre" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Institución</label>
+    <select asp-for="ID_Institucion" class="form-select">
+        @if (ViewData["Instituciones"] is IEnumerable<InstitucionDto> instituciones && instituciones != null)
+        {
+            @foreach (var i in instituciones)
+            {
+                <option value="@i.ID_Institucion">@i.Nombre</option>
+            }
+        }
+    </select>
+    <span asp-validation-for="ID_Institucion" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Director (Profesor)</label>
+    <input id="profSearch" type="text" class="form-control" placeholder="Buscar profesor..." />
+    <input type="hidden" asp-for="ID_Profesor_Director" />
+    <div id="profResults" class="list-group mt-1"></div>
+    <span asp-validation-for="ID_Profesor_Director" class="text-danger"></span>
+</div>
+
+@section Scripts {
+    <script>
+        const input = document.getElementById('profSearch');
+        const list = document.getElementById('profResults');
+        let timeout;
+
+        input.addEventListener('input', () => {
+          clearTimeout(timeout);
+          const q = input.value.trim();
+          if (q.length < 2) { list.innerHTML = ''; return; }
+
+          timeout = setTimeout(async () => {
+            const res = await fetch(`SearchProfesor?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            list.innerHTML = '';
+            data.forEach(p => {
+              const item = document.createElement('a');
+              item.className = 'list-group-item list-group-item-action';
+              item.textContent = p.nombreCompleto || p.nombre;
+              item.onclick = () => {
+                //  CAMBIO CORRECTO
+                document.querySelector('[name="ID_Profesor_Director"]').value = p.id;
+
+                input.value = p.nombreCompleto || p.nombre;
+                list.innerHTML = '';
+              };
+              list.appendChild(item);
+            });
+          }, 300);
+        });
+    </script>
+}

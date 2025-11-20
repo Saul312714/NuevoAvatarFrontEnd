@@ -16,9 +16,8 @@ namespace NuevoAvatarFront.Services
             _context = context;
         }
 
-        // ============================
-        // AGREGA EL TOKEN CORRECTAMENTE
-        // ============================
+
+        // AGREGA EL TOKEN
         private void AddAuth()
         {
             var token = _context.HttpContext?.Session.GetString("AccessToken");
@@ -36,9 +35,7 @@ namespace NuevoAvatarFront.Services
         }
 
 
-        // ============================
         // GET permisos por rol
-        // ============================
         public async Task<List<RolModuloDto>> GetByRolAsync(int idRol)
         {
             AddAuth();
@@ -53,10 +50,7 @@ namespace NuevoAvatarFront.Services
             return data ?? new List<RolModuloDto>();
         }
 
-
-        // ============================
         // UPDATE permisos por rol
-        // ============================
         public async Task<bool> UpdatePermisosAsync(int idRol, List<RolModuloDto> permisos)
         {
             AddAuth();

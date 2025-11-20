@@ -1,0 +1,85 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Instituciones.IndexModel
+@{
+    ViewData["Title"] = "Instituciones";
+    Layout = "_Layout";
+}
+
+<!-- SWEET ALERT MENSAJES -->
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <script>
+        Swal.fire({
+            icon: '@Model.StatusType',
+            title: '@Model.StatusMessage',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    </script>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Listado de Instituciones</h1>
+    <a asp-page="/Instituciones/Upsert" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nueva Institución
+    </a>
+</div>
+
+<!-- FILTRO -->
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label class="fw-bold text-gray-800">Buscar</label>
+        <input asp-for="nombre" class="form-control shadow-sm" placeholder="Buscar por nombre..." />
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary shadow me-2">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+        <a asp-page="/Instituciones/Index" class="btn btn-secondary shadow">Limpiar</a>
+    </div>
+</form>
+
+<div class="card shadow">
+    <div class="card-body">
+        <!-- SIN RESULTADOS -->
+        @if (Model.Instituciones.Count == 0)
+        {
+            <div class="alert alert-info text-center">
+                No hay instituciones registradas.
+            </div>
+        }
+        else
+        {
+            <table class="table table-bordered table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th style="width:150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Model.Instituciones)
+                    {
+                        <tr>
+                            <td>@i.ID_Institucion</td>
+                            <td>@i.Nombre</td>
+                            <td>
+                                <a asp-page="/Instituciones/Upsert"
+                                   asp-route-id="@i.ID_Institucion"
+                                   class="btn btn-sm btn-warning">
+                                    Editar
+                                </a>
+                                <a asp-page="/Instituciones/Delete"
+                                   asp-route-id="@i.ID_Institucion"
+                                   class="btn btn-sm btn-danger">
+                                    Eliminar
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

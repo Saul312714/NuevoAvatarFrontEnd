@@ -1,0 +1,86 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Modulos.IndexModel
+@{
+    ViewData["Title"] = "Módulos";
+    Layout = "_Layout";
+}
+
+<!-- SWEET ALERT MENSAJES -->
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <script>
+        Swal.fire({
+            icon: '@Model.StatusType',
+            title: '@Model.StatusMessage',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    </script>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Listado de Módulos</h1>
+    <a asp-page="/Modulos/Upsert" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Módulo
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <!-- SIN RESULTADOS -->
+        @if (Model.Modulos.Count == 0)
+        {
+            <div class="alert alert-info text-center">
+                No hay módulos registrados.
+            </div>
+        }
+        else
+        {
+            <table class="table table-bordered table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Icono</th>
+                        <th>Nombre</th>
+                        <th>URL</th>
+                        <th>Orden</th>
+                        <th>Estado</th>
+                        <th style="width:200px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in Model.Modulos)
+                    {
+                        <tr>
+                            <td><i class="@m.Icono"></i></td>
+                            <td>@m.Nombre</td>
+                            <td>@m.Url</td>
+                            <td>@m.Orden</td>
+
+                            <!-- ESTADO -->
+                            <td>
+                                @if (m.Activo)
+                                {
+                                    <span class="badge badge-success">Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary">Inactivo</span>
+                                }
+                            </td>
+
+                            <!-- ACCIONES -->
+                            <td>
+                                <!-- EDITAR -->
+                                <a asp-page="/Modulos/Upsert"
+                                   asp-route-id="@m.ID_Modulo"
+                                   class="btn btn-sm btn-warning">
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

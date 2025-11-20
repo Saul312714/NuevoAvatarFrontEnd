@@ -1,0 +1,68 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.Carreras.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Carrera";
+    Layout = "_Layout";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-danger text-white">
+        <h6 class="m-0 font-weight-bold">Eliminar Carrera</h6>
+    </div>
+
+    <div class="card-body">
+        <h5 class="text-danger">¿Está seguro que desea eliminar esta carrera?</h5>
+
+        <dl class="row mt-4">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Carrera.ID_Carrera</dd>
+
+            <dt class="col-sm-3">Nombre</dt>
+            <dd class="col-sm-9">@Model.Carrera.Nombre</dd>
+
+            <dt class="col-sm-3">Institución</dt>
+            <dd class="col-sm-9">@Model.NombreInstitucion</dd>
+
+            <dt class="col-sm-3">Director</dt>
+            <dd class="col-sm-9">@Model.NombreDirector</dd>
+        </dl>
+
+        <form method="post" class="mt-4 d-flex justify-content-between">
+            <a asp-page="/Carreras/Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <script>
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "@Model.ErrorMessage"
+        });
+    </script>
+}
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <script>
+        Swal.fire({
+            icon: "success",
+            title: "Éxito",
+            text: "@Model.SuccessMessage",
+            timer: 1800,
+            showConfirmButton: false
+        }).then(() => {
+            window.location.href = "/Carreras/Index";
+        });
+    </script>
+}

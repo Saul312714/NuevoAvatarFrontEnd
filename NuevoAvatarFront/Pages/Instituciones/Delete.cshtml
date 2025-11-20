@@ -1,0 +1,49 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.Instituciones.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Institución";
+    Layout = "_Layout";
+}
+
+<div class="card shadow mb-4">
+
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-danger">
+            Eliminar Institución
+        </h6>
+    </div>
+
+    <div class="card-body">
+
+        <div class="alert alert-warning">
+            <h5 class="text-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                ¿Está seguro que desea eliminar esta institución?
+            </h5>
+
+            <p class="mb-0">
+                <strong>ID:</strong> @Model.Institucion.ID_Institucion <br />
+                <strong>Nombre:</strong> @Model.Institucion.Nombre
+            </p>
+
+            <hr />
+
+            <p class="small text-muted">
+                Esta acción no se puede deshacer.
+                Si esta institución tiene <strong>carreras asociadas</strong>, el sistema no permitirá eliminarla.
+            </p>
+        </div>
+
+        <form method="post" class="d-flex justify-content-end mt-4">
+
+            <a asp-page="/Instituciones/Index" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </a>
+
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+        </form>
+
+    </div>
+</div>

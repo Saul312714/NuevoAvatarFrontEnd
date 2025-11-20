@@ -10,7 +10,10 @@
     var permisos = await RolModuloApi.GetByRolAsync(rolId);
     var modulos = await ModuloApi.GetAllAsync();
 
-    // Filtrar módulos visibles según permisos
+    // Página actual para marcar menú activo
+    var currentUrl = Http.HttpContext?.Request.Path.Value ?? "";
+
+    // Filtrar módulos visibles
     var visibles = modulos
         .Where(m => permisos.Any(p => p.ID_Modulo == m.ID_Modulo && p.PuedeVer))
         .OrderBy(m => m.Orden)
@@ -37,17 +40,24 @@
     {
         @foreach (var m in visibles)
         {
-            <li class="nav-item">
+            // Determinar si el módulo está activo
+            bool isActive = currentUrl.StartsWith(m.Url, StringComparison.OrdinalIgnoreCase);
+
+            <li class="nav-item @(isActive ? "active" : "")">
+
                 <a class="nav-link" href="@m.Url">
+                    <i class="@m.Icono me-2"></i>
+
                     <span>@m.Nombre</span>
                 </a>
+
             </li>
         }
     }
 
     <hr class="sidebar-divider d-none d-md-block" />
 
-    <!-- BOTÓN QUE HACE FUNCIONAR EL TOGGLE -->
+    <!-- BOTÓN TOGGLE -->
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>
     </div>

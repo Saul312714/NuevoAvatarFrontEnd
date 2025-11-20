@@ -28,11 +28,16 @@ namespace NuevoAvatarFront.Pages.Usuarios
 
             if (id.HasValue)
             {
-                var u = await _usuarioApi.GetByIdAsync(id.Value, idUsuarioAccion);
-                if (u == null)
-                    return NotFound();
+                var (ok, status, data, message) =
+                    await _usuarioApi.GetByIdAsync(id.Value, idUsuarioAccion);
 
-                Usuario = u;
+                if (!ok || data == null)
+                {
+                    ModelState.AddModelError(string.Empty, message ?? "Usuario no encontrado.");
+                    return Page();
+                }
+
+                Usuario = data;
             }
 
             return Page();
@@ -42,13 +47,26 @@ namespace NuevoAvatarFront.Pages.Usuarios
         {
             var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
 
-            // --- VALIDACIONES ---
+            // ============================
+            // VALIDACIONES DEL NOMBRE
+            // ============================
             if (string.IsNullOrWhiteSpace(Usuario.Nombre))
             {
                 ModelState.AddModelError(string.Empty, "El nombre es requerido.");
                 return Page();
             }
 
+            // Solo letras y espacios (incluye tildes y ñ)
+            if (!Regex.IsMatch(Usuario.Nombre, @"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$"))
+            {
+                ModelState.AddModelError(string.Empty,
+                    "El nombre solo puede contener letras y espacios.");
+                return Page();
+            }
+
+            // ============================
+            // VALIDACIÓN EMAIL
+            // ============================
             if (string.IsNullOrWhiteSpace(Usuario.Email) ||
                 !Regex.IsMatch(Usuario.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {
@@ -56,61 +74,71 @@ namespace NuevoAvatarFront.Pages.Usuarios
                 return Page();
             }
 
-            // Validación de dominio y asignación correcta según tu tabla
+            // ============================
+            // VALIDACIÓN DOMINIOS
+            // ============================
             if (Usuario.Email.EndsWith("@cuc.cr"))
             {
-                Usuario.ID_Rol = 1; // Estudiante
+                Usuario.ID_Rol = 3; // estudiante
             }
             else if (Usuario.Email.EndsWith("@cuc.ac.cr"))
             {
-                // Solo Profesor o Administrador
                 if (Usuario.ID_Rol != 2 && Usuario.ID_Rol != 7)
                 {
                     ModelState.AddModelError(string.Empty,
-                        "El dominio cuc.ac.cr solo es válido para Profesor o Administrador.");
+                        "Solo Profesor o Administrador pueden usar cuc.ac.cr");
                     return Page();
                 }
             }
             else
             {
-                ModelState.AddModelError(string.Empty,
-                    "Dominio no permitido. Solo cuc.cr o cuc.ac.cr.");
+                ModelState.AddModelError(string.Empty, "Dominio no permitido.");
                 return Page();
             }
 
-            // Si no hay contraseña
-            Usuario.Contrasena ??= string.Empty;
-
-            // --- CREAR ---
-            if (Usuario.ID_Usuario == 0)
+            // ============================
+            // CONTRASEÑA (solo al crear)
+            // ============================
+            if (!EsEdicion && string.IsNullOrWhiteSpace(Usuario.Contrasena))
             {
-                if (string.IsNullOrWhiteSpace(Usuario.Contrasena))
-                {
-                    ModelState.AddModelError(string.Empty, "La contraseña es obligatoria para nuevos usuarios.");
-                    return Page();
-                }
-
-                var creado = await _usuarioApi.CreateAsync(Usuario, idUsuarioAccion);
-                if (creado == null)
-                {
-                    ModelState.AddModelError(string.Empty, "Error al crear el usuario.");
-                    return Page();
-                }
-
-                await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Alta de usuario {Usuario.Email}");
+                ModelState.AddModelError(string.Empty, "La contraseña es obligatoria.");
+                return Page();
             }
-            // --- EDITAR ---
-            else
+
+            // ============================
+            // CREAR
+            // ============================
+            if (!EsEdicion)
             {
-                var actualizado = await _usuarioApi.UpdateAsync(Usuario, idUsuarioAccion);
-                if (actualizado == null)
+                var (ok, status, data, message) =
+                    await _usuarioApi.CreateAsync(Usuario, idUsuarioAccion);
+
+                if (!ok)
                 {
-                    ModelState.AddModelError(string.Empty, "Error al actualizar el usuario.");
+                    ModelState.AddModelError(string.Empty, message ?? "Error al crear usuario.");
                     return Page();
                 }
 
-                await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Modificación de usuario {Usuario.Email}");
+                await _bitacoraApi.RegistrarAsync(idUsuarioAccion,
+                    $"Alta usuario {Usuario.Email}");
+
+                return RedirectToPage("/Usuarios/Index");
             }
+
+            // ============================
+            // ACTUALIZAR
+            // ============================
+            var (okUpdate, statusUpdate, dataUpdate, msgUpdate) =
+                await _usuarioApi.UpdateAsync(Usuario, idUsuarioAccion);
+
+            if (!okUpdate)
+            {
+                ModelState.AddModelError(string.Empty, msgUpdate ?? "Error al actualizar.");
+                return Page();
+            }
+
+            await _bitacoraApi.RegistrarAsync(idUsuarioAccion,
+                $"Actualización usuario {Usuario.Email}");
 
             return RedirectToPage("/Usuarios/Index");
         }

@@ -7,65 +7,60 @@ using NuevoAvatarFront.Pages.Expedientes;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ============================================
+// ======================================================
 // RAZOR PAGES
-// ============================================
+// ======================================================
 builder.Services.AddRazorPages();
 
-// ============================================
-// BASE URLS
-// ============================================
+// ======================================================
+// BASE URLs (de appsettings.json)
+// ======================================================
 var baseUsuariosRoles = builder.Configuration["UsuariosRolesApi:BaseUrl"]
     ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
 
 var baseBitacora = builder.Configuration["BitacoraApi:BaseUrl"]
     ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
 
-// ============================================
-// HTTP CLIENTS (solo los que EXISTEN)
-// ============================================
-builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
+var baseOfertaAcademica = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
+    ?? throw new InvalidOperationException("OfertaAcademicaApi:BaseUrl no configurado");
 
-builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
+var baseMatricula = builder.Configuration["MatriculaApi:BaseUrl"]
+    ?? throw new InvalidOperationException("MatriculaApi:BaseUrl no configurado");
 
-builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
+// ======================================================
+// HTTP CLIENTS — CORRECTOS Y COMPLETOS
+// ======================================================
 
-builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseBitacora);
-});
+// --- Usuarios / Roles / Login ---
+builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c => c.BaseAddress = new Uri(baseUsuariosRoles));
+builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(c => c.BaseAddress = new Uri(baseUsuariosRoles));
+builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(c => c.BaseAddress = new Uri(baseUsuariosRoles));
+builder.Services.AddHttpClient<IModuloApiClient, ModuloApiClient>(c => c.BaseAddress = new Uri(baseUsuariosRoles));
+builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(c => c.BaseAddress = new Uri(baseUsuariosRoles));
 
-builder.Services.AddHttpClient<IModuloApiClient, ModuloApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
+// --- Bitácora ---
+builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c => c.BaseAddress = new Uri(baseBitacora));
 
-builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(client =>
-{
-    client.BaseAddress = new Uri(baseUsuariosRoles);
-});
+// --- Parámetros ---
+builder.Services.AddHttpClient<IParametroApiClient, ParametroApiClient>(c => c.BaseAddress = new Uri(baseUsuariosRoles));
 
+// --- Grupos ---
+builder.Services.AddHttpClient<IGrupoApiClient, GrupoApiClient>(c => c.BaseAddress = new Uri(baseOfertaAcademica));
 
-builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(client =>
-{
-    var baseUrl = builder.Configuration["UsuariosRolesApi:BaseUrl"]
-        ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
+// --- Expedientes ---
+builder.Services.AddHttpClient<IExpedienteApiClient, ExpedienteApiClient>(c => c.BaseAddress = new Uri(baseMatricula));
 
-    client.BaseAddress = new Uri(baseUrl);
-});
+// --- Dashboard ---
+builder.Services.AddHttpClient<IDashboardService, DashboardService>(); // importante
 
-// ============================================
+// ======================================================
+// MOCKS (solo Expedientes)
+// ======================================================
+builder.Services.AddSingleton<IMockDirecciones, MockDirecciones>();
+
+// ======================================================
 // SESIÓN
-// ============================================
+// ======================================================
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -75,14 +70,14 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<TokenHelper>();
 
-// ============================================
-// APP
-// ============================================
+// ======================================================
+// BUILD
+// ======================================================
 var app = builder.Build();
 
-// ============================================
+// ======================================================
 // PIPELINE
-// ============================================
+// ======================================================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -104,9 +99,9 @@ app.UseSession();
 app.UseSessionAuth();
 app.UseAuthorization();
 
-// ============================================
+// ======================================================
 // LOGOUT
-// ============================================
+// ======================================================
 app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraApi) =>
 {
     var idUsuario = context.Session.GetInt32("UsuarioID") ?? 0;
@@ -127,9 +122,9 @@ app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraAp
     context.Response.Redirect("/HU_MICHEL/Login/Index?logout=1");
 });
 
-// ============================================
-// DEFAULT ROUTE → LOGIN
-// ============================================
+// ======================================================
+// REDIRECCIÓN DEFAULT
+// ======================================================
 app.MapGet("/", context =>
 {
     context.Response.Redirect("/HU_MICHEL/Login/Index");

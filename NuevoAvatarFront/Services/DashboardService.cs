@@ -48,7 +48,7 @@ namespace NuevoAvatarFront.Services.Dashboard
             if (rolUsuario.Contains("Admin"))
             {
                 data.Bitacoras = await GetList<BitacoraDto>(
-                    $"{_config["ApiSeguridad"]}/bitacora"
+                    $"{_config["BitacoraApi:BaseUrl"]}/bitacora"
                 );
             }
             else
@@ -66,17 +66,17 @@ namespace NuevoAvatarFront.Services.Dashboard
 
         private async Task LoadAdminData(DashboardData data)
         {
-            data.TotalUsuarios = await Contar($"{_config["ApiUsuariosRoles"]}/usuario?idUsuarioAccion={data.IdUsuario}");
-            data.TotalCarreras = await Contar($"{_config["ApiOfertaAcademica"]}/carrera");
-            data.TotalCursos = await Contar($"{_config["ApiOfertaAcademica"]}/curso");
-            data.TotalPeriodosActivos = await Contar($"{_config["ApiOfertaAcademica"]}/periodo?idUsuarioAccion={data.IdUsuario}");
+            data.TotalUsuarios = await Contar($"{_config["UsuariosRolesApi:BaseUrl"]}/usuario?idUsuarioAccion={data.IdUsuario}");
+            data.TotalCarreras = await Contar($"{_config["OfertaAcademicaApi:BaseUrl"]}/carrera");
+            data.TotalCursos = await Contar($"{_config["OfertaAcademicaApi:BaseUrl"]}/curso");
+            data.TotalPeriodosActivos = await Contar($"{_config["OfertaAcademicaApi:BaseUrl"]}/periodo?idUsuarioAccion={data.IdUsuario}");
             data.TotalFacturasPendientes = await ContarFacturasPendientes();
 
             data.Bitacoras = await GetFullList<BitacoraDto>(
-                $"{_config["ApiSeguridad"]}/bitacora");
+                $"{_config["BitacoraApi:BaseUrl"]}/bitacora");
 
             data.Usuarios = await GetFullList<UsuarioSimpleDto>(
-                $"{_config["ApiUsuariosRoles"]}/usuario?idUsuarioAccion={data.IdUsuario}");
+                $"{_config["UsuariosRolesApi:BaseUrl"]}/usuario?idUsuarioAccion={data.IdUsuario}");
 
             data.UsuariosLookup = data.Usuarios
                 .ToDictionary(u => u.ID_Usuario, u => u.Nombre);
@@ -88,14 +88,14 @@ namespace NuevoAvatarFront.Services.Dashboard
             try
             {
                 var expediente = await GetObject<dynamic>(
-                    $"{_config["ApiMatricula"]}/expediente/usuario/{data.IdUsuario}?idUsuario={data.IdUsuario}");
+                    $"{_config["MatriculaApi:BaseUrl"]}/expediente/usuario/{data.IdUsuario}?idUsuario={data.IdUsuario}");
 
                 if (expediente != null)
                 {
                     int idEstudiante = expediente.GetProperty("id_Estudiante").GetInt32();
 
                     data.MisMatriculas = await Contar(
-                        $"{_config["ApiMatricula"]}/matricula/estudiante/{idEstudiante}?idUsuario={data.IdUsuario}");
+                        $"{_config["MatriculaApi:BaseUrl"]}/matricula/estudiante/{idEstudiante}?idUsuario={data.IdUsuario}");
 
                     data.MisCursosActuales = data.MisMatriculas;
                 }
@@ -111,7 +111,7 @@ namespace NuevoAvatarFront.Services.Dashboard
             try
             {
                 var grupos = await GetList<dynamic>(
-                    $"{_config["ApiOfertaAcademica"]}/grupo/profesor/{data.IdUsuario}");
+                    $"{_config["MatriculaApi:BaseUrl"]}/grupo/profesor/{data.IdUsuario}");
 
                 data.MisGrupos = grupos.Count;
 
@@ -134,13 +134,13 @@ namespace NuevoAvatarFront.Services.Dashboard
         private async Task LoadCommonData(DashboardData data)
         {
             data.Notificaciones = await GetList<NotificacionDto>(
-                $"{_config["ApiNotificaciones"]}/notificar");
+                $"{_config["NotificacionesApi:BaseUrl"]}/notificar");
 
             // Si NO es admin → bitácoras solo recientes
             if (!data.RolUsuario.Contains("Admin"))
             {
                 data.Bitacoras = await GetList<BitacoraDto>(
-                    $"{_config["ApiSeguridad"]}/bitacora");
+                    $"{_config["BitacoraApi:BaseUrl"]}/bitacora");
             }
         }
 
@@ -157,7 +157,7 @@ namespace NuevoAvatarFront.Services.Dashboard
 
         private async Task<int> ContarFacturasPendientes()
         {
-            var facturas = await GetList<dynamic>($"{_config["ApiPagos"]}/factura");
+            var facturas = await GetList<dynamic>($"{_config["PagosApi:BaseUrl"]}/factura");
 
             return facturas.Count(f =>
             {
@@ -173,7 +173,7 @@ namespace NuevoAvatarFront.Services.Dashboard
         private async Task<decimal> ObtenerSaldoPendiente()
         {
             var facturas = await GetList<dynamic>(
-                $"{_config["ApiPagos"]}/factura/estudiante");
+                $"{_config["PagosApi:BaseUrl"]}/factura/estudiante");
 
             decimal total = 0;
 
@@ -229,7 +229,7 @@ namespace NuevoAvatarFront.Services.Dashboard
         {
             try
             {
-                await _http.PostAsJsonAsync($"{_config["ApiSeguridad"]}/bitacora", new
+                await _http.PostAsJsonAsync($"{_config["BitacoraApi:BaseUrl"]}/bitacora", new
                 {
                     ID_Usuario = idUsuario,
                     Fecha = DateTime.Now,

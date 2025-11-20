@@ -4,8 +4,6 @@ using NuevoAvatarFront.Middleware;
 using System.Net.Http.Headers;
 using NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Services;
-using NuevoAvatarFront.Services.Dashboard;
-using NuevoAvatarFront.Pages.Expedientes;
 
 var builder = WebApplication.CreateBuilder(args);
 

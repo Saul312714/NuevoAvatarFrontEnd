@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NuevoAvatarFront.Services;
 
@@ -27,14 +27,15 @@ namespace NuevoAvatarFront.Pages.Shared
                 Console.WriteLine("No se pudo registrar el logout en bitácora.");
             }
 
-            // Limpiar sesión y cookies
+            // 1. Limpiar sesión
             HttpContext.Session.Clear();
+
+            // 2. Borrar TODAS las cookies del navegador
             foreach (var cookie in Request.Cookies.Keys)
                 Response.Cookies.Delete(cookie);
 
-            // Redirigir al login con mensaje de sesión cerrada
+            // 3. Redirigir al login con mensaje
             return Redirect("/HU_MICHEL/Login/Index?logout=1");
         }
     }
 }
-

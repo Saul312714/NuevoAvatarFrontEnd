@@ -1,15 +1,30 @@
 ﻿using Microsoft.AspNetCore.CookiePolicy;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Middleware;
 using NuevoAvatarFront.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// CONFIGURACIÓN DE SERVICIOS
-// Razor Pages
+// ============================================
+// RAZOR PAGES
+// ============================================
 builder.Services.AddRazorPages();
-builder.Services.AddHttpContextAccessor();
 
+// ============================================
+// BASE URLS
+// ============================================
+var baseUsuariosRoles = builder.Configuration["UsuariosRolesApi:BaseUrl"]
+    ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
+
+var baseBitacora = builder.Configuration["BitacoraApi:BaseUrl"]
+    ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
+
+// ============================================
+// HTTP CLIENTS (solo los que EXISTEN)
+// ============================================
+builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 // Sesión (IMPORTANTE: AddDistributedMemoryCache debe ir ANTES de AddSession)
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -19,56 +34,61 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
+});
 
-// OBTENER URLs BASE DESDE CONFIGURACIÓN
-string usuariosRolesBase = builder.Configuration["UsuariosRolesApi:BaseUrl"]
-    ?? throw new Exception("❌ UsuariosRolesApi:BaseUrl no configurado");
+builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
+});
 
-string bitacoraBase = builder.Configuration["BitacoraApi:BaseUrl"]
-    ?? throw new Exception("❌ BitacoraApi:BaseUrl no configurado");
+builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseBitacora);
+});
 
-string ofertaAcademicaBase = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
-    ?? throw new Exception("❌ OfertaAcademicaApi:BaseUrl no configurado");
+builder.Services.AddHttpClient<IModuloApiClient, ModuloApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
+});
 
-
-// CLIENTES HTTP - USUARIOS & ROLES
-builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(client =>
-    client.BaseAddress = new Uri(usuariosRolesBase));
-
-builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(client =>
-    client.BaseAddress = new Uri(usuariosRolesBase));
-
-builder.Services.AddHttpClient<IModuloApiClient, ModuloApiClient>(client =>
-    client.BaseAddress = new Uri(usuariosRolesBase));
-
-builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(client =>
-    client.BaseAddress = new Uri(usuariosRolesBase));
-
-
-// CLIENTES HTTP - BITÁCORA
-builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(client =>
-    client.BaseAddress = new Uri(bitacoraBase));
-
-// CLIENTES HTTP - OFERTA ACADÉMICA
-builder.Services.AddHttpClient<IInstitucionApiClient, InstitucionApiClient>(client =>
-    client.BaseAddress = new Uri(ofertaAcademicaBase));
-
-builder.Services.AddHttpClient<IProfesorApiClient, ProfesorApiClient>(client =>
-    client.BaseAddress = new Uri(ofertaAcademicaBase));
-
-builder.Services.AddHttpClient<ICarreraApiClient, CarreraApiClient>(client =>
-    client.BaseAddress = new Uri(ofertaAcademicaBase));
-
-builder.Services.AddHttpClient<ICursoApiClient, CursoApiClient>(client =>
-    client.BaseAddress = new Uri(ofertaAcademicaBase));
+builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(client =>
+{
+    client.BaseAddress = new Uri(baseUsuariosRoles);
+});
 
 
-// HELPERS
+builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["UsuariosRolesApi:BaseUrl"]
+        ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
+
+    client.BaseAddress = new Uri(baseUrl);
+});
+
+// ============================================
+// SESIÓN
+// ============================================
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(60);
+});
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<TokenHelper>();
+// ============================================
+// APP
+// ============================================
 
 var app = builder.Build();
-
-// MIDDLEWARE PIPELINE (ORDEN IMPORTANTE)
+// ============================================
+// PIPELINE
+// ============================================
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -89,11 +109,14 @@ app.UseCookiePolicy(new CookiePolicyOptions
     Secure = CookieSecurePolicy.None
 });
 
-app.UseAuthentication();
+app.UseRouting();
+app.UseSession();
+app.UseSessionAuth();
 app.UseAuthorization();
+// ============================================
+// LOGOUT
+// ============================================
 
-
-// RUTAS
 app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraApi) =>
 {
     var idUsuario = context.Session.GetInt32("UsuarioID") ?? 0;
@@ -121,5 +144,4 @@ app.MapGet("/", context =>
 });
 
 app.MapRazorPages();
-
 app.Run();

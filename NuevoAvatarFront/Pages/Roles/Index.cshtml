@@ -1,106 +1,135 @@
 ﻿@page
 @model NuevoAvatarFront.Pages.Roles.IndexModel
 @{
-    ViewData["Title"] = "Listado de Roles";
+    ViewData["Title"] = "Administración de Roles";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Roles del Sistema</h1>
 
-<!-- Filtros -->
-<form id="filtroForm" class="mb-3">
-    <div class="row">
-        <div class="col-md-6">
-            <label>Nombre del Rol</label>
-            <input type="text" class="form-control" id="filtroNombre" placeholder="Nombre del Rol" />
-        </div>
+    <a href="/Roles/Upsert" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Rol
+    </a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+@if (TempData["SuccessMessage"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success">@ok</div>
+}
+
+<!-- CARD DE FILTROS -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
     </div>
-</form>
 
-<!-- Botón para crear nuevo rol -->
-<a href="/Roles/Upsert" class="btn btn-success mb-3">
-    <i class="fas fa-plus"></i> Crear Nuevo Rol
-</a>
+    <div class="card-body">
+        <form id="filtroForm" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Nombre del Rol</label>
+                <input type="text" class="form-control shadow-sm" id="filtroNombre"
+                       placeholder="Buscar por nombre..." />
+            </div>
+        </form>
+    </div>
+</div>
 
-<!-- Tabla de Roles -->
-<table class="table table-bordered" id="rolesTable">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var rol in Model.Roles)
-        {
-            <tr>
-                <td>@rol.Nombre</td>
-                <td>
-                    <!-- Editar -->
-                    <a href="/Roles/Upsert?id=@rol.ID_Rol"
-                       class="btn btn-warning btn-sm">Editar</a>
+<!-- TABLA -->
+<div class="card shadow">
+    <div class="card-body">
 
-                    <!-- Eliminar -->
-                    <form method="post"
-                          asp-page-handler="Delete"
-                          asp-route-id="@rol.ID_Rol"
-                          class="d-inline"
-                          onsubmit="return confirmDelete(event)">
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            Eliminar
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+        <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Nombre</th>
+                    <th style="width:150px;">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Roles.Any())
+                {
+                    @foreach (var rol in Model.Roles)
+                    {
+                        <tr>
+                            <td>@rol.Nombre</td>
+
+                            <td>
+                                <a href="/Roles/Upsert?id=@rol.ID_Rol"
+                                   class="btn btn-warning btn-sm">
+                                    Editar
+                                </a>
+
+                                <form method="post"
+                                      asp-page-handler="Delete"
+                                      asp-route-id="@rol.ID_Rol"
+                                      class="d-inline delete-form">
+
+                                    <button type="button" class="btn btn-danger btn-sm"
+                                            onclick="confirmDelete(event)">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">No hay roles registrados.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-
-        // Filtrar tabla
-        function filterTable() {
-            const filtroNombre = document.getElementById('filtroNombre').value.toLowerCase();
-            const rows = document.querySelectorAll('#rolesTable tbody tr');
-
-            rows.forEach(row => {
-                const nombre = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                row.style.display = nombre.includes(filtroNombre) ? '' : 'none';
-            });
-        }
-
+        // FILTRO EN VIVO
         document.getElementById('filtroNombre')
-            .addEventListener('input', filterTable);
+            .addEventListener('input', function () {
+                const filtro = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#rolesTable tbody tr');
 
-        // 🔥 Confirmación de eliminación (corregida)
+                rows.forEach(row => {
+                    const text = row.children[0].textContent.toLowerCase();
+                    row.style.display = text.includes(filtro) ? '' : 'none';
+                });
+            });
+
+        // SWEETALERT DELETE
         function confirmDelete(event) {
             event.preventDefault();
 
             Swal.fire({
-                title: '¿Estás seguro?',
-                text: "¡No podrás revertir esto!",
+                title: '¿Eliminar rol?',
+                text: 'Esta acción no se puede deshacer.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminarlo',
+                confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-
-                    // 🔥 ESTA ES LA LÍNEA CORRECTA: toma el FORM real
+            }).then(r => {
+                if (r.isConfirmed) {
                     let form = event.target.closest("form");
-
                     form.submit();
                 }
             });
-
-            return false;
         }
-
-        window.onload = function () {
-            filterTable();
-        };
-
     </script>
 }

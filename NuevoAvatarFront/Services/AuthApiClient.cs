@@ -7,11 +7,12 @@ namespace NuevoAvatarFront.Services
 {
     public interface IAuthApiClient
     {
-        Task<LoginResponse?> LoginAsync(string email, string password);
+        Task<(LoginResponse? Data, ApiError? Error)> LoginAsync(string email, string password);
 
-        Task<LoginResponse?> RefreshAsync(string refreshToken);
+
+        Task<(LoginResponse? Data, ApiError? Error)> RefreshAsync(string refreshToken);
+
     }
-
 
     public class AuthApiClient : IAuthApiClient
     {
@@ -22,33 +23,65 @@ namespace NuevoAvatarFront.Services
             _http = http;
         }
 
-        public async Task<LoginResponse?> LoginAsync(string email, string password)
+        public async Task<(LoginResponse? Data, ApiError? Error)> LoginAsync(string email, string password)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "Login/login");
 
-            //Los encabezados que la API espera
             request.Headers.Add("usuario", email);
             request.Headers.Add("contrasena", password);
+            request.Content = new StringContent("");
 
-            request.Content = new StringContent(string.Empty);
-
-            //Enviar la solicitud
             var response = await _http.SendAsync(request);
+            var rawContent = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
-                return null;
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                return (data, null);
+            }
 
-            //Leer la respuesta con los tokens
-            return await response.Content.ReadFromJsonAsync<LoginResponse>();
+            var error = new ApiError
+            {
+                StatusCode = (int)response.StatusCode,
+                Message = response.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.BadRequest => "Datos Incompletos.",
+                    System.Net.HttpStatusCode.Unauthorized => "Usuario y/o contraseña incorrectos.",
+                    System.Net.HttpStatusCode.Forbidden => "Usuario Inautorizado.",
+                    System.Net.HttpStatusCode.NotFound => "El recurso no fue encontrado.",
+                    System.Net.HttpStatusCode.InternalServerError => "Hubo un error. Inténtalo más tarde.",
+                    _ => "Error desconocido."
+                },
+                Details = rawContent
+            }; 
+
+            return (null, error);
         }
 
-        public async Task<LoginResponse?> RefreshAsync(string refreshToken)
+
+        public async Task<(LoginResponse? Data, ApiError? Error)> RefreshAsync(string refreshToken)
         {
             var response = await _http.PostAsJsonAsync("Login/refresh", new { refreshToken });
-            if (!response.IsSuccessStatusCode) return null;
+            var rawContent = await response.Content.ReadAsStringAsync();
 
-            return await response.Content.ReadFromJsonAsync<LoginResponse>();
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                return (data, null);
+            }
+
+            var error = new ApiError
+            {
+                StatusCode = (int)response.StatusCode,
+                Message = response.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                    ? "Token inválido o expirado."
+                    : "Error en el proceso de refresh.",
+                Details = rawContent
+            };
+
+            return (null, error);
         }
     }
+
 }
 

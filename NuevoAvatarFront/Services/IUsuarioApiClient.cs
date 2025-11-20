@@ -1,5 +1,7 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using NuevoAvatarFront.Entities;
 
@@ -7,11 +9,20 @@ namespace NuevoAvatarFront.Services
 {
     public interface IUsuarioApiClient
     {
-        Task<List<UsuarioDto>> GetAllAsync(string? filtro = null, string? rol = null, int page = 1, int pageSize = 10);
-        Task<UsuarioDto?> GetByIdAsync(int id, int idUsuarioAccion);
-        Task<UsuarioDto?> CreateAsync(UsuarioDto usuario, int idUsuarioAccion);
-        Task<UsuarioDto?> UpdateAsync(UsuarioDto usuario, int idUsuarioAccion);
-        Task<bool> DeleteAsync(int id, int idUsuarioAccion);
+        Task<(bool ok, HttpStatusCode status, List<UsuarioDto>? Data, string? Message)>
+            GetAllAsync(string? filtro = null, string? rol = null, int page = 1, int pageSize = 10);
+
+        Task<(bool ok, HttpStatusCode status, UsuarioDto? Data, string? Message)>
+            GetByIdAsync(int id, int idUsuarioAccion);
+
+        Task<(bool ok, HttpStatusCode status, UsuarioDto? Data, string? Message)>
+            CreateAsync(UsuarioDto usuario, int idUsuarioAccion);
+
+        Task<(bool ok, HttpStatusCode status, UsuarioDto? Data, string? Message)>
+            UpdateAsync(UsuarioDto usuario, int idUsuarioAccion);
+
+        Task<(bool ok, HttpStatusCode status, string? Message)>
+            DeleteAsync(int id, int idUsuarioAccion);
     }
 
     public class UsuarioApiClient : IUsuarioApiClient
@@ -25,65 +36,136 @@ namespace NuevoAvatarFront.Services
             _context = context;
         }
 
+        // ============================================================
+        // AGREGA CABECERA AUTH
+        // ============================================================
         private void AddAuthHeader()
         {
             var token = _context.HttpContext?.Session.GetString("AccessToken");
             if (!string.IsNullOrEmpty(token))
-                _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                _http.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
         }
 
-        // Obtener todos
-        public async Task<List<UsuarioDto>> GetAllAsync(string? filtro = null, string? rol = null, int page = 1, int pageSize = 10)
+        // ============================================================
+        // LECTOR SEGURO DE JSON
+        // ============================================================
+        private async Task<T?> SafeJson<T>(HttpResponseMessage res)
+        {
+            var raw = await res.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrWhiteSpace(raw))
+                return default;
+
+            if (raw.TrimStart().StartsWith("<")) // HTML = error interno
+                return default;
+
+            try
+            {
+                return JsonSerializer.Deserialize<T>(raw, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        // ============================================================
+        // SWITCH DE ERRORES + MENSAJES DEL BACKEND
+        // ============================================================
+        private async Task<string> MapError(HttpResponseMessage response)
+        {
+            var raw = await response.Content.ReadAsStringAsync();
+            string backendMessage = "";
+
+            try
+            {
+                var payload = JsonSerializer.Deserialize<Dictionary<string, string?>>(raw);
+
+                if (payload != null &&
+                    payload.TryGetValue("error", out string? msg) &&
+                    !string.IsNullOrWhiteSpace(msg))
+                {
+                    backendMessage = msg; // Mensaje exacto del backend
+                }
+            }
+            catch { }
+
+            return response.StatusCode switch
+            {
+                HttpStatusCode.BadRequest =>
+                    backendMessage != "" ? backendMessage : "La información enviada no es válida.",
+
+                HttpStatusCode.Unauthorized =>
+                    "No tienes autorización.",
+
+                HttpStatusCode.Forbidden =>
+                    "No tienes permisos para realizar esta acción.",
+
+                HttpStatusCode.NotFound =>
+                    backendMessage != "" ? backendMessage : "No se encontró el usuario solicitado.",
+
+                HttpStatusCode.Conflict =>
+                    backendMessage != "" ? backendMessage : "Conflicto: algún dato ya existe.",
+
+                HttpStatusCode.InternalServerError =>
+                    "Error interno del servidor. Inténtalo más tarde.",
+
+                _ =>
+                    backendMessage != "" ? backendMessage : "Ocurrió un error desconocido."
+            };
+        }
+
+        // ============================================================
+        // GET ALL
+        // ============================================================
+        public async Task<(bool ok, HttpStatusCode status, List<UsuarioDto>? Data, string? Message)>
+            GetAllAsync(string? filtro = null, string? rol = null, int page = 1, int pageSize = 10)
         {
             AddAuthHeader();
 
-            // Obtener el ID del usuario en sesión (idUsuarioAccion)
             var idUsuarioAccion = _context.HttpContext?.Session.GetInt32("UsuarioID") ?? 0;
 
-            // Construir la URL con los parámetros de paginación y filtros
             var url = $"usuario?idUsuarioAccion={idUsuarioAccion}&page={page}&pageSize={pageSize}";
+            if (!string.IsNullOrEmpty(filtro)) url += $"&filtro={filtro}";
+            if (!string.IsNullOrEmpty(rol)) url += $"&rol={rol}";
 
-            if (!string.IsNullOrEmpty(filtro))
-                url += $"&filtro={filtro}";
-            if (!string.IsNullOrEmpty(rol))
-                url += $"&rol={rol}";
-
-            // Realizar la solicitud GET
             var res = await _http.GetAsync(url);
 
             if (!res.IsSuccessStatusCode)
-            {
-                var msg = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error API GetAllUsuarios: {msg}");
-                return new List<UsuarioDto>(); // Retorna una lista vacía si hay un error
-            }
+                return (false, res.StatusCode, null, await MapError(res));
 
-            return await res.Content.ReadFromJsonAsync<List<UsuarioDto>>() ?? new List<UsuarioDto>(); // Devuelve los resultados obtenidos
+            var data = await SafeJson<List<UsuarioDto>>(res);
+            return (true, res.StatusCode, data, null);
         }
 
-
-        // Obtener por ID
-        public async Task<UsuarioDto?> GetByIdAsync(int id, int idUsuarioAccion)
+        // ============================================================
+        // GET BY ID
+        // ============================================================
+        public async Task<(bool ok, HttpStatusCode status, UsuarioDto? Data, string? Message)>
+            GetByIdAsync(int id, int idUsuarioAccion)
         {
             AddAuthHeader();
-            var url = $"usuario/{id}?idUsuarioAccion={idUsuarioAccion}";
-            var res = await _http.GetAsync(url);
+
+            var res = await _http.GetAsync($"usuario/{id}?idUsuarioAccion={idUsuarioAccion}");
 
             if (!res.IsSuccessStatusCode)
-            {
-                var error = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error GetById: {error}");
-                return null;
-            }
+                return (false, res.StatusCode, null, await MapError(res));
 
-            return await res.Content.ReadFromJsonAsync<UsuarioDto>();
+            var data = await SafeJson<UsuarioDto>(res);
+            return (true, res.StatusCode, data, null);
         }
 
-        // Crear usuario
-        public async Task<UsuarioDto?> CreateAsync(UsuarioDto usuario, int idUsuarioAccion)
+        // ============================================================
+        // CREATE
+        // ============================================================
+        public async Task<(bool ok, HttpStatusCode status, UsuarioDto? Data, string? Message)>
+            CreateAsync(UsuarioDto usuario, int idUsuarioAccion)
         {
             AddAuthHeader();
-            var url = $"usuario?idUsuarioAccion={idUsuarioAccion}";
 
             var payload = new
             {
@@ -96,23 +178,23 @@ namespace NuevoAvatarFront.Services
                 rolNombre = usuario.RolNombre
             };
 
-            var res = await _http.PostAsJsonAsync(url, payload);
+            var res = await _http.PostAsJsonAsync(
+                $"usuario?idUsuarioAccion={idUsuarioAccion}", payload);
 
             if (!res.IsSuccessStatusCode)
-            {
-                var msg = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error API CrearUsuario: {msg}");
-                return null;
-            }
+                return (false, res.StatusCode, null, await MapError(res));
 
-            return await res.Content.ReadFromJsonAsync<UsuarioDto>();
+            var data = await SafeJson<UsuarioDto>(res);
+            return (true, res.StatusCode, data, null);
         }
 
-        // Actualizar usuario
-        public async Task<UsuarioDto?> UpdateAsync(UsuarioDto usuario, int idUsuarioAccion)
+        // ============================================================
+        // UPDATE
+        // ============================================================
+        public async Task<(bool ok, HttpStatusCode status, UsuarioDto? Data, string? Message)>
+            UpdateAsync(UsuarioDto usuario, int idUsuarioAccion)
         {
             AddAuthHeader();
-            var url = $"usuario/{usuario.ID_Usuario}?idUsuarioAccion={idUsuarioAccion}";
 
             var payload = new
             {
@@ -126,32 +208,31 @@ namespace NuevoAvatarFront.Services
                 rolNombre = usuario.RolNombre
             };
 
-            var res = await _http.PutAsJsonAsync(url, payload);
+            var res = await _http.PutAsJsonAsync(
+                $"usuario/{usuario.ID_Usuario}?idUsuarioAccion={idUsuarioAccion}", payload);
 
             if (!res.IsSuccessStatusCode)
-            {
-                var msg = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error API UpdateUsuario: {msg}");
-                return null;
-            }
+                return (false, res.StatusCode, null, await MapError(res));
 
-            return await res.Content.ReadFromJsonAsync<UsuarioDto>();
+            var data = await SafeJson<UsuarioDto>(res);
+            return (true, res.StatusCode, data, null);
         }
 
-        // Eliminar usuario
-        public async Task<bool> DeleteAsync(int id, int idUsuarioAccion)
+        // ============================================================
+        // DELETE
+        // ============================================================
+        public async Task<(bool ok, HttpStatusCode status, string? Message)>
+            DeleteAsync(int id, int idUsuarioAccion)
         {
             AddAuthHeader();
-            var url = $"usuario/{id}?idUsuarioAccion={idUsuarioAccion}";
-            var res = await _http.DeleteAsync(url);
+
+            var res = await _http.DeleteAsync(
+                $"usuario/{id}?idUsuarioAccion={idUsuarioAccion}");
 
             if (!res.IsSuccessStatusCode)
-            {
-                var msg = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error API DeleteUsuario: {msg}");
-            }
+                return (false, res.StatusCode, await MapError(res));
 
-            return res.IsSuccessStatusCode;
+            return (true, res.StatusCode, null);
         }
     }
 }

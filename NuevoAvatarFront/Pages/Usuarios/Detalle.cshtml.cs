@@ -21,12 +21,18 @@ namespace NuevoAvatarFront.Pages.Usuarios
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
-            Usuario = await _usuarioApi.GetByIdAsync(id, idUsuarioAccion);
 
-            if (Usuario == null) return NotFound();
+            var (ok, status, data, message) = await _usuarioApi.GetByIdAsync(id, idUsuarioAccion);
+
+            if (!ok || data == null)
+            {
+                ModelState.AddModelError(string.Empty, message ?? "Usuario no encontrado.");
+                return Page();
+            }
+
+            Usuario = data;
 
             await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Consulta detalle usuario {id}");
-
             return Page();
         }
     }

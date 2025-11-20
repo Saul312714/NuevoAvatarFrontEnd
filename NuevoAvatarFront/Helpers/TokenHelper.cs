@@ -33,18 +33,21 @@ namespace NuevoAvatarFront.Helpers
             {
                 try
                 {
-                    var result = await _authApi.RefreshAsync(refreshToken!);
+                    var (data, error) = await _authApi.RefreshAsync(refreshToken!);
 
-                    if (result == null)
+                    // Si hubo error (401, 400, 500, etc.)
+                    if (error != null || data == null)
                     {
                         context.Session.Clear();
                         context.Response.Redirect("/HU_MICHEL/Login/Index");
                         return null;
                     }
 
-                    context.Session.SetString("AccessToken", result.Access_Token);
-                    context.Session.SetString("RefreshToken", result.Refresh_Token);
-                    return result.Access_Token;
+                    // Guardar tokens renovados
+                    context.Session.SetString("AccessToken", data.Access_Token);
+                    context.Session.SetString("RefreshToken", data.Refresh_Token);
+
+                    return data.Access_Token;
                 }
                 catch
                 {

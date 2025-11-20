@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.CookiePolicy;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Pages.Expedientes;
 using NuevoAvatarFront.Services;
+using NuevoAvatarFront.Services.Dashboard;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,23 @@ builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(client =>
         ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
     client.BaseAddress = new Uri(baseUrl);
 });
+
+
+builder.Services.AddHttpClient<IDashboardService, DashboardService>();
+
+/************************************/
+
+builder.Services.AddHttpClient<IExpedienteApiClient, ExpedienteApiClient>();
+/************************************/
+builder.Services.AddHttpClient<IParametroApiClient, ParametroApiClient>();
+/************************************/
+builder.Services.AddHttpClient<IGrupoApiClient, GrupoApiClient>();
+
+builder.Services.AddSingleton<IMockDirecciones, MockDirecciones>();
+
+
+
+
 
 // Habilitar sesiones para guardar tokens
 builder.Services.AddDistributedMemoryCache();

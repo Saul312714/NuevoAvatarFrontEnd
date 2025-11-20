@@ -5,26 +5,29 @@
 
 @{
     var rolId = Http.HttpContext?.Session.GetInt32("RolID") ?? 0;
+
+    // Obtener permisos y módulos del backend
     var permisos = await RolModuloApi.GetByRolAsync(rolId);
     var modulos = await ModuloApi.GetAllAsync();
 
-    // filtrar solo los módulos permitidos
+    // Filtrar módulos visibles según permisos
     var visibles = modulos
         .Where(m => permisos.Any(p => p.ID_Modulo == m.ID_Modulo && p.PuedeVer))
         .OrderBy(m => m.Orden)
         .ToList();
 }
 
-<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion">
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
     <!-- Logo -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/Dashboard/Index">
         <img src="/images/logo.png" width="40" height="40" class="me-2" />
     </a>
 
-    <hr class="sidebar-divider my-0">
+    <hr class="sidebar-divider my-0" />
 
-    @if (visibles.Count == 0)
+    <!-- LISTA DE MÓDULOS -->
+    @if (!visibles.Any())
     {
         <li class="nav-item mt-4 text-center text-warning">
             <span>No tienes módulos asignados</span>
@@ -32,7 +35,7 @@
     }
     else
     {
-        foreach (var m in visibles)
+        @foreach (var m in visibles)
         {
             <li class="nav-item">
                 <a class="nav-link" href="@m.Url">
@@ -42,5 +45,11 @@
         }
     }
 
-    <hr class="sidebar-divider d-none d-md-block">
+    <hr class="sidebar-divider d-none d-md-block" />
+
+    <!-- BOTÓN QUE HACE FUNCIONAR EL TOGGLE -->
+    <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+
 </ul>

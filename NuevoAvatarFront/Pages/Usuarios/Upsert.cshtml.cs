@@ -28,7 +28,8 @@ namespace NuevoAvatarFront.Pages.Usuarios
 
             if (id.HasValue)
             {
-                var (ok, status, data, message) = await _usuarioApi.GetByIdAsync(id.Value, idUsuarioAccion);
+                var (ok, status, data, message) =
+                    await _usuarioApi.GetByIdAsync(id.Value, idUsuarioAccion);
 
                 if (!ok || data == null)
                 {
@@ -47,7 +48,7 @@ namespace NuevoAvatarFront.Pages.Usuarios
             var idUsuarioAccion = HttpContext.Session.GetInt32("UsuarioID") ?? 0;
 
             // ============================
-            // VALIDACIONES DEL FRONTEND
+            // VALIDACIONES DEL NOMBRE
             // ============================
             if (string.IsNullOrWhiteSpace(Usuario.Nombre))
             {
@@ -55,6 +56,17 @@ namespace NuevoAvatarFront.Pages.Usuarios
                 return Page();
             }
 
+            // Solo letras y espacios (incluye tildes y ñ)
+            if (!Regex.IsMatch(Usuario.Nombre, @"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$"))
+            {
+                ModelState.AddModelError(string.Empty,
+                    "El nombre solo puede contener letras y espacios.");
+                return Page();
+            }
+
+            // ============================
+            // VALIDACIÓN EMAIL
+            // ============================
             if (string.IsNullOrWhiteSpace(Usuario.Email) ||
                 !Regex.IsMatch(Usuario.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {
@@ -62,9 +74,12 @@ namespace NuevoAvatarFront.Pages.Usuarios
                 return Page();
             }
 
+            // ============================
+            // VALIDACIÓN DOMINIOS
+            // ============================
             if (Usuario.Email.EndsWith("@cuc.cr"))
             {
-                Usuario.ID_Rol = 1; // estudiante
+                Usuario.ID_Rol = 3; // estudiante
             }
             else if (Usuario.Email.EndsWith("@cuc.ac.cr"))
             {
@@ -81,8 +96,10 @@ namespace NuevoAvatarFront.Pages.Usuarios
                 return Page();
             }
 
-            // Para nuevos usuarios -> contraseña obligatoria
-            if (Usuario.ID_Usuario == 0 && string.IsNullOrWhiteSpace(Usuario.Contrasena))
+            // ============================
+            // CONTRASEÑA (solo al crear)
+            // ============================
+            if (!EsEdicion && string.IsNullOrWhiteSpace(Usuario.Contrasena))
             {
                 ModelState.AddModelError(string.Empty, "La contraseña es obligatoria.");
                 return Page();
@@ -93,7 +110,8 @@ namespace NuevoAvatarFront.Pages.Usuarios
             // ============================
             if (!EsEdicion)
             {
-                var (ok, status, data, message) = await _usuarioApi.CreateAsync(Usuario, idUsuarioAccion);
+                var (ok, status, data, message) =
+                    await _usuarioApi.CreateAsync(Usuario, idUsuarioAccion);
 
                 if (!ok)
                 {
@@ -101,15 +119,17 @@ namespace NuevoAvatarFront.Pages.Usuarios
                     return Page();
                 }
 
-                await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Alta usuario {Usuario.Email}");
+                await _bitacoraApi.RegistrarAsync(idUsuarioAccion,
+                    $"Alta usuario {Usuario.Email}");
+
                 return RedirectToPage("/Usuarios/Index");
             }
 
             // ============================
             // ACTUALIZAR
             // ============================
-            var (okUpdate, statusUpdate, dataUpdate, msgUpdate)
-                = await _usuarioApi.UpdateAsync(Usuario, idUsuarioAccion);
+            var (okUpdate, statusUpdate, dataUpdate, msgUpdate) =
+                await _usuarioApi.UpdateAsync(Usuario, idUsuarioAccion);
 
             if (!okUpdate)
             {
@@ -117,7 +137,8 @@ namespace NuevoAvatarFront.Pages.Usuarios
                 return Page();
             }
 
-            await _bitacoraApi.RegistrarAsync(idUsuarioAccion, $"Actualización usuario {Usuario.Email}");
+            await _bitacoraApi.RegistrarAsync(idUsuarioAccion,
+                $"Actualización usuario {Usuario.Email}");
 
             return RedirectToPage("/Usuarios/Index");
         }

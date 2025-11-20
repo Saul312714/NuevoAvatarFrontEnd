@@ -1,0 +1,112 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Profesores.UpsertModel
+@{
+    bool esEdicion = Model.Profesor.ID_Profesor > 0;
+    ViewData["Title"] = esEdicion ? "Editar Profesor" : "Nuevo Profesor";
+    Layout = "_Layout";
+}
+
+<div class="card shadow p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-primary mb-0">
+            @ViewData["Title"]
+        </h3>
+
+        <a asp-page="./Index" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <form method="post"
+          asp-page-handler="Save"
+          id="profesorForm"
+          class="needs-validation"
+          novalidate>
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+        <input type="hidden" asp-for="Profesor.ID_Profesor" />
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Tipo ID</label>
+                <input asp-for="Profesor.Tipo_Identificacion"
+                       class="form-control shadow-sm" />
+                <span asp-validation-for="Profesor.Tipo_Identificacion" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Identificación</label>
+                <input asp-for="Profesor.Identificacion"
+                       class="form-control shadow-sm" />
+                <span asp-validation-for="Profesor.Identificacion" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+                <input asp-for="Profesor.Nombre"
+                       class="form-control shadow-sm" />
+                <span asp-validation-for="Profesor.Nombre" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input asp-for="Profesor.Email"
+                       class="form-control shadow-sm" />
+                <span asp-validation-for="Profesor.Email" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Fecha Nacimiento</label>
+                <input asp-for="Profesor.Fecha_Nacimiento"
+                       type="date"
+                       class="form-control shadow-sm" />
+                <span asp-validation-for="Profesor.Fecha_Nacimiento" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <!-- Botón verde, con confirmación -->
+            <button type="button" class="btn btn-success" onclick="confirmSaveProfesor()">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+
+            <a asp-page="./Index" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function confirmSaveProfesor() {
+            const form = document.getElementById("profesorForm");
+
+            // Validación HTML5 básica
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Por favor complete todos los campos obligatorios'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '@(esEdicion ? "¿Guardar cambios del profesor?" : "¿Guardar nuevo profesor?")',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

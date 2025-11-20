@@ -1,0 +1,41 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.Periodos.EliminarModel
+@{
+    ViewData["Title"] = "Eliminar Período";
+    Layout = "_Layout";
+}
+
+<form id="deleteForm" method="post">
+</form>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const idPeriodo = '@RouteData.Values["id"]';
+
+            Swal.fire({
+                title: '¿Eliminar período?',
+                html: 'Esta acción <b>no se puede deshacer</b>.<br/>' +
+                      'Se eliminará definitivamente el período con ID ' + idPeriodo +
+                      '.<br/><br/>' +
+                      '<small>Si tiene grupos activos u otras relaciones, el sistema puede impedir la eliminación.</small>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteForm').submit();
+                } else {
+                    window.location.href = '@Url.Page("./Index")';
+                }
+            });
+        });
+    </script>
+}
+
+

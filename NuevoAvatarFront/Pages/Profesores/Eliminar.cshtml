@@ -1,0 +1,42 @@
+﻿@page "{id:int}"
+@model NuevoAvatarFront.Pages.Profesores.EliminarModel
+@{
+    ViewData["Title"] = "Eliminar Profesor";
+    Layout = "_Layout";
+}
+
+<!-- Formulario “invisible” que hará el POST si el usuario confirma -->
+<form id="deleteForm" method="post">
+    @* No hace falta mandar el id: viene en la ruta /Profesores/Eliminar/{id} *@
+</form>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tomamos el id que viene en la ruta
+            const idProfesor = '@RouteData.Values["id"]';
+
+            Swal.fire({
+                title: '¿Eliminar profesor?',
+                text: 'Esta acción no se puede deshacer. Se eliminará definitivamente el profesor con ID ' + idProfesor + '.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Hace POST a /Profesores/Eliminar/{id} -> OnPost de tu Razor Page
+                    document.getElementById('deleteForm').submit();
+                } else {
+                    // Vuelve al listado si cancela
+                    window.location.href = '@Url.Page("./Index")';
+                }
+            });
+        });
+    </script>
+}
+

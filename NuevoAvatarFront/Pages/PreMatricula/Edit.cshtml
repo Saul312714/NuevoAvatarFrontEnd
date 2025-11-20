@@ -1,0 +1,172 @@
+﻿@page
+@model NuevoAvatarFront.Pages.PreMatriculas.EditModel
+@{
+    ViewData["Title"] = "Editar Prematrícula";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+
+            <!-- CARD ESTILO GRUPOS -->
+            <div class="card shadow p-4">
+                <!-- Encabezado similar a Grupos -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-primary mb-0">
+                        <i class="bi bi-pencil-square"></i> Editar Prematrícula
+                    </h3>
+                    <a asp-page="./Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+
+                @* Mensaje de error *@
+                @if (!string.IsNullOrEmpty(Model.MensajeError))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i> @Model.MensajeError
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <form method="post" id="editPrematriculaForm">
+                    <input type="hidden" asp-for="PreMatricula.ID_Prematricula" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Estudiante -->
+                    <div class="form-group mb-3">
+                        <label asp-for="PreMatricula.ID_Estudiante" class="fw-bold text-gray-800">
+                            <i class="bi bi-person"></i> Estudiante *
+                        </label>
+                        <select asp-for="PreMatricula.ID_Estudiante"
+                                class="form-control shadow-sm"
+                                asp-items="Model.Estudiantes">
+                            <option value="">-- Seleccione un estudiante --</option>
+                        </select>
+                        <span asp-validation-for="PreMatricula.ID_Estudiante" class="text-danger"></span>
+                        <small class="form-text text-muted">
+                            Seleccione el estudiante que realiza la prematrícula.
+                        </small>
+                    </div>
+
+                    <!-- Carrera -->
+                    <div class="form-group mb-3">
+                        <label asp-for="PreMatricula.ID_Carrera" class="fw-bold text-gray-800">
+                            <i class="bi bi-book"></i> Carrera *
+                        </label>
+                        <select asp-for="PreMatricula.ID_Carrera"
+                                class="form-control shadow-sm"
+                                asp-items="Model.Carreras">
+                            <option value="">-- Seleccione una carrera --</option>
+                        </select>
+                        <span asp-validation-for="PreMatricula.ID_Carrera" class="text-danger"></span>
+                        <small class="form-text text-muted">
+                            Carrera a la que desea ingresar.
+                        </small>
+                    </div>
+
+                    <!-- Curso -->
+                    <div class="form-group mb-3">
+                        <label asp-for="PreMatricula.ID_Curso" class="fw-bold text-gray-800">
+                            <i class="bi bi-journal-text"></i> Curso (Nivel 1) *
+                        </label>
+                        <select asp-for="PreMatricula.ID_Curso"
+                                class="form-control shadow-sm"
+                                asp-items="Model.Cursos">
+                            <option value="">-- Seleccione un curso --</option>
+                        </select>
+                        <span asp-validation-for="PreMatricula.ID_Curso" class="text-danger"></span>
+                        <small class="form-text text-muted">
+                            Solo se pueden prematricular cursos de primer nivel.
+                        </small>
+                    </div>
+
+                    <!-- Periodo -->
+                    <div class="form-group mb-3">
+                        <label asp-for="PreMatricula.ID_Periodo" class="fw-bold text-gray-800">
+                            <i class="bi bi-calendar-event"></i> Periodo *
+                        </label>
+                        <select asp-for="PreMatricula.ID_Periodo"
+                                class="form-control shadow-sm"
+                                asp-items="Model.PeriodosFuturos">
+                            <option value="">-- Seleccione un periodo --</option>
+                        </select>
+                        <span asp-validation-for="PreMatricula.ID_Periodo" class="text-danger"></span>
+                        <small class="form-text text-muted">
+                            Solo se muestran periodos futuros (fecha de inicio posterior a hoy).
+                        </small>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="mb-3">
+                        <label asp-for="PreMatricula.Observaciones" class="form-label fw-bold text-gray-800">
+                            <i class="bi bi-card-text"></i> Observaciones
+                        </label>
+                        <textarea asp-for="PreMatricula.Observaciones"
+                                  class="form-control shadow-sm"
+                                  rows="4"
+                                  placeholder="Ingrese observaciones adicionales (opcional)"
+                                  maxlength="500"></textarea>
+                        <span asp-validation-for="PreMatricula.Observaciones" class="text-danger"></span>
+                        <small class="form-text text-muted">
+                            Campo opcional. Máximo 500 caracteres.
+                        </small>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="mt-4 d-flex gap-2">
+                        <a asp-page="./Index" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Guardar cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bloque informativo (lo dejamos igual) -->
+            <div class="alert alert-info mt-3" role="alert">
+                <h6 class="alert-heading">
+                    <i class="bi bi-lightbulb"></i> Información importante:
+                </h6>
+                <ul class="mb-0">
+                    <li>Los campos marcados con * son obligatorios.</li>
+                    <li>El periodo debe ser futuro (esto lo valida el backend).</li>
+                    <li>No se permiten duplicados de estudiante–curso–periodo.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Auto-cerrar alertas después de 5 segundos
+        setTimeout(function () {
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // Validación del lado del cliente para el límite de caracteres
+        document.addEventListener('DOMContentLoaded', function () {
+            const observaciones = document.querySelector('textarea[name="PreMatricula.Observaciones"]');
+            if (observaciones) {
+                observaciones.addEventListener('input', function () {
+                    const maxLength = 500;
+                    const currentLength = this.value.length;
+
+                    if (currentLength > maxLength) {
+                        this.value = this.value.substring(0, maxLength);
+                    }
+                });
+            }
+        });
+    </script>
+}

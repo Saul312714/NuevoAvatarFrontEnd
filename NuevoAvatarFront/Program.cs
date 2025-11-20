@@ -1,16 +1,15 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.CookiePolicy;
 using NuevoAvatarFront.Helpers;
-using NuevoAvatarFront.Infra;
 using NuevoAvatarFront.Middleware;
 using NuevoAvatarFront.Services;
 using NuevoAvatarFront.Services.Dashboard;
-using NuevoAvatarFront.Pages.Expedientes; // 👈 para IMockDirecciones / MockDirecciones
+using NuevoAvatarFront.Pages.Expedientes; // Mock direcciones
 
 var builder = WebApplication.CreateBuilder(args);
 
 // =========================================================
-// RAZOR PAGES
+// RAZOR PAGES + ACCESOR
 // =========================================================
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
@@ -26,57 +25,104 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddHttpContextAccessor();
+// =========================================================
+// HELPERS
+// =========================================================
 builder.Services.AddScoped<TokenHelper>();
 
 // =========================================================
-// CLIENTES PROPIOS (OFERTA / MATRÍCULA / PREMATRÍCULA)
+// BASE URLS
 // =========================================================
+var baseUsuariosRoles = builder.Configuration["UsuariosRolesApi:BaseUrl"]
+    ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
 
-// API OFERTA (named client)
-builder.Services.AddHttpClient("OfertaClient", (sp, client) =>
+var baseBitacora = builder.Configuration["BitacoraApi:BaseUrl"]
+    ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
+
+var baseOferta = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
+    ?? throw new InvalidOperationException("OfertaAcademicaApi:BaseUrl no configurado");
+
+var baseMatricula = builder.Configuration["MatriculaApi:BaseUrl"]
+    ?? throw new InvalidOperationException("MatriculaApi:BaseUrl no configurado");
+
+// =========================================================
+// CLIENTES: SEGURIDAD (Usuarios / Roles / Auth / Parámetros / Módulos)
+// =========================================================
+builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c =>
 {
-    var cfg = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
-    client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
-// API MATRÍCULA (named client)
-builder.Services.AddHttpClient("MatriculaClient", (sp, client) =>
+builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(c =>
 {
-    var cfg = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = cfg["Apis:Matricula"] ?? "http://localhost:5193";
-    client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
-// API PROFESORES (typed client)
-builder.Services.AddHttpClient<ProfesorClient>((sp, client) =>
+builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(c =>
 {
-    var cfg = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
-    client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
-// API PERÍODOS (typed client)
-builder.Services.AddHttpClient<PeriodoClient>((sp, client) =>
+builder.Services.AddHttpClient<IModuloApiClient, ModuloApiClient>(c =>
 {
-    var cfg = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
-    client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
+    c.BaseAddress = new Uri(baseUsuariosRoles);
 });
 
-// 👇 servicio de Dashboard (IDashboardService -> DashboardService)
-builder.Services.AddHttpClient<IDashboardService, DashboardService>();
+builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
+});
 
-// Servicios de tu módulo de prematrícula
+builder.Services.AddHttpClient<IParametroApiClient, ParametroApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseUsuariosRoles);
+});
+
+// =========================================================
+// CLIENTES: BITÁCORA
+// =========================================================
+builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseBitacora);
+});
+
+// =========================================================
+// CLIENTES: OFERTA ACADÉMICA (Institución / Carrera / Curso / Profesor / Grupos)
+// =========================================================
+builder.Services.AddHttpClient<IInstitucionApiClient, InstitucionApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseOferta);
+});
+
+builder.Services.AddHttpClient<ICarreraApiClient, CarreraApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseOferta);
+});
+
+builder.Services.AddHttpClient<ICursoApiClient, CursoApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseOferta);
+});
+
+builder.Services.AddHttpClient<IProfesorApiClient, ProfesorApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseOferta);
+});
+
+builder.Services.AddHttpClient<IGrupoApiClient, GrupoApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseOferta);
+});
+
+// =========================================================
+// CLIENTES: MATRÍCULA / PREMATRÍCULA / EXPEDIENTES
+// =========================================================
+builder.Services.AddHttpClient<IExpedienteApiClient, ExpedienteApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseMatricula);
+});
+
+// Servicios internos (no API clients, sino lógica del Front)
 builder.Services.AddScoped<IPreMatriculaService, PreMatriculaService>();
 builder.Services.AddScoped<IEstudianteService, EstudianteService>();
 builder.Services.AddScoped<ICarreraService, CarreraService>();
@@ -85,85 +131,21 @@ builder.Services.AddScoped<IPeriodoService, PeriodoService>();
 builder.Services.AddScoped<IMatriculaFrontService, MatriculaFrontService>();
 builder.Services.AddScoped<IGrupoService, GrupoService>();
 
-// 👇 MOCKS de Expedientes (venían en Develop)
+// =========================================================
+// DASHBOARD
+// =========================================================
+builder.Services.AddHttpClient<IDashboardService, DashboardService>();
+
+// =========================================================
+// Mocks (desarrollo)
+// =========================================================
 builder.Services.AddSingleton<IMockDirecciones, MockDirecciones>();
-
-// =========================================================
-// CLIENTES DE SEGURIDAD (USUARIOS / ROLES / BITÁCORA)
-// =========================================================
-var baseUsuariosRoles = builder.Configuration["UsuariosRolesApi:BaseUrl"]
-    ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
-
-var baseBitacora = builder.Configuration["BitacoraApi:BaseUrl"]
-    ?? throw new InvalidOperationException("BitacoraApi:BaseUrl no configurado");
-
-// 🔹 también traemos las bases de Oferta y Matrícula como en Develop
-var baseOfertaAcademica = builder.Configuration["OfertaAcademicaApi:BaseUrl"]
-    ?? throw new InvalidOperationException("OfertaAcademicaApi:BaseUrl no configurado");
-
-var baseMatricula = builder.Configuration["MatriculaApi:BaseUrl"]
-    ?? throw new InvalidOperationException("MatriculaApi:BaseUrl no configurado");
-
-// Usuarios
-builder.Services.AddHttpClient<IUsuarioApiClient, UsuarioApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
-
-// Roles
-builder.Services.AddHttpClient<IRolApiClient, RolApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
-
-// Auth
-builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
-
-// Bitácora
-builder.Services.AddHttpClient<IBitacoraApiClient, BitacoraApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
-
-// Módulos
-builder.Services.AddHttpClient<IModuloApiClient, ModuloApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
-
-// Rol-Módulo
-builder.Services.AddHttpClient<IRolModuloApiClient, RolModuloApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
-
-// 🔹 Parámetros (venía en Develop)
-builder.Services.AddHttpClient<IParametroApiClient, ParametroApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseUsuariosRoles);
-});
-
-// 🔹 Grupos API (admin de grupos, no el IGrupoService que ya tienes)
-builder.Services.AddHttpClient<IGrupoApiClient, GrupoApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseOfertaAcademica);
-});
-
-// 🔹 Expedientes API
-builder.Services.AddHttpClient<IExpedienteApiClient, ExpedienteApiClient>(c =>
-{
-    c.BaseAddress = new Uri(baseMatricula);
-});
 
 // =========================================================
 // BUILD APP
 // =========================================================
 var app = builder.Build();
 
-// ================== MIDDLEWARE ==================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -173,7 +155,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// Política de cookies
 app.UseCookiePolicy(new CookiePolicyOptions
 {
     MinimumSameSitePolicy = SameSiteMode.Lax,
@@ -188,8 +169,9 @@ app.UseSessionAuth();
 
 app.UseAuthorization();
 
-
+// =========================================================
 // LOGOUT
+// =========================================================
 app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraApi) =>
 {
     var idUsuario = context.Session.GetInt32("UsuarioID") ?? 0;
@@ -203,24 +185,21 @@ app.MapPost("/logout", async (HttpContext context, IBitacoraApiClient bitacoraAp
         Console.WriteLine("⚠ No se pudo registrar el logout en bitácora.");
     }
 
-    // Limpiar sesión y cookies
     context.Session.Clear();
-
     foreach (var cookie in context.Request.Cookies.Keys)
         context.Response.Cookies.Delete(cookie);
 
     context.Response.Redirect("/HU_MICHEL/Login/Index?logout=1");
 });
 
-
-// HOME → LOGIN
-app.MapGet("/", context =>
+// =========================================================
+// HOME REDIRECT
+// =========================================================
+app.MapGet("/", ctx =>
 {
-    context.Response.Redirect("/HU_MICHEL/Login/Index");
+    ctx.Response.Redirect("/HU_MICHEL/Login/Index");
     return Task.CompletedTask;
 });
 
-// RAZOR PAGES
 app.MapRazorPages();
-
 app.Run();

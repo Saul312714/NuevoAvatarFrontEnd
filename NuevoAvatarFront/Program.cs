@@ -30,6 +30,46 @@ builder.Services.AddSession(options =>
 // =========================================================
 builder.Services.AddScoped<TokenHelper>();
 
+// API OFERTA (named client)
+builder.Services.AddHttpClient("OfertaClient", (sp, client) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
+// API MATRÍCULA (named client)
+builder.Services.AddHttpClient("MatriculaClient", (sp, client) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = cfg["Apis:Matricula"] ?? "http://localhost:5193";
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
+// API PROFESORES (typed client)
+builder.Services.AddHttpClient<ProfesorClient>((sp, client) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
+// API PERÍODOS (typed client)
+builder.Services.AddHttpClient<PeriodoClient>((sp, client) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = cfg["Apis:Oferta"] ?? "http://localhost:5048";
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
 // =========================================================
 // BASE URLS
 // =========================================================

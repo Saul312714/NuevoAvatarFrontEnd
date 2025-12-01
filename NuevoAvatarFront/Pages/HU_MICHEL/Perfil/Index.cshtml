@@ -1,0 +1,96 @@
+﻿@page
+@model NuevoAvatarFront.Pages.HU_MICHEL.Perfil.IndexModel
+@{
+    ViewData["Title"] = "Mi perfil";
+    Layout = "_Layout";
+}
+
+<h1 class="h3 mb-4 text-gray-800">Mi perfil y cambio de contraseña</h1>
+
+<!-- MENSAJES -->
+@if (!string.IsNullOrEmpty(Model.MensajeError))
+{
+    <div class="alert alert-danger">
+        @Model.MensajeError
+    </div>
+}
+@if (!string.IsNullOrEmpty(Model.MensajeOk))
+{
+    <div class="alert alert-success">
+        @Model.MensajeOk
+    </div>
+}
+
+<div class="row">
+    <!-- Datos de perfil (solo lectura) -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <strong>Datos de perfil</strong>
+            </div>
+            <div class="card-body">
+                @if (Model.Usuario is null)
+                {
+                    <p>No se pudo cargar la información del usuario.</p>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" value="@Model.Usuario.Nombre" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control" value="@Model.Usuario.Email" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de identificación</label>
+                        <input type="text" class="form-control" value="@Model.Usuario.Tipo_Identificacion" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Identificación</label>
+                        <input type="text" class="form-control" value="@Model.Usuario.Identificacion" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Rol</label>
+                        <input type="text" class="form-control" value="@Model.Usuario.RolNombre" readonly />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de cambio de contraseña -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <strong>Cambiar contraseña</strong>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label asp-for="NuevaContrasena" class="form-label">Nueva contraseña</label>
+                        <input asp-for="NuevaContrasena" class="form-control" type="password" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmarContrasena" class="form-label">Confirmar nueva contraseña</label>
+                        <input asp-for="ConfirmarContrasena" class="form-control" type="password" />
+                    </div>
+
+                    <p class="text-muted small">
+                        La contraseña puede contener cualquier carácter, pero no puede tener más de 100 caracteres.
+                    </p>
+
+                    <button type="submit" class="btn btn-primary">
+                        Guardar nueva contraseña
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

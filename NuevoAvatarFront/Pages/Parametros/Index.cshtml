@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Administración de Parámetros";
 }
-
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 text-gray-800">Parámetros del Sistema</h1>
     <a asp-page="Upsert" class="btn btn-primary">
@@ -60,17 +59,19 @@
         <!-- PAGINACIÓN -->
         <nav aria-label="Page navigation">
             <ul class="pagination justify-content-end">
+
                 <!-- Anterior -->
-                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
                     <a class="page-link" href="#"
-                       onclick="navigateToPage(@(Model.Page - 1)); return false;">
+                       onclick="navigateToPage(@(Model.CurrentPage - 1)); return false;">
                         Anterior
                     </a>
                 </li>
 
+                <!-- Números -->
                 @for (int i = 1; i <= Model.TotalPages; i++)
                 {
-                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
                         <a class="page-link" href="#"
                            onclick="navigateToPage(@i); return false;">
                             @i
@@ -79,12 +80,13 @@
                 }
 
                 <!-- Siguiente -->
-                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
                     <a class="page-link" href="#"
-                       onclick="navigateToPage(@(Model.Page + 1)); return false;">
+                       onclick="navigateToPage(@(Model.CurrentPage + 1)); return false;">
                         Siguiente
                     </a>
                 </li>
+
             </ul>
         </nav>
 
@@ -96,9 +98,8 @@
 
     <script>
         function confirmDelete(event) {
-            event.preventDefault(); // Prevenir el comportamiento por defecto (evitar recargar la página)
+            event.preventDefault();
 
-            // Usar SweetAlert para confirmar la eliminación
             Swal.fire({
                 title: '¿Eliminar parámetro?',
                 text: 'Esta acción no se puede deshacer.',
@@ -110,14 +111,8 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Accedemos al formulario usando el target de la acción (button) para hacer submit
-                    let form = event.target.closest("form");  // Cambié event.currentTarget por event.target
-
-                    if (form) {
-                        form.submit(); // Realizamos el submit del formulario
-                    } else {
-                        console.error('Formulario no encontrado.');
-                    }
+                    let form = event.target.closest("form");
+                    if (form) form.submit();
                 }
             });
         }
@@ -125,9 +120,7 @@
         function navigateToPage(pageNum) {
             const totalPages = @Model.TotalPages;
 
-            if (pageNum < 1 || pageNum > totalPages) {
-                return false;
-            }
+            if (pageNum < 1 || pageNum > totalPages) return false;
 
             const params = new URLSearchParams(window.location.search);
             params.set('page', pageNum);

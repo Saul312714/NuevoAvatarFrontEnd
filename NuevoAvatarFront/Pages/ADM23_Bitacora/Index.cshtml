@@ -1,0 +1,241 @@
+﻿@page
+@model NuevoAvatarFront.Pages.ADM23_Bitacora.IndexModel
+@{
+    ViewData["Title"] = "Bitácoras (ADM23)";
+    Layout = "_Layout";
+}
+
+<h1 class="h3 mb-4 text-gray-800">Bitácoras del sistema (auditoría)</h1>
+
+@if (!string.IsNullOrEmpty(Model.MensajeError))
+{
+    <div class="alert alert-danger">
+        @Model.MensajeError
+    </div>
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <strong>Filtros</strong>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3 mb-3">
+                <label asp-for="FechaDesde" class="form-label">Fecha desde</label>
+                <input asp-for="FechaDesde" type="date" class="form-control" />
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="FechaHasta" class="form-label">Fecha hasta</label>
+                <input asp-for="FechaHasta" type="date" class="form-control" />
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="UsuarioFiltro" class="form-label">Usuario (ID o nombre)</label>
+                <input asp-for="UsuarioFiltro" class="form-control" />
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="ModuloFiltro" class="form-label">Módulo</label>
+                <input asp-for="ModuloFiltro" class="form-control" />
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="AccionFiltro" class="form-label">Acción</label>
+                <input asp-for="AccionFiltro" class="form-control" />
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="TamanoPagina" class="form-label">Tamaño página</label>
+                <input asp-for="TamanoPagina" type="number" min="5" max="100" class="form-control" />
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="Orden" class="form-label">Orden</label>
+                <select asp-for="Orden" class="form-control">
+                    <option value="fecha_desc">Más recientes primero</option>
+                    <option value="fecha_asc">Más antiguos primero</option>
+                </select>
+            </div>
+
+            <div class="col-md-3 mb-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <strong>Resultados</strong>
+        <span class="text-muted small ms-2">
+            (@Model.TotalRegistros registros encontrados)
+        </span>
+    </div>
+    <div class="card-body table-responsive">
+        @if (Model.Registros.Count == 0)
+        {
+            <p class="text-muted">No hay registros para los filtros seleccionados.</p>
+        }
+        else
+        {
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Usuario</th>
+                        <th>Módulo</th>
+                        <th>Acción</th>
+                        <th>Descripción</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Registros)
+                    {
+                        <tr>
+                            <td>@item.Fecha.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.UsuarioNombre))
+                                {
+                                    @($"{item.UsuarioNombre} ({item.ID_Usuario})")
+                                }
+                                else
+                                {
+                                    @item.ID_Usuario
+                                }
+                            </td>
+                            <td>@item.Modulo</td>
+                            <td>@item.Accion</td>
+                            <td>@item.Descripcion</td>
+                            <td>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        data-toggle="modal"
+                                        data-target="#detalleModal"
+                                        data-jsonantes="@Html.Raw((item.JsonAntes ?? "").Replace("\"", "&quot;"))"
+                                        data-jsondespues="@Html.Raw((item.JsonDespues ?? "").Replace("\"", "&quot;"))">
+                                    Ver detalle
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Paginación -->
+            @if (Model.TotalPaginas > 1)
+            {
+                <nav>
+                    <ul class="pagination">
+                        @{
+                            int paginaActual = Model.Pagina;
+                            int totalPaginas = Model.TotalPaginas;
+                        }
+
+                        <li class="page-item @(paginaActual <= 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-page="./Index"
+                               asp-route-Pagina="@(paginaActual - 1)"
+                               asp-route-FechaDesde="@(Model.FechaDesde?.ToString("yyyy-MM-dd"))"
+                               asp-route-FechaHasta="@(Model.FechaHasta?.ToString("yyyy-MM-dd"))"
+                               asp-route-UsuarioFiltro="@Model.UsuarioFiltro"
+                               asp-route-AccionFiltro="@Model.AccionFiltro"
+                               asp-route-ModuloFiltro="@Model.ModuloFiltro"
+                               asp-route-TamanoPagina="@Model.TamanoPagina"
+                               asp-route-Orden="@Model.Orden">
+                                &laquo; Anterior
+                            </a>
+                        </li>
+
+                        @for (int p = 1; p <= totalPaginas; p++)
+                        {
+                            <li class="page-item @(p == paginaActual ? "active" : "")">
+                                <a class="page-link"
+                                   asp-page="./Index"
+                                   asp-route-Pagina="@p"
+                                   asp-route-FechaDesde="@(Model.FechaDesde?.ToString("yyyy-MM-dd"))"
+                                   asp-route-FechaHasta="@(Model.FechaHasta?.ToString("yyyy-MM-dd"))"
+                                   asp-route-UsuarioFiltro="@Model.UsuarioFiltro"
+                                   asp-route-AccionFiltro="@Model.AccionFiltro"
+                                   asp-route-ModuloFiltro="@Model.ModuloFiltro"
+                                   asp-route-TamanoPagina="@Model.TamanoPagina"
+                                   asp-route-Orden="@Model.Orden">
+                                    @p
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(paginaActual >= totalPaginas ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-page="./Index"
+                               asp-route-Pagina="@(paginaActual + 1)"
+                               asp-route-FechaDesde="@(Model.FechaDesde?.ToString("yyyy-MM-dd"))"
+                               asp-route-FechaHasta="@(Model.FechaHasta?.ToString("yyyy-MM-dd"))"
+                               asp-route-UsuarioFiltro="@Model.UsuarioFiltro"
+                               asp-route-AccionFiltro="@Model.AccionFiltro"
+                               asp-route-ModuloFiltro="@Model.ModuloFiltro"
+                               asp-route-TamanoPagina="@Model.TamanoPagina"
+                               asp-route-Orden="@Model.Orden">
+                                Siguiente &raquo;
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+</div>
+
+<!-- Modal Detalle JSON antes/después -->
+<div class="modal fade" id="detalleModal" tabindex="-1" role="dialog" aria-labelledby="detalleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detalleModalLabel">Detalle de la operación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h6>Antes</h6>
+                <pre id="jsonAntes" class="bg-light p-2 small" style="max-height: 250px; overflow:auto;"></pre>
+
+                <h6 class="mt-3">Después</h6>
+                <pre id="jsonDespues" class="bg-light p-2 small" style="max-height: 250px; overflow:auto;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#detalleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var jsonAntes = button.data('jsonantes') || '';
+            var jsonDespues = button.data('jsondespues') || '';
+
+            try {
+                if (jsonAntes) {
+                    var objA = JSON.parse(jsonAntes);
+                    jsonAntes = JSON.stringify(objA, null, 2);
+                }
+            } catch { }
+
+            try {
+                if (jsonDespues) {
+                    var objD = JSON.parse(jsonDespues);
+                    jsonDespues = JSON.stringify(objD, null, 2);
+                }
+            } catch { }
+
+            $('#jsonAntes').text(jsonAntes);
+            $('#jsonDespues').text(jsonDespues);
+        });
+    </script>
+}

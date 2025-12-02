@@ -16,17 +16,21 @@ namespace NuevoAvatarFront.Pages.Parametros
 
         public List<ParametroDto> Parametros { get; set; } = new();
 
-        public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 5;
         public int TotalPages { get; set; }
+
+        // 🔹 EL NUEVO NOMBRE (NO USAR "Page")
+        public int CurrentPage { get; set; } = 1;
+
         public string? ErrorMessage { get; set; }
 
         public async Task OnGetAsync()
         {
+            // Leer parámetro "page" correctamente
             if (Request.Query.ContainsKey("page"))
             {
                 int.TryParse(Request.Query["page"], out int p);
-                Page = p > 0 ? p : 1;
+                CurrentPage = p > 0 ? p : 1;
             }
 
             var token = HttpContext.Session.GetString("AccessToken");
@@ -40,12 +44,14 @@ namespace NuevoAvatarFront.Pages.Parametros
 
             var lista = await _parametroApi.GetAllAsync(userId.Value, token);
 
+            // Total de páginas
             TotalPages = (int)Math.Ceiling(lista.Count / (double)PageSize);
-            if (Page > TotalPages && TotalPages > 0)
-                Page = TotalPages;
+            if (CurrentPage > TotalPages && TotalPages > 0)
+                CurrentPage = TotalPages;
 
+            // Aplicar paginación
             Parametros = lista
-                .Skip((Page - 1) * PageSize)
+                .Skip((CurrentPage - 1) * PageSize)
                 .Take(PageSize)
                 .ToList();
         }
@@ -67,6 +73,7 @@ namespace NuevoAvatarFront.Pages.Parametros
                 return Page();
             }
 
+            // Mantener la página actual después de eliminar
             int currentPage = 1;
             if (Request.Query.ContainsKey("page"))
                 int.TryParse(Request.Query["page"], out currentPage);

@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
-using System.Text.Json; 
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NuevoAvatarFront.Helpers;
@@ -13,6 +14,24 @@ namespace NuevoAvatarFront.Services
     {
         Task<int> CrearAsync(MatriculaCreateDto dto);
         Task<List<MatriculadoDto>> GetMatriculadosPorCursoGrupoAsync(int idCurso, int idGrupo);
+
+        Task<(List<Adm19ListadoRowDto> datos, int total)> GetListadoAdm19Async(
+            int? idPeriodo,
+            int? idCarrera,
+            int? idCurso,
+            int? idGrupo,
+            int page,
+            int size,
+            string? sort,
+            bool asc);
+
+        Task<byte[]> ExportListadoAdm19CsvAsync(
+            int? idPeriodo,
+            int? idCarrera,
+            int? idCurso,
+            int? idGrupo,
+            string? sort,
+            bool asc);
     }
 
     public class MatriculaFrontService : ApiClientBase, IMatriculaFrontService
@@ -167,6 +186,192 @@ namespace NuevoAvatarFront.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error inesperado al obtener matriculados");
+                throw;
+            }
+        }
+
+        // ================================
+        //   ADM19 - helpers internos
+        // ================================
+        private string ConstruirQueryAdm19(
+            int idUsuario,
+            int? idPeriodo,
+            int? idCarrera,
+            int? idCurso,
+            int? idGrupo)
+        {
+            var qs = new List<string> { $"idUsuario={idUsuario}" };
+
+            if (idPeriodo.HasValue) qs.Add($"idPeriodo={idPeriodo.Value}");
+            if (idCarrera.HasValue) qs.Add($"idCarrera={idCarrera.Value}");
+            if (idCurso.HasValue) qs.Add($"idCurso={idCurso.Value}");
+            if (idGrupo.HasValue) qs.Add($"idGrupo={idGrupo.Value}");
+
+            return "/matricula/adm19" + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
+        }
+
+        private static IEnumerable<Adm19ListadoRowDto> OrdenarAdm19(
+            IEnumerable<Adm19ListadoRowDto> source,
+            string? sort,
+            bool asc)
+        {
+            sort = (sort ?? "").ToLowerInvariant();
+            IOrderedEnumerable<Adm19ListadoRowDto> ordered;
+
+            switch (sort)
+            {
+                case "nombre":
+                    ordered = asc
+                        ? source.OrderBy(x => x.Nombre)
+                        : source.OrderByDescending(x => x.Nombre);
+                    break;
+
+                case "identificacion":
+                    ordered = asc
+                        ? source.OrderBy(x => x.Identificacion)
+                        : source.OrderByDescending(x => x.Identificacion);
+                    break;
+
+                case "carrera":
+                    ordered = asc
+                        ? source.OrderBy(x => x.Carrera)
+                        : source.OrderByDescending(x => x.Carrera);
+                    break;
+
+                case "curso":
+                    ordered = asc
+                        ? source.OrderBy(x => x.Curso)
+                        : source.OrderByDescending(x => x.Curso);
+                    break;
+
+                case "grupo":
+                    ordered = asc
+                        ? source.OrderBy(x => x.Numero_Grupo)
+                        : source.OrderByDescending(x => x.Numero_Grupo);
+                    break;
+
+                default: // id
+                    ordered = asc
+                        ? source.OrderBy(x => x.ID_Matricula)
+                        : source.OrderByDescending(x => x.ID_Matricula);
+                    break;
+            }
+
+            return ordered;
+        }
+
+        // ================================
+        //   ADM19 - listado paginado
+        // ================================
+        public async Task<(List<Adm19ListadoRowDto> datos, int total)> GetListadoAdm19Async(
+            int? idPeriodo,
+            int? idCarrera,
+            int? idCurso,
+            int? idGrupo,
+            int page,
+            int size,
+            string? sort,
+            bool asc)
+        {
+            try
+            {
+                await AttachBearerAsync(_http);
+
+                var idUsuario = ObtenerIdUsuario();
+                var url = ConstruirQueryAdm19(idUsuario, idPeriodo, idCarrera, idCurso, idGrupo);
+
+                var response = await _http.GetAsync(url);
+
+                await EnsureSuccessOrThrowAsync(
+                    response,
+                    _logger,
+                    "No fue posible obtener el listado de matrículas."
+                );
+
+                var lista =
+                    await response.Content.ReadFromJsonAsync<List<Adm19ListadoRowDto>>()
+                    ?? new List<Adm19ListadoRowDto>();
+
+                var total = lista.Count;
+
+                if (total == 0)
+                    return (new List<Adm19ListadoRowDto>(), 0);
+
+                var ordenados = OrdenarAdm19(lista, sort, asc);
+
+                if (size <= 0) size = 10;
+                if (page <= 0) page = 1;
+
+                var skip = (page - 1) * size;
+                var pagina = ordenados
+                    .Skip(skip)
+                    .Take(size)
+                    .ToList();
+
+                return (pagina, total);
+            }
+            catch (ApiException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al obtener listado ADM19");
+                throw;
+            }
+        }
+
+        // ================================
+        //   ADM19 - exportar CSV
+        // ================================
+        public async Task<byte[]> ExportListadoAdm19CsvAsync(
+            int? idPeriodo,
+            int? idCarrera,
+            int? idCurso,
+            int? idGrupo,
+            string? sort,
+            bool asc)
+        {
+            try
+            {
+                await AttachBearerAsync(_http);
+
+                var idUsuario = ObtenerIdUsuario();
+                var url = ConstruirQueryAdm19(idUsuario, idPeriodo, idCarrera, idCurso, idGrupo);
+
+                var response = await _http.GetAsync(url);
+
+                await EnsureSuccessOrThrowAsync(
+                    response,
+                    _logger,
+                    "No fue posible exportar el listado a CSV."
+                );
+
+                var lista =
+                    await response.Content.ReadFromJsonAsync<List<Adm19ListadoRowDto>>()
+                    ?? new List<Adm19ListadoRowDto>();
+
+                var ordenados = OrdenarAdm19(lista, sort, asc).ToList();
+
+                var sb = new StringBuilder();
+                sb.AppendLine("ID_Matricula;ID_Estudiante;Tipo_Identificacion;Identificacion;Nombre;ID_Carrera;Carrera;ID_Curso;Curso;ID_Grupo;Numero_Grupo;ID_Periodo");
+
+                foreach (var r in ordenados)
+                {
+                    sb.AppendLine(
+                        $"{r.ID_Matricula};{r.ID_Estudiante};{r.Tipo_Identificacion};{r.Identificacion};{r.Nombre};" +
+                        $"{r.ID_Carrera};{r.Carrera};{r.ID_Curso};{r.Curso};{r.ID_Grupo};{r.Numero_Grupo};{r.ID_Periodo}");
+                }
+
+                return Encoding.UTF8.GetBytes(sb.ToString());
+            }
+            catch (ApiException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al exportar CSV ADM19");
                 throw;
             }
         }

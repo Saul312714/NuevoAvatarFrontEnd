@@ -13,6 +13,7 @@ namespace NuevoAvatarFront.Services
     {
         Task<List<GrupoDto>> GetAllAsync();
         Task<List<GrupoDto>> GetByCursoAsync(int idCurso);
+       
     }
 
     public class GrupoService : ApiClientBase, IGrupoService

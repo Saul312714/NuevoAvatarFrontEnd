@@ -164,6 +164,21 @@ builder.Services.AddHttpClient<IExpedienteApiClient, ExpedienteApiClient>(c =>
     c.BaseAddress = new Uri(baseMatricula);
 });
 
+builder.Services.AddHttpClient<INotasApiClient, NotasApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseMatricula);
+});
+
+builder.Services.AddHttpClient("MatriculaClient", c =>
+{
+    c.BaseAddress = new Uri(baseMatricula);
+});
+
+builder.Services.AddHttpClient("OfertaClient", c =>
+{
+    c.BaseAddress = new Uri(baseOferta);
+});
+
 // Servicios internos (no API clients, sino lógica del Front)
 builder.Services.AddScoped<IPreMatriculaService, PreMatriculaService>();
 builder.Services.AddScoped<IEstudianteService, EstudianteService>();

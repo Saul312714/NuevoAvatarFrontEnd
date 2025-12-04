@@ -34,7 +34,7 @@ namespace NuevoAvatarFront.Services
 
             if (!res.IsSuccessStatusCode)
             {
-                Console.WriteLine($"❌ Error API Notas.ObtenerDesglose: {await res.Content.ReadAsStringAsync()}");
+                Console.WriteLine($" Error API Notas.ObtenerDesglose: {await res.Content.ReadAsStringAsync()}");
                 return new List<NotaRubro>();
             }
 
@@ -56,7 +56,7 @@ namespace NuevoAvatarFront.Services
             if (!res.IsSuccessStatusCode)
             {
                 var msg = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"❌ Error API Notas.CargarDesglose: {msg}");
+                Console.WriteLine($" Error API Notas.CargarDesglose: {msg}");
                 return (false, msg, null);
             }
 
@@ -75,7 +75,7 @@ namespace NuevoAvatarFront.Services
 
             if (!res.IsSuccessStatusCode)
             {
-                Console.WriteLine($"❌ Error API Notas.ObtenerNotas: {await res.Content.ReadAsStringAsync()}");
+                Console.WriteLine($" Error API Notas.ObtenerNotas: {await res.Content.ReadAsStringAsync()}");
                 return new List<Nota>();
             }
 
@@ -94,7 +94,7 @@ namespace NuevoAvatarFront.Services
             if (!res.IsSuccessStatusCode)
             {
                 var msg = await res.Content.ReadAsStringAsync();
-                Console.WriteLine($"❌ Error API Notas.AsignarNota: {msg}");
+                Console.WriteLine($" Error API Notas.AsignarNota: {msg}");
                 return (false, msg, null);
             }
 

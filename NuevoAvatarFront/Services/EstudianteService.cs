@@ -1,15 +1,17 @@
-﻿using System.Net.Http.Json;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using NuevoAvatarFront.Infra;
-using NuevoAvatarFront.Models;
 using NuevoAvatarFront.Helpers;
+using NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Infra.NuevoAvatarFront.Infra;
+using NuevoAvatarFront.Models;
+using System.Net.Http.Json;
 
 namespace NuevoAvatarFront.Services
 {
     public interface IEstudianteService
     {
         Task<List<EstudianteDto>> GetAllAsync();
+        Task<List<EstudianteDto>> GetByCursoYGrupoAsync(int idCurso, int idGrupo);
     }
 
     public class EstudianteService : ApiClientBase, IEstudianteService
@@ -39,7 +41,7 @@ namespace NuevoAvatarFront.Services
 
                 if (idUsuario == 0)
                 {
-                    _logger.LogWarning("⚠ No se encontró UsuarioID en sesión. Devolviendo lista vacía.");
+                    _logger.LogWarning(" No se encontró UsuarioID en sesión. Devolviendo lista vacía.");
                     return new List<EstudianteDto>();
                 }
 
@@ -68,6 +70,54 @@ namespace NuevoAvatarFront.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener estudiantes");
+                throw;
+            }
+        }
+
+        /// Obtiene los estudiantes matriculados en un curso y grupo específicos
+        public async Task<List<EstudianteDto>> GetByCursoYGrupoAsync(int idCurso, int idGrupo)
+        {
+            try
+            {
+                await AttachBearerAsync(_httpClient);
+
+                var idUsuario = _httpContextAccessor.HttpContext?
+                    .Session.GetInt32("UsuarioID") ?? 0;
+
+                if (idUsuario == 0)
+                {
+                    _logger.LogWarning(" No se encontró UsuarioID en sesión. Devolviendo lista vacía.");
+                    return new List<EstudianteDto>();
+                }
+
+                var url = $"/matricula/curso/{idCurso}/grupo/{idGrupo}?idUsuario={idUsuario}";
+                var response = await _httpClient.GetAsync(url);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    // No hay estudiantes matriculados en ese curso y grupo
+                    return new List<EstudianteDto>();
+                }
+
+                await EnsureSuccessOrThrowAsync(
+                    response,
+                    _logger,
+                    "No fue posible obtener los estudiantes del curso y grupo."
+                );
+
+                var data = await response.Content.ReadFromJsonAsync<List<EstudianteDto>>();
+                return data ?? new List<EstudianteDto>();
+            }
+            catch (ApiException)
+            {
+                // Las ApiException ya vienen con mensaje controlado
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error no controlado al obtener estudiantes por curso {Curso} y grupo {Grupo}",
+                    idCurso, idGrupo);
                 throw;
             }
         }

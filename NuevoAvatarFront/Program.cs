@@ -8,6 +8,8 @@ using NuevoAvatarFront.Pages.Expedientes; // Mock direcciones
 
 var builder = WebApplication.CreateBuilder(args);
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 // =========================================================
 // RAZOR PAGES + ACCESOR
 // =========================================================
@@ -160,6 +162,21 @@ builder.Services.AddHttpClient<IGrupoApiClient, GrupoApiClient>(c =>
 builder.Services.AddHttpClient<IExpedienteApiClient, ExpedienteApiClient>(c =>
 {
     c.BaseAddress = new Uri(baseMatricula);
+});
+
+builder.Services.AddHttpClient<INotasApiClient, NotasApiClient>(c =>
+{
+    c.BaseAddress = new Uri(baseMatricula);
+});
+
+builder.Services.AddHttpClient("MatriculaClient", c =>
+{
+    c.BaseAddress = new Uri(baseMatricula);
+});
+
+builder.Services.AddHttpClient("OfertaClient", c =>
+{
+    c.BaseAddress = new Uri(baseOferta);
 });
 
 // Servicios internos (no API clients, sino lógica del Front)

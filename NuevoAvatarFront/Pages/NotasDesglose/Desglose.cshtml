@@ -1,0 +1,285 @@
+﻿@page "/NotasDesglose/Desglose/{idGrupo?}"
+@model NuevoAvatarFront.Pages.NotasDesglose.DesgloseModel
+@{
+    ViewData["Title"] = "Desglose de Rubros";
+    Layout = "_Layout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Desglose de Rubros</h1>
+    <a asp-page="/Grupos/Index" class="btn btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left"></i> Volver a grupos
+    </a>
+</div>
+
+<!-- ERRORES DE VALIDACIÓN GENERALES -->
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<!-- DESGLOSE BLOQUEADO POR NOTAS -->
+@if (Model.DesgloseBloqueado)
+{
+    <div class="alert alert-warning shadow-sm">
+        <i class="fas fa-lock"></i> <strong>Desglose bloqueado:</strong> No es posible modificar el desglose porque ya existen notas registradas para este grupo.
+    </div>
+}
+
+<!-- ESTADO SIN DESGLOSE -->
+@if (Model.Rubros == null || !Model.Rubros.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="alert alert-info text-center mb-0">
+                <i class="fas fa-info-circle"></i> Este grupo no tiene un desglose registrado todavía. Si el curso lo requiere, comuníquese con el administrador para configurar los rubros.
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- INFORMACIÓN DEL TOTAL -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="mb-0">
+                        <i class="fas fa-percent text-primary"></i>
+                        <strong>Total de porcentajes:</strong>
+                        <span class="badge @(Model.TotalPorcentaje == 100 ? "bg-success" : "bg-danger") fs-6">
+                            @Model.TotalPorcentaje %
+                        </span>
+                    </h5>
+                    @if (!Model.DesgloseBloqueado && Model.TotalPorcentaje != 100)
+                    {
+                        <small class="text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> La suma debe ser exactamente 100%
+                        </small>
+                    }
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-info text-dark">
+                        <i class="fas fa-list"></i> @Model.Rubros.Count rubro(s)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO DE RUBROS -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> Configuración de Rubros</h5>
+        </div>
+        <div class="card-body p-0">
+            <form method="post">
+                <input type="hidden" asp-for="IdGrupo" />
+                <input type="hidden" asp-for="DesgloseBloqueado" />
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0" id="tablaRubros">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 60px;" class="text-center">#</th>
+                                <th style="width: 60%;">Nombre del rubro</th>
+                                <th style="width: 20%;">Porcentaje (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Rubros.Count; i++)
+                            {
+                                var numeroRubro = i + 1;
+                                <tr>
+                                    <td class="text-center fw-bold text-primary">@numeroRubro</td>
+                                    <td>
+                                        <input asp-for="Rubros[@i].Nombre"
+                                               class="form-control shadow-sm"
+                                               placeholder="Ingrese el nombre del rubro"
+                                               readonly="@(Model.DesgloseBloqueado ? "readonly" : null)" />
+                                        <span asp-validation-for="Rubros[@i].Nombre" class="text-danger small"></span>
+                                    </td>
+                                    <td>
+                                        <div class="input-group shadow-sm">
+                                            <input asp-for="Rubros[@i].Porcentaje"
+                                                   type="number"
+                                                   min="1"
+                                                   max="100"
+                                                   step="0.01"
+                                                   class="form-control porcentaje-input"
+                                                   placeholder="0"
+                                                   readonly="@(Model.DesgloseBloqueado ? "readonly" : null)" />
+                                            <span class="input-group-text">
+                                                <i class="fas fa-percent"></i>
+                                            </span>
+                                        </div>
+                                        <span asp-validation-for="Rubros[@i].Porcentaje" class="text-danger small"></span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="2" class="text-end fw-bold">TOTAL:</td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text"
+                                               id="totalPorcentaje"
+                                               value="@Model.TotalPorcentaje"
+                                               class="form-control fw-bold @(Model.TotalPorcentaje == 100 ? "bg-success text-white" : "bg-danger text-white")"
+                                               readonly />
+                                        <span class="input-group-text">
+                                            <i class="fas fa-percent"></i>
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            @if (!Model.DesgloseBloqueado)
+                            {
+                                <button type="submit" class="btn btn-primary shadow-sm" id="btnGuardar">
+                                    <i class="fas fa-save"></i> Guardar desglose
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-secondary shadow-sm" disabled>
+                                    <i class="fas fa-lock"></i> Desglose bloqueado
+                                </button>
+                            }
+                        </div>
+                        <a asp-page="/Grupos/Index" class="btn btn-secondary shadow-sm">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Mostrar mensaje de éxito
+    @if (TempData["success"] is string successMsg)
+    {
+            <text>
+            Swal.fire({
+                icon: "success",
+                title: "¡Éxito!",
+                text: "@Html.Raw(successMsg)",
+                timer: 3000,
+                showConfirmButton: false
+            });
+            </text>
+    }
+
+    // Calcular total de porcentajes en tiempo real
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('.porcentaje-input');
+        const totalInput = document.getElementById('totalPorcentaje');
+        const btnGuardar = document.getElementById('btnGuardar');
+
+        function calcularTotal() {
+            let total = 0;
+            inputs.forEach(input => {
+                const valor = parseFloat(input.value) || 0;
+                total += valor;
+            });
+
+            total = Math.round(total * 100) / 100; // Redondear a 2 decimales
+
+            if (totalInput) {
+                totalInput.value = total;
+
+                // Cambiar color según el total
+                if (total === 100) {
+                    totalInput.classList.remove('bg-danger');
+                    totalInput.classList.add('bg-success', 'text-white');
+                } else {
+                    totalInput.classList.remove('bg-success');
+                    totalInput.classList.add('bg-danger', 'text-white');
+                }
+            }
+
+            // Deshabilitar botón si no suma 100
+            if (btnGuardar) {
+                if (total === 100) {
+                    btnGuardar.disabled = false;
+                    btnGuardar.classList.remove('disabled');
+                } else {
+                    btnGuardar.disabled = true;
+                    btnGuardar.classList.add('disabled');
+                }
+            }
+        }
+
+        // Escuchar cambios en los inputs
+        inputs.forEach(input => {
+            input.addEventListener('input', calcularTotal);
+            input.addEventListener('change', calcularTotal);
+        });
+
+        // Calcular total inicial
+        calcularTotal();
+
+        // Validación antes de enviar
+        const form = document.querySelector('form');
+        if (form && btnGuardar) {
+            form.addEventListener('submit', function(e) {
+                let total = 0;
+                inputs.forEach(input => {
+                    total += parseFloat(input.value) || 0;
+                });
+
+                total = Math.round(total * 100) / 100;
+
+                if (total !== 100) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de validación',
+                        text: `La suma de los porcentajes debe ser exactamente 100%. Actualmente suma ${total}%`,
+                        confirmButtonText: 'Entendido'
+                    });
+                    return false;
+                }
+            });
+        }
+    });
+</script>
+
+<style>
+    .table-responsive {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .porcentaje-input:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    input[readonly] {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+
+    .btn.disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

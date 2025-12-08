@@ -1,0 +1,384 @@
+﻿@page "/NotasDesglose/Notas/{idGrupo:int}"
+@model NuevoAvatarFront.Pages.NotasDesglose.NotasModel
+@{
+    ViewData["Title"] = "Asignación de Notas";
+    Layout = "_Layout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Asignación de Notas por Rubro</h1>
+    <a asp-page="/Grupos/Index" class="btn btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left"></i> Volver a grupos
+    </a>
+</div>
+
+<!-- ERRORES GENERALES -->
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<!-- SIN DESGLOSE: NO PERMITIR ASIGNAR NOTAS -->
+@if (Model.Rubros == null || !Model.Rubros.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="alert alert-warning mb-3">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Desglose no configurado:</strong> Este grupo no tiene un desglose configurado. Debe crear el desglose antes de asignar notas.
+            </div>
+            <div class="text-center">
+                <a asp-page="/NotasDesglose/Desglose"
+                   asp-route-idGrupo="@Model.IdGrupo"
+                   class="btn btn-primary shadow-sm">
+                    <i class="fas fa-cog"></i> Ir a configurar desglose
+                </a>
+                <a asp-page="/Grupos/Index" class="btn btn-secondary shadow-sm ms-2">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- SELECTOR DE ESTUDIANTE -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-user-graduate"></i> Selección de Estudiante</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" asp-page-handler="Seleccionar" class="row g-3 align-items-end">
+                <input type="hidden" asp-for="IdGrupo" />
+                <div class="col-md-8">
+                    <label for="selectEstudiante" class="form-label fw-bold text-gray-800">
+                        <i class="fas fa-user"></i> Estudiante:
+                    </label>
+                    <select id="selectEstudiante" asp-for="IdEstudiante" class="form-select shadow-sm">
+                        <option value="">-- Seleccione un estudiante --</option>
+                        @foreach (var est in Model.Estudiantes)
+                        {
+                            <option value="@est.ID_Estudiante">
+                                @est.Nombre (@est.Identificacion)
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary shadow-sm w-100">
+                        <i class="fas fa-search"></i> Cargar notas
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABLA DE NOTAS -->
+    @if (Model.IdEstudiante > 0)
+    {
+        var estudianteSeleccionado = Model.Estudiantes.FirstOrDefault(e => e.ID_Estudiante == Model.IdEstudiante);
+        var promedioFinal = Model.Notas?.Any() == true
+            ? Model.Notas.Sum(n =>
+            {
+                var rubro = Model.Rubros.FirstOrDefault(r => r.ID_Rubro == n.ID_Rubro);
+                return rubro != null ? (n.Valor * rubro.Porcentaje / 100) : 0;
+            })
+            : 0;
+
+        <!-- INFORMACIÓN DEL ESTUDIANTE -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1">
+                            <i class="fas fa-id-card text-primary"></i>
+                            <strong>@estudianteSeleccionado?.Nombre</strong>
+                        </h5>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-hashtag"></i> Identificación: <strong>@estudianteSeleccionado?.Identificacion</strong>
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="d-inline-block">
+                            <span class="text-muted d-block small">Promedio Final</span>
+                            <h3 class="mb-0">
+                                <span class="badge @(promedioFinal >= 70 ? "bg-success" : "bg-danger") fs-4">
+                                    @promedioFinal.ToString("F2")
+                                </span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Notas == null || !Model.Notas.Any())
+        {
+            <div class="alert alert-info shadow-sm">
+                <i class="fas fa-info-circle"></i> Este estudiante no tiene notas registradas aún. Complete el formulario a continuación para asignar las notas.
+            </div>
+        }
+
+        <!-- TABLA DE NOTAS POR RUBRO -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> Notas por Rubro</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0" id="tablaNotas">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 50px;" class="text-center">#</th>
+                                <th style="width: 40%;">Rubro</th>
+                                <th style="width: 15%;">Porcentaje</th>
+                                <th style="width: 15%;">Nota (1-100)</th>
+                                <th style="width: 15%;">Ponderado</th>
+                                <th style="width: 15%;" class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Rubros.Count; i++)
+                            {
+                                var rubro = Model.Rubros[i];
+                                var nota = Model.Notas?.FirstOrDefault(n => n.ID_Rubro == rubro.ID_Rubro);
+                                var valorNota = nota?.Valor ?? 0;
+                                var notaPonderada = (valorNota * rubro.Porcentaje) / 100;
+                                var numeroRubro = i + 1;
+
+                                <tr>
+                                    <td class="text-center fw-bold text-primary">@numeroRubro</td>
+                                    <td>
+                                        <i class="fas fa-bookmark text-muted me-1"></i>
+                                        <strong>@rubro.Nombre</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">
+                                            @rubro.Porcentaje %
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form method="post" asp-page-handler="GuardarNota" class="form-nota" data-rubro="@rubro.ID_Rubro">
+                                            <input type="hidden" asp-for="IdGrupo" />
+                                            <input type="hidden" asp-for="IdEstudiante" />
+                                            <input type="hidden" name="idRubro" value="@rubro.ID_Rubro" />
+                                            <input type="number"
+                                                   name="valor"
+                                                   class="form-control form-control-sm nota-input shadow-sm"
+                                                   min="1"
+                                                   max="100"
+                                                   step="0.01"
+                                                   value="@(valorNota > 0 ? valorNota.ToString("F2") : "")"
+                                                   placeholder="0.00"
+                                                   required
+                                                   oninvalid="this.setCustomValidity('La nota debe estar entre 1 y 100')"
+                                                   oninput="this.setCustomValidity('')" />
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(notaPonderada >= (70 * rubro.Porcentaje / 100) ? "bg-success" : "bg-secondary")">
+                                            @notaPonderada.ToString("F2")
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button"
+                                                class="btn btn-sm btn-success shadow-sm btn-guardar-nota"
+                                                data-rubro="@rubro.ID_Rubro"
+                                                title="Guardar nota">
+                                            <i class="fas fa-save"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">PROMEDIO FINAL:</td>
+                                <td colspan="2">
+                                    <span class="badge @(promedioFinal >= 70 ? "bg-success" : "bg-danger") fs-6">
+                                        @promedioFinal.ToString("F2")
+                                    </span>
+                                    <span class="ms-2 small text-muted">
+                                        (@(promedioFinal >= 70 ? "Aprobado" : "Reprobado"))
+                                    </span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-success shadow-sm" id="btnGuardarTodo">
+                        <i class="fas fa-save"></i> Guardar todas las notas
+                    </button>
+                    <a asp-page="/Grupos/Index" class="btn btn-secondary shadow-sm">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Mostrar mensaje de éxito
+    @if (TempData["success"] is string successMsg)
+    {
+            <text>
+            Swal.fire({
+                icon: "success",
+                title: "¡Éxito!",
+                text: "@Html.Raw(successMsg)",
+                timer: 3000,
+                showConfirmButton: false
+            });
+            </text>
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Guardar nota individual
+        const botonesGuardar = document.querySelectorAll('.btn-guardar-nota');
+        botonesGuardar.forEach(boton => {
+            boton.addEventListener('click', function() {
+                const idRubro = this.getAttribute('data-rubro');
+                const form = document.querySelector(`.form-nota[data-rubro="${idRubro}"]`);
+
+                if (form) {
+                    const input = form.querySelector('.nota-input');
+                    const valor = parseFloat(input.value);
+
+                    if (!valor || valor < 1 || valor > 100) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Valor inválido',
+                            text: 'La nota debe estar entre 1 y 100',
+                            confirmButtonText: 'Entendido'
+                        });
+                        return;
+                    }
+
+                    form.submit();
+                }
+            });
+        });
+
+        // Guardar todas las notas
+        const btnGuardarTodo = document.getElementById('btnGuardarTodo');
+        if (btnGuardarTodo) {
+            btnGuardarTodo.addEventListener('click', function() {
+                const forms = document.querySelectorAll('.form-nota');
+                let valido = true;
+                let notasVacias = 0;
+
+                forms.forEach(form => {
+                    const input = form.querySelector('.nota-input');
+                    const valor = parseFloat(input.value);
+
+                    if (!valor) {
+                        notasVacias++;
+                    } else if (valor < 1 || valor > 100) {
+                        valido = false;
+                    }
+                });
+
+                if (!valido) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Valores inválidos',
+                        text: 'Todas las notas deben estar entre 1 y 100',
+                        confirmButtonText: 'Entendido'
+                    });
+                    return;
+                }
+
+                if (notasVacias > 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '¿Continuar?',
+                        text: `Hay ${notasVacias} nota(s) sin completar. ¿Desea guardar solo las notas ingresadas?`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, guardar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            guardarTodasLasNotas(forms);
+                        }
+                    });
+                } else {
+                    guardarTodasLasNotas(forms);
+                }
+            });
+        }
+
+        function guardarTodasLasNotas(forms) {
+            let guardadas = 0;
+            forms.forEach((form, index) => {
+                const input = form.querySelector('.nota-input');
+                if (input.value && parseFloat(input.value) >= 1 && parseFloat(input.value) <= 100) {
+                    setTimeout(() => {
+                        form.submit();
+                    }, index * 100); // Delay para evitar problemas de concurrencia
+                    guardadas++;
+                }
+            });
+
+            if (guardadas === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin cambios',
+                    text: 'No hay notas válidas para guardar',
+                    confirmButtonText: 'Entendido'
+                });
+            }
+        }
+
+        // Enter para guardar
+        const notasInputs = document.querySelectorAll('.nota-input');
+        notasInputs.forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const form = this.closest('.form-nota');
+                    const idRubro = form.getAttribute('data-rubro');
+                    const boton = document.querySelector(`.btn-guardar-nota[data-rubro="${idRubro}"]`);
+                    if (boton) {
+                        boton.click();
+                    }
+                }
+            });
+        });
+    });
+</script>
+
+<style>
+    .table-responsive {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .nota-input {
+        text-align: center;
+        font-weight: bold;
+    }
+
+        .nota-input:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+
+    .table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .btn-guardar-nota {
+        padding: 0.25rem 0.5rem;
+    }
+
+    .form-nota {
+        margin-bottom: 0;
+    }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

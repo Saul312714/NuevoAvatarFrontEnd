@@ -8,7 +8,7 @@ namespace NuevoAvatarFront.Services
     {
         private readonly HttpClient _http;
         private readonly IHttpContextAccessor _context;
-        private const string BaseEndpoint = "/modulo";
+        private const string BaseEndpoint = "modulo";
 
         public ModuloApiClient(HttpClient http, IHttpContextAccessor context)
         {

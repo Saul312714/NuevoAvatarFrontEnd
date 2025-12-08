@@ -40,7 +40,7 @@ namespace NuevoAvatarFront.Services
         {
             AddAuth();
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"/rolmodulo/{idRol}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"rolmodulo/{idRol}");
             var response = await _http.SendAsync(request);
 
             if (!response.IsSuccessStatusCode)
@@ -55,7 +55,7 @@ namespace NuevoAvatarFront.Services
         {
             AddAuth();
 
-            var res = await _http.PutAsJsonAsync($"/rolmodulo/{idRol}", permisos);
+            var res = await _http.PutAsJsonAsync($"rolmodulo/{idRol}", permisos);
             return res.IsSuccessStatusCode;
         }
     }

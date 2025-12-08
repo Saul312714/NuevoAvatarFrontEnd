@@ -103,7 +103,7 @@ namespace NuevoAvatarFront.Services
         {
             AddAuthHeader();
 
-            var res = await _http.GetAsync($"/rol?idUsuarioAccion={idUsuarioAccion}");
+            var res = await _http.GetAsync($"rol?idUsuarioAccion={idUsuarioAccion}");
 
             if (!res.IsSuccessStatusCode)
                 return (false, res.StatusCode, null, await BuildFriendlyError(res));

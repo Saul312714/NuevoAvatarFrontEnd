@@ -1,0 +1,117 @@
+﻿@page "/Promedios/Index"
+@model NuevoAvatarFront.Pages.Promedios.IndexModel
+
+@{
+    ViewData["Title"] = "Consulta de Promedios";
+}
+
+<h3 class="mb-3">Consulta de Promedios por Estudiante</h3>
+
+<!-- BOTÓN VOLVER -->
+<a asp-page="/NotasDesglose/Notas"
+   asp-route-idGrupo="@Model.IdGrupo"
+   asp-route-idEstudiante="@Model.IdEstudiante"
+   class="btn btn-secondary shadow-sm mb-3">
+    <i class="fas fa-arrow-left"></i> Volver a Notas
+</a>
+
+<!-- FORMULARIO DE BÚSQUEDA -->
+<form method="post" asp-page-handler="Buscar" class="card p-3 mb-3">
+
+    <div class="row">
+        <!-- Tipo identificación -->
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Tipo de Identificación:</label>
+            <select asp-for="TipoIdentificacion" class="form-control">
+                <option value="">-- Seleccione --</option>
+                <option value="Nacional">Nacional</option>
+                <option value="DIMEX">DIMEX</option>
+                <option value="Pasaporte">Pasaporte</option>
+            </select>
+        </div>
+
+        <!-- Identificación -->
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Identificación:</label>
+            <input asp-for="Identificacion" class="form-control" placeholder="Ej: 1-2345-6789" />
+        </div>
+
+        <!-- Periodo -->
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Periodo:</label>
+            <select asp-for="Periodo" class="form-control">
+                <option value="">-- Todos --</option>
+                @foreach (var p in Model.Periodos)
+                {
+                    <option value="@p">@p</option>
+                }
+            </select>
+        </div>
+
+        <!-- Botón buscar -->
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- EXPORTACIONES + TABLA -->
+@if (Model.Resultados.Any())
+{
+    <!-- BOTONES EXPORTAR -->
+    <div class="d-flex justify-content-end mb-2">
+
+        <!-- CSV -->
+        <form method="post" asp-page-handler="ExportCsv" class="d-inline">
+            <button type="submit" class="btn btn-success btn-sm">
+                <i class="fas fa-file-csv"></i> Exportar CSV
+            </button>
+        </form>
+
+        <!-- PDF (corregido con input hidden) -->
+        <form method="post" class="d-inline ms-2">
+            <input type="hidden" name="handler" value="ExportPdf" />
+            <button type="submit" class="btn btn-danger btn-sm">
+                <i class="fas fa-file-pdf"></i> Exportar PDF
+            </button>
+        </form>
+    </div>
+
+    <!-- TABLA DE RESULTADOS -->
+    <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th style="width: 15%;">Código</th>
+                <th style="width: 55%;">Curso</th>
+                <th style="width: 20%;">Promedio</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var r in Model.Resultados)
+            {
+                <tr>
+                    <td>@r.CodigoCurso</td>
+                    <td>@r.NombreCurso</td>
+                    <td>
+                        <span class="badge @(r.Promedio >= 70 ? "bg-success" : "bg-danger")">
+                            @r.Promedio.ToString("F2")
+                        </span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (Model.BusquedaRealizada)
+{
+    <p class="text-muted mt-3">
+        <i class="fas fa-info-circle"></i> No se encontraron resultados…
+    </p>
+}
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a2d9d6c8d0.js" crossorigin="anonymous"></script>
+}

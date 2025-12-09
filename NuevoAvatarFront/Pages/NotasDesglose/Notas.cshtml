@@ -102,6 +102,17 @@ else
                                     @promedioFinal.ToString("F2")
                                 </span>
                             </h3>
+
+                            <a asp-page="/Promedios/Index"
+                               asp-route-idGrupo="@Model.IdGrupo"
+                               asp-route-idEstudiante="@Model.IdEstudiante"
+                               asp-route-identificacion="@estudianteSeleccionado?.Identificacion"
+                               asp-route-tipoIdentificacion="@estudianteSeleccionado?.TipoIdentificacion"
+                               asp-route-promedioFinal="@promedioFinal"
+                               asp-route-nombreCurso="@Model.Rubros.FirstOrDefault()?.Nombre"
+                               class="btn btn-info btn-sm mt-2 shadow-sm">
+                                <i class="fas fa-chart-line"></i> Ver Promedio
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -66,6 +66,7 @@ builder.Services.AddHttpClient("PagosClient", (sp, client) =>
     client.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json"));
 });
+builder.Services.AddHttpClient<IPagoApiClient, PagoApiClient>();
 
 // API PROFESORES (typed client)
 builder.Services.AddHttpClient<ProfesorClient>((sp, client) =>
@@ -86,6 +87,14 @@ builder.Services.AddHttpClient<PeriodoClient>((sp, client) =>
     client.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json"));
 });
+
+// API Notificaciones)
+
+builder.Services.AddHttpClient<INotificacionApiClient, NotificacionApiClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiNotificaciones"]);
+});
+
 
 // =========================================================
 // BASE URLS (APIs tipo "XxxApi:BaseUrl")

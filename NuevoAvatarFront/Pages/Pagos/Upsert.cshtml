@@ -1,0 +1,61 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Pagos.UpsertModel
+@{
+    ViewData["Title"] = "Registrar Pago";
+}
+
+<h4 class="text-primary mb-3">Registrar Pago</h4>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        @Model.ErrorMessage
+    </div>
+}
+
+<div class="card shadow">
+    <div class="card-body">
+
+        <form method="post">
+            <div class="form-group">
+                <label for="IdFactura">Factura</label>
+                <select asp-for="IdFactura" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Seleccione una factura --</option>
+                    @foreach (var f in Model.Facturas)
+                    {
+                        <option value="@f.ID_Factura" selected="@(f.ID_Factura == Model.IdFactura)">
+                            @f.ID_Factura - Estudiante @f.ID_Estudiante - Total @f.Total.ToString("N2") - Estado @f.Estado
+                        </option>
+                    }
+                </select>
+                <small class="form-text text-muted">
+                    Al cambiar de factura se recargará la página para mostrar el saldo.
+                </small>
+            </div>
+
+            @if (Model.TotalFactura.HasValue)
+            {
+                <div class="alert alert-info">
+                    <strong>Resumen de factura:</strong><br />
+                    Total: @Model.TotalFactura.Value.ToString("N2")<br />
+                    Saldo pendiente: @(Model.SaldoPendiente ?? 0).ToString("N2")<br />
+                    Estado: @Model.EstadoFactura
+                </div>
+            }
+
+            <div class="form-group">
+                <label for="Monto">Monto a pagar</label>
+                <input asp-for="Monto" class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+
+            <a asp-page="Index" class="btn btn-secondary">
+                Volver
+            </a>
+        </form>
+
+    </div>
+</div>

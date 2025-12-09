@@ -1,0 +1,113 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Notificaciones.IndexModel
+@{
+    ViewData["Title"] = "Enviar Notificaciones";
+}
+
+<h3 class="text-primary mb-3">Enviar Notificación</h3>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.ResultadoEnvio))
+{
+    <div class="alert @(Model.EnvioExitoso ? "alert-success" : "alert-danger")">
+        @Model.ResultadoEnvio
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-3">
+            <div class="card-header">Formulario</div>
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" asp-for="Confirmado" value="false" />
+
+                    <div class="form-group">
+                        <label>Email destinatario</label>
+                        <input asp-for="Email" class="form-control" />
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <label>Asunto</label>
+                        <input asp-for="Asunto" class="form-control" />
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <label>Cuerpo (HTML permitido)</label>
+                        <textarea asp-for="Cuerpo" class="form-control" rows="6"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-2">
+                        Previsualizar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        @if (Model.MostrarConfirmacion)
+        {
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <strong>Confirmación de envío</strong>
+                </div>
+                <div class="card-body">
+                    <p><strong>Email:</strong> @Model.Email</p>
+                    <p><strong>Asunto:</strong> @Model.Asunto</p>
+
+                    <div class="border p-2" style="max-height:250px; overflow-y:auto;">
+                        @Html.Raw(Model.CuerpoSanitizado)
+                    </div>
+
+                    <form method="post" class="d-inline">
+                        <input type="hidden" asp-for="Email" />
+                        <input type="hidden" asp-for="Asunto" />
+                        <input type="hidden" asp-for="Cuerpo" />
+                        <input type="hidden" asp-for="Confirmado" value="true" />
+
+                        <button type="submit" class="btn btn-success mt-3">
+                            Confirmar y Enviar
+                        </button>
+                    </form>
+
+                    <a asp-page="./Index" class="btn btn-secondary mt-3">Cancelar</a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header d-flex justify-content-between">
+                <span>Historial de Notificaciones</span>
+                <span class="badge bg-primary">@Model.Historial.Count</span>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Destino</th>
+                            <th>Asunto</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var n in Model.Historial.OrderByDescending(x => x.FechaEnvio))
+                        {
+                            <tr>
+                                <td>@n.FechaEnvio.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@n.Email_Destino</td>
+                                <td>@n.Asunto</td>
+                                <td>@n.Estado</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

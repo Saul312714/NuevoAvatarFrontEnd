@@ -1,0 +1,65 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Pagos.DetalleModel
+@{
+    ViewData["Title"] = "Detalle de Pago";
+}
+
+<h4 class="text-primary mb-3">Detalle de Pago</h4>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        @Model.ErrorMessage
+    </div>
+}
+
+@if (Model.Pago is null)
+{
+    <div class="alert alert-warning">
+        No se encontró la información del pago.
+    </div>
+}
+else
+{
+    <div class="card shadow mb-3">
+        <div class="card-header">
+            Información del Pago
+        </div>
+        <div class="card-body">
+            <p><strong>ID Pago:</strong> @Model.Pago.ID_Pago</p>
+            <p><strong>ID Factura:</strong> @Model.Pago.ID_Factura</p>
+            <p><strong>Fecha:</strong> @Model.Pago.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
+            <p><strong>Monto:</strong> @Model.Pago.Monto.ToString("N2")</p>
+            <p><strong>Estado:</strong> @Model.Pago.Estado</p>
+        </div>
+    </div>
+
+    @if (Model.Factura != null)
+    {
+        <div class="card shadow mb-3">
+            <div class="card-header">
+                Información de la Factura
+            </div>
+            <div class="card-body">
+                <p><strong>ID Factura:</strong> @Model.Factura.ID_Factura</p>
+                <p><strong>ID Estudiante:</strong> @Model.Factura.ID_Estudiante</p>
+                <p><strong>Fecha:</strong> @Model.Factura.Fecha.ToString("dd/MM/yyyy")</p>
+                <p><strong>Monto:</strong> @Model.Factura.Monto.ToString("N2")</p>
+                <p><strong>Impuesto:</strong> @Model.Factura.Impuesto.ToString("N2")</p>
+                <p><strong>Total:</strong> @Model.Factura.Total.ToString("N2")</p>
+                <p><strong>Estado:</strong> @Model.Factura.Estado</p>
+                <p><strong>Total Pagado:</strong> @Model.TotalPagado.ToString("N2")</p>
+                <p><strong>Saldo Pendiente:</strong> @Model.SaldoPendiente.ToString("N2")</p>
+            </div>
+        </div>
+    }
+
+    <div class="alert alert-secondary">
+        <strong>Comprobante:</strong> no se maneja archivo de comprobante en esta versión
+        (si aplica en el futuro, aquí se mostraría el enlace o archivo).
+    </div>
+}
+
+<a asp-page="Index" class="btn btn-secondary">
+    Volver al listado
+</a>

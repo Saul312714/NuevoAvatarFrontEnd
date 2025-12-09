@@ -1,0 +1,55 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Pagos.ReversarModel
+@{
+    ViewData["Title"] = "Reversar Pago";
+}
+
+<h4 class="text-danger mb-3">Reversar Pago</h4>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        @Model.ErrorMessage
+    </div>
+}
+
+@if (Model.Pago is null)
+{
+    <div class="alert alert-warning">
+        No se encontró la información del pago.
+    </div>
+}
+else
+{
+    <div class="card shadow mb-3">
+        <div class="card-header">
+            Confirmación de reversa
+        </div>
+        <div class="card-body">
+            <p><strong>ID Pago:</strong> @Model.Pago.ID_Pago</p>
+            <p><strong>ID Factura:</strong> @Model.Pago.ID_Factura</p>
+            <p><strong>Fecha Pago:</strong> @Model.Pago.FechaPago.ToString("dd/MM/yyyy HH:mm")</p>
+            <p><strong>Monto:</strong> @Model.Pago.Monto.ToString("N2")</p>
+            <p><strong>Estado actual:</strong> @Model.Pago.Estado</p>
+
+            <hr />
+
+            <form method="post">
+                <input type="hidden" asp-for="IdPago" />
+
+                <div class="form-group">
+                    <label for="Motivo">Motivo de la reversa</label>
+                    <textarea asp-for="Motivo" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-undo"></i> Confirmar reversa
+                </button>
+
+                <a asp-page="Index" class="btn btn-secondary">
+                    Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+}

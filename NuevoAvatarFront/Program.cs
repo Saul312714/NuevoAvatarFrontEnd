@@ -4,7 +4,7 @@ using NuevoAvatarFront.Helpers;
 using NuevoAvatarFront.Middleware;
 using NuevoAvatarFront.Services;
 using NuevoAvatarFront.Services.Dashboard;
-using NuevoAvatarFront.Pages.Expedientes; // Mock direcciones
+using NuevoAvatarFront.Pages.Expedientes; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +32,10 @@ builder.Services.AddSession(options =>
 // =========================================================
 builder.Services.AddScoped<TokenHelper>();
 
+// =========================================================
+// NAMED HTTP CLIENTS BÁSICOS
+// =========================================================
+
 // API OFERTA (named client)
 builder.Services.AddHttpClient("OfertaClient", (sp, client) =>
 {
@@ -47,6 +51,17 @@ builder.Services.AddHttpClient("MatriculaClient", (sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     var baseUrl = cfg["Apis:Matricula"] ?? "http://localhost:5193";
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
+// ✅ API PAGOS (named client) - PARA ADM20 / Facturas
+builder.Services.AddHttpClient("PagosClient", (sp, client) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    // Usa la sección que ya tienes en appsettings.json
+    var baseUrl = cfg["PagosApi:BaseUrl"] ?? "http://localhost:5034";
     client.BaseAddress = new Uri(baseUrl);
     client.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json"));
@@ -73,7 +88,7 @@ builder.Services.AddHttpClient<PeriodoClient>((sp, client) =>
 });
 
 // =========================================================
-// BASE URLS
+// BASE URLS (APIs tipo "XxxApi:BaseUrl")
 // =========================================================
 var baseUsuariosRoles = builder.Configuration["UsuariosRolesApi:BaseUrl"]
     ?? throw new InvalidOperationException("UsuariosRolesApi:BaseUrl no configurado");
@@ -187,6 +202,7 @@ builder.Services.AddScoped<ICursoService, CursoService>();
 builder.Services.AddScoped<IPeriodoService, PeriodoService>();
 builder.Services.AddScoped<IMatriculaFrontService, MatriculaFrontService>();
 builder.Services.AddScoped<IGrupoService, GrupoService>();
+builder.Services.AddScoped<IFacturaFrontService, FacturaFrontService>();
 
 // =========================================================
 // DASHBOARD

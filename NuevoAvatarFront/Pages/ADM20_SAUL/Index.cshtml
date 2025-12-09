@@ -1,0 +1,265 @@
+﻿@page
+@model NuevoAvatarFront.Pages.ADM20_SAUL.IndexModel
+@{
+    ViewData["Title"] = "Administración de Facturas";
+    Layout = "_Layout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-gray-800">Administración de facturas ligadas a matrícula</h1>
+</div>
+
+<!-- MENSAJES -->
+@if (!string.IsNullOrEmpty(Model.MensajeError))
+{
+    <div class="alert alert-danger">@Model.MensajeError</div>
+}
+@if (!string.IsNullOrEmpty(Model.MensajeOk))
+{
+    <div class="alert alert-success">@Model.MensajeOk</div>
+}
+
+<!-- FILTROS + CREACIÓN -->
+<div class="row g-3 mb-4">
+
+    <!-- Filtros (GET) -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header py-2">
+                <span class="fw-bold text-gray-800">Filtros de búsqueda</span>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-gray-800">Período</label>
+                        <select asp-for="FiltroPeriodo"
+                                class="form-control"
+                                asp-items="Model.Periodos">
+                            <option value="">-- Todos --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-gray-800">Estudiante</label>
+                        <select asp-for="FiltroEstudiante"
+                                class="form-control"
+                                asp-items="Model.Estudiantes">
+                            <option value="">-- Todos --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-gray-800">Estado</label>
+                        <select asp-for="FiltroEstado"
+                                class="form-control"
+                                asp-items="Model.Estados">
+                        </select>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-end mt-1 gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Aplicar filtros
+                        </button>
+                        <a asp-page="./Index" class="btn btn-secondary">
+                            Limpiar
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crear factura (POST) -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header py-2">
+                <span class="fw-bold text-gray-800">Crear nueva factura</span>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Crear" class="row g-2">
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-gray-800">Período</label>
+                        <select asp-for="NuevoIdPeriodo"
+                                class="form-control"
+                                asp-items="Model.Periodos">
+                            <option value="">-- Seleccione un período --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-gray-800">Estudiante</label>
+                        <select asp-for="NuevoIdEstudiante"
+                                class="form-control"
+                                asp-items="Model.Estudiantes">
+                            <option value="">-- Seleccione un estudiante --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-gray-800">Matrícula</label>
+                        <select asp-for="NuevoIdMatricula"
+                                class="form-control"
+                                asp-items="Model.Matriculas">
+                            <option value="">-- Seleccione una matrícula --</option>
+                        </select>
+                        <span class="form-text text-muted">
+                            Matrícula a la que se ligará la factura.
+                        </span>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-end mt-2">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-plus"></i> Crear factura
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LISTADO -->
+<div class="card shadow">
+    <div class="card-body">
+
+        @if (Model.Facturas is null || !Model.Facturas.Any())
+        {
+            <div class="alert alert-info text-center mb-0">
+                No hay facturas para los filtros seleccionados.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <!-- Tabla con estilo similar a Períodos -->
+                <table class="table table-sm table-striped table-hover mb-0 align-middle">
+                    <thead class="text-white" style="background-color:#5b5e6b;">
+                        <tr>
+                            <th>ID Factura</th>
+                            <th>ID Período</th>
+                            <th>ID Matrícula</th>
+                            <th>ID Estudiante</th>
+                            <th>Fecha</th>
+                            <th>Monto base</th>
+                            <th>Impuesto</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Motivo reversión</th>
+                            <th class="text-center" style="width: 260px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in Model.Facturas)
+                        {
+                            <tr>
+                                <td>@f.ID_Factura</td>
+                                <td>@f.ID_Periodo</td>
+                                <td>@f.ID_Matricula</td>
+                                <td>@f.ID_Estudiante</td>
+                                <td>@f.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@f.Monto.ToString("N2")</td>
+                                <td>@f.Impuesto.ToString("N2")</td>
+                                <td>@((f.Monto + f.Impuesto).ToString("N2"))</td>
+                                <td>
+                                    @if (string.Equals(f.Estado, "Pendiente", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    }
+                                    else if (string.Equals(f.Estado, "Anulada", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-danger">Anulada</span>
+                                    }
+                                    else if (string.Equals(f.Estado, "Pagada", StringComparison.OrdinalIgnoreCase)
+                                    || string.Equals(f.Estado, "Cancelada", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-success">Pagada</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@f.Estado</span>
+                                    }
+                                </td>
+                                <td>@f.MotivoReversion</td>
+                                <td class="text-center">
+                                    <div class="mb-2">
+                                        <span class="text-muted small">
+                                            Detalle: Servicios estudiantiles (₡30 000 + 2% IVA)
+                                        </span>
+                                    </div>
+
+                                    @if (!string.Equals(f.Estado, "Anulada", StringComparison.OrdinalIgnoreCase)
+                                                                && !string.Equals(f.Estado, "Pagada", StringComparison.OrdinalIgnoreCase)
+                                                                && !string.Equals(f.Estado, "Cancelada", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="confirmarReversionFactura(@f.ID_Factura)">
+                                            <i class="fas fa-undo"></i> Reversar
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Acciones no disponibles (estado final).</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Formulario real que se envía al servidor -->
+<form id="formReversar" method="post" asp-page-handler="Reversar">
+    <input type="hidden" name="FacturaIdReversar" id="FacturaIdReversar" />
+    <input type="hidden" name="MotivoReversion" id="MotivoReversionHidden" />
+</form>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function confirmarReversionFactura(idFactura) {
+            Swal.fire({
+                title: 'Reversar factura',
+                html:
+                    '<p>Esta acción <b>no se puede deshacer</b>.</p>' +
+                    '<p>Se anulará definitivamente la factura con ID <b>' + idFactura + '</b>.</p>' +
+                    '<p class="text-muted" style="font-size: 0.9rem;">' +
+                    'Si la factura ya tiene pagos aplicados, el sistema puede impedir la reversión.' +
+                    '</p>' +
+                    '<hr />' +
+                    '<label class="fw-semibold d-block mb-2">Motivo de reversión</label>' +
+                    '<textarea id="swalMotivo" class="swal2-textarea" ' +
+                    'placeholder="Explique el motivo de la reversión (obligatorio)"></textarea>',
+                icon: 'warning',
+                showCancelButton: true,
+                focusConfirm: false,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, reversar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const motivo = document.getElementById('swalMotivo').value.trim();
+                    if (!motivo) {
+                        Swal.showValidationMessage('Debe indicar el motivo de la reversión.');
+                        return false;
+                    }
+                    return motivo;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('FacturaIdReversar').value = idFactura;
+                    document.getElementById('MotivoReversionHidden').value = result.value;
+                    document.getElementById('formReversar').submit();
+                }
+            });
+        }
+    </script>
+}

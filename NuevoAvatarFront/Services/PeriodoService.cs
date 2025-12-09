@@ -12,8 +12,6 @@ namespace NuevoAvatarFront.Services
     public interface IPeriodoService
     {
         Task<List<PeriodoDto>> GetPeriodosFuturosAsync();
-
-        // 🔹 NUEVO: obtener todos los períodos (para pantallas que lo necesitan)
         Task<List<PeriodoDto>> GetAllAsync();
     }
 
@@ -33,9 +31,6 @@ namespace NuevoAvatarFront.Services
             _logger = logger;
         }
 
-        // ===========================
-        //  PERIODOS FUTUROS (YA TENÍAS)
-        // ===========================
         public async Task<List<PeriodoDto>> GetPeriodosFuturosAsync()
         {
             try
@@ -87,9 +82,6 @@ namespace NuevoAvatarFront.Services
             }
         }
 
-        // ===========================
-        //  NUEVO: GET ALL PERIODOS
-        // ===========================
         public async Task<List<PeriodoDto>> GetAllAsync()
         {
             try
@@ -122,7 +114,6 @@ namespace NuevoAvatarFront.Services
                 var lista = await resp.Content.ReadFromJsonAsync<List<PeriodoDto>>(opciones)
                             ?? new List<PeriodoDto>();
 
-                // Aquí NO filtramos por futuros, devolvemos todo
                 return lista
                     .OrderBy(p => p.Anno)
                     .ThenBy(p => p.Numero)
@@ -130,7 +121,6 @@ namespace NuevoAvatarFront.Services
             }
             catch (ApiException)
             {
-                // Dejo pasar el ApiException para que la Razor Page lo maneje bonito
                 throw;
             }
             catch (Exception ex)

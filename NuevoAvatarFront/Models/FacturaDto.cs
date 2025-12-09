@@ -1,0 +1,15 @@
+﻿namespace NuevoAvatarFront.Models
+{
+    public class FacturaDto
+    {
+        public int ID_Factura { get; set; }
+        public int ID_Estudiante { get; set; }
+        public int ID_Matricula { get; set; }
+        public int ID_Periodo { get; set; }
+        public decimal Monto { get; set; }
+        public decimal Impuesto { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public DateTime Fecha { get; set; }
+        public string MotivoReversion { get; set; } = string.Empty;
+    }
+}

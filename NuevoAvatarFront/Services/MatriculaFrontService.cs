@@ -32,6 +32,8 @@ namespace NuevoAvatarFront.Services
             int? idGrupo,
             string? sort,
             bool asc);
+
+        Task<List<Matricula>> ListarAsync();
     }
 
     public class MatriculaFrontService : ApiClientBase, IMatriculaFrontService
@@ -60,6 +62,45 @@ namespace NuevoAvatarFront.Services
             }
 
             return id;
+        }
+
+        public async Task<List<Matricula>> ListarAsync()
+        {
+            try
+            {
+                await AttachBearerAsync(_http);
+
+                var idUsuario = ObtenerIdUsuario();
+
+                var url = ConstruirQueryAdm19(
+                    idUsuario,
+                    idPeriodo: null,
+                    idCarrera: null,
+                    idCurso: null,
+                    idGrupo: null
+                );
+
+                var response = await _http.GetAsync(url);
+
+                await EnsureSuccessOrThrowAsync(
+                    response,
+                    _logger,
+                    "No fue posible obtener el listado de matrículas."
+                );
+                var lista = await response.Content.ReadFromJsonAsync<List<Matricula>>()
+                            ?? new List<Matricula>();
+
+                return lista;
+            }
+            catch (ApiException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al listar matrículas");
+                throw;
+            }
         }
 
         public async Task<int> CrearAsync(MatriculaCreateDto dto)

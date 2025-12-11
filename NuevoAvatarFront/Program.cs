@@ -61,7 +61,7 @@ builder.Services.AddHttpClient("PagosClient", (sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     // Usa la sección que ya tienes en appsettings.json
-    var baseUrl = cfg["PagosApi:BaseUrl"] ?? "http://localhost:5034";
+    var baseUrl = cfg["Apis:Pagos"] ?? "http://localhost:5034";
     client.BaseAddress = new Uri(baseUrl);
     client.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json"));

@@ -267,7 +267,11 @@
                                     @foreach (var b in Model.Data.Bitacoras)
                                     {
                                         <tr>
-                                            <td>@Model.Data.UsuariosLookup[b.ID_Usuario]</td>
+                                            <td>
+                                                @(Model.Data.UsuariosLookup.ContainsKey(b.ID_Usuario)
+                                                                                    ? Model.Data.UsuariosLookup[b.ID_Usuario]
+                                                                                    : $"Usuario {b.ID_Usuario}")
+                                            </td>
                                             <td>@b.Accion</td>
                                             <td>@b.Fecha.ToString("dd/MM HH:mm")</td>
                                         </tr>
@@ -380,4 +384,3 @@
 
     </div>
 </div>
-

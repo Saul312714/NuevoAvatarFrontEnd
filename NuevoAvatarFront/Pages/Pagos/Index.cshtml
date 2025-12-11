@@ -1,0 +1,118 @@
+﻿@page
+@model NuevoAvatarFront.Pages.Pagos.IndexModel
+@{
+    ViewData["Title"] = "Pagos";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h4 class="text-primary mb-0">Listado de Pagos</h4>
+
+    <a asp-page="Upsert" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus"></i> Registrar Pago
+    </a>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        @Model.ErrorMessage
+    </div>
+}
+
+<div class="card shadow mb-3">
+    <div class="card-body">
+
+        <form method="get" class="form-inline mb-3">
+            <div class="form-group mr-2">
+                <label class="mr-1">Año:</label>
+                <input asp-for="Anio" class="form-control form-control-sm" style="width: 90px;" />
+            </div>
+
+            <div class="form-group mr-2">
+                <label class="mr-1">Mes:</label>
+                <input asp-for="Mes" class="form-control form-control-sm" style="width: 70px;" />
+            </div>
+
+            <div class="form-group mr-2">
+                <label class="mr-1">Estado:</label>
+                <select asp-for="Estado" class="form-control form-control-sm">
+                    <option value="Todos">Todos</option>
+                    <option value="Aplicado">Aplicado</option>
+                    <option value="Pendiente">Pendiente</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-sm btn-secondary">
+                <i class="fas fa-search"></i> Filtrar
+            </button>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+                <thead class="thead-light">
+                    <tr>
+                        <th>ID Pago</th>
+                        <th>ID Factura</th>
+                        <th>Fecha Pago</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th style="width: 230px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Pagos.Any())
+                    {
+                        @foreach (var p in Model.Pagos)
+                        {
+                            <tr>
+                                <td>@p.ID_Pago</td>
+                                <td>@p.ID_Factura</td>
+                                <td>@p.FechaPago.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@p.Monto.ToString("N2")</td>
+                                <td>@p.Estado</td>
+                                <td>
+                                    <a asp-page="Detalle"
+                                       asp-route-id="@p.ID_Pago"
+                                       class="btn btn-info btn-sm mr-1">
+                                        <i class="fas fa-info-circle"></i> Detalle
+                                    </a>
+
+                                    <a asp-page="Upsert"
+                                       asp-route-idFactura="@p.ID_Factura"
+                                       class="btn btn-success btn-sm mr-1">
+                                        <i class="fas fa-plus"></i> Nuevo Pago
+                                    </a>
+
+                                    @if (p.Estado.Equals("Aplicado", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <a asp-page="Reversar"
+                                           asp-route-id="@p.ID_Pago"
+                                           class="btn btn-danger btn-sm">
+                                            <i class="fas fa-undo"></i> Reversar
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No hay pagos para los filtros seleccionados.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
